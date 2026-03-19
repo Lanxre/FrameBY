@@ -1,0 +1,165 @@
+@import "tailwindcss";
+@variant dark (&:where(.dark, .dark *));
+
+:root {
+	--foreground-rgb: 15, 15, 15;
+
+	--color-bg: #ffffff;
+	--color-bg-soft: #f7f7f7;
+	--color-bg-mute: #efefef;
+
+	--color-border: rgba(0, 0, 0, 0.08);
+	--color-border-strong: rgba(0, 0, 0, 0.15);
+
+	--color-primary: #22c55e;
+	--color-primary-strong: #16a34a;
+	--color-primary-gradient: linear-gradient(90deg, #4ade80, #10b981);
+
+  	--header-bg-color: rgba(255, 255, 255, 0.7);
+  	--footer-bg-color: rgba(255, 255, 255, 0.65);
+
+	color: rgba(0, 0, 0, 0.87);
+
+	font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+	line-height: 1.5;
+	font-weight: 400;
+
+	font-synthesis: none;
+	text-rendering: optimizeLegibility;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+
+	color-scheme: light;
+	background-color: white;
+}
+
+.dark {
+	--foreground-rgb: 255, 255, 255;
+
+	--color-bg: #0f0f0f;
+	--color-bg-soft: #161616;
+	--color-bg-mute: #1c1c1c;
+
+	--color-border: rgba(255, 255, 255, 0.08);
+	--color-border-strong: rgba(255, 255, 255, 0.15);
+
+	--header-bg-color: rgba(22, 22, 22, 0.7);
+	--footer-bg-color: rgba(22, 22, 22, 0.65);
+
+	color: rgba(255, 255, 255, 0.87);
+	color-scheme: dark;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+	min-height: 100%;
+	background-color: var(--color-bg);
+}
+
+html {
+	scroll-behavior: smooth;
+}
+
+::selection {
+	background: rgba(34, 197, 94, 0.3);
+	color: white;
+}
+
+.glass {
+	background: rgba(255, 255, 255, 0.6);
+	backdrop-filter: blur(12px);
+	-webkit-backdrop-filter: blur(12px);
+}
+
+.dark .glass {
+	background: rgba(255, 255, 255, 0.03);
+}
+
+.glass-strong {
+	background: rgba(255, 255, 255, 0.8);
+	backdrop-filter: blur(16px);
+	border: 1px solid #22c55e;
+}
+
+.dark .glass-strong {
+	background: rgba(255, 255, 255, 0.06);
+}
+
+a {
+	color: inherit;
+	text-decoration: none;
+	transition: 0.2s;
+}
+
+.btn {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.5rem;
+
+	padding: 0.5rem 1rem;
+	border-radius: 0.75rem;
+
+	font-size: 0.875rem;
+	font-weight: 500;
+
+	transition: 0.2s ease;
+}
+
+.btn-primary {
+	background: var(--color-primary-gradient);
+	color: white;
+	box-shadow: 0 10px 25px rgba(34, 197, 94, 0.2);
+}
+
+.btn-primary:hover {
+	opacity: 0.9;
+}
+
+.btn-ghost {
+	background: transparent;
+}
+
+.btn-ghost:hover {
+	background: rgba(0, 0, 0, 0.05);
+}
+
+.dark .btn-ghost:hover {
+	background: rgba(255, 255, 255, 0.05);
+}
+
+.header-glass {
+	background: var(--header-bg-color);
+	backdrop-filter: blur(14px);
+}
+
+.footer-glass {
+	background: var(--footer-bg-color);
+	backdrop-filter: blur(10px);
+}
+
+.white-img-filter {
+	filter: brightness(0) invert(1);
+}
+
+::-webkit-scrollbar {
+	width: 6px;
+}
+
+::-webkit-scrollbar-thumb {
+	background: rgba(0, 0, 0, 0.15);
+	border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+	background: rgba(0, 0, 0, 0.25);
+}
+
+.dark ::-webkit-scrollbar-thumb {
+	background: rgba(255, 255, 255, 0.1);
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+	background: rgba(255, 255, 255, 0.2);
+}
