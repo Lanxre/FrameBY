@@ -12,9 +12,8 @@ export const REQUIRE_MENU: MenuItem[] = [
 ]
 
 export const REQUIRE_SECTION_MENU: MenuItem[] = [
-  { label: 'Постановление Совета Министров Республики Беларусь N 572 от 31 августа 2022 г.', to: '/normative-sovmin', icon: 'mdi:medal' },
+  { label: 'Постановление Совета Министров Республики Беларусь N 572 от 31 августа 2022 г.', to: '/normative-sovmin#item-14', icon: 'mdi:medal' },
   { label: 'Классификатор "Специальности и квалификации" (ОКРБ 011-2022)', to: '/normative-okrb', icon: 'mdi:medal' },
-  { label: 'Указ Президента Республики Беларусь №60 от 1 февраля 2010 г.', to: '/normative-ukaz', icon: 'mdi:medal' },
   { label: 'Рекомендации ОАЦ при Президенте Республики Беларусь по обеспечению безопасности информации', to: '/normative-oac', icon: 'mdi:medal' },
   { label: 'Рекомендации по прогнозированию потребности, численности и структуры подготовки специалистов', to: '/normative-prognosis', icon: 'mdi:medal' },
 ]
