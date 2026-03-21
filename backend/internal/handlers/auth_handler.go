@@ -50,8 +50,6 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		"message":  "Регистрация успешна",
 		"role":     role,
 	})
-	
-	c.Redirect(http.StatusFound, "/")
 }
 
 func (h *AuthHandler) Login(c *gin.Context) {
@@ -62,7 +60,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	token, role, err := h.authSvc.Login(c.Request.Context(), req.Email, req.Password)
+	token, userDto, err := h.authSvc.Login(c.Request.Context(), req.Email, req.Password)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Неверный логин или пароль"})
 		return
@@ -72,17 +70,15 @@ func (h *AuthHandler) Login(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"message":  "Вход выполнен",
-		"role":     role,
+		"user":     userDto,
 	})
-	
-	c.Redirect(http.StatusFound, "/profile")
 }
 
 func (h *AuthHandler) Logout(c *gin.Context) {
 	c.SetCookie(
 		"FRAMEBY_ACCESS_TOKEN",
 		"",
-		time.Now().AddDate(0, 0, -1).Second(),
+		int((time.Hour * 24 * 30).Seconds()),
 		"/",
 		"localhost",
 		false,
@@ -104,13 +100,12 @@ func (h *AuthHandler) CheckAuth(c *gin.Context) {
 	})
 }
 
-// Вспомогательный метод для установки куки, чтобы не дублировать код
 func (h *AuthHandler) setAuthCookie(c *gin.Context, token string) {
 	c.SetSameSite(http.SameSiteLaxMode)
 	c.SetCookie(
 		"FRAMEBY_ACCESS_TOKEN",
 		token,
-		time.Now().AddDate(0, 1, 0).Second(),
+		int((time.Hour * 24 * 30).Seconds()),
 		"/",
 		"localhost",
 		false,

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { GITHUB_URL, TELEGRAM_URL, TWITTER_URL, FOOTER_SECTIONS } from '@/const';
+import { PROJECT_NAME, GITHUB_URL, TELEGRAM_URL, TWITTER_URL, FOOTER_SECTIONS } from '@/const';
 import FooterList from '@/components/utils/footer/FooterList.vue';
 </script>
 
@@ -28,7 +28,7 @@ import FooterList from '@/components/utils/footer/FooterList.vue';
               class="bg-clip-text text-transparent"
               style="background-image: var(--color-primary-gradient)"
             >
-                FrameBy
+                {{ PROJECT_NAME }}
             </span>
           </NuxtLink>
 

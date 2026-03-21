@@ -4,7 +4,8 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "bun run frontend",
+    "dev": "concurrently \"bun run backend\" \"bun run frontend\"",
+    "backend": "cd backend && go run cmd/api/main.go",
     "frontend": "cd frontend && bun run dev"
   },
   "devDependencies": {
@@ -12,5 +13,8 @@
   },
   "peerDependencies": {
     "typescript": "^5"
+  },
+  "dependencies": {
+    "concurrently": "^9.2.1"
   }
 }

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import Dropdown from "~/components/ui/Dropdown.vue";
 import {
+    PROJECT_NAME,
     REQUIRE_MENU,
     REQUIRE_SECTION_MENU,
     PROFILE_MENU,
@@ -29,7 +30,7 @@ import {
                 <span
                     class="bg-linear-to-r text-4xl from-green-400 to-emerald-600 bg-clip-text text-transparent"
                 >
-                    FrameBY
+                    {{ PROJECT_NAME }}
                 </span>
             </NuxtLink>
 
@@ -83,7 +84,7 @@ import {
 
             <div class="flex items-center gap-2">
                 <NuxtLink
-                    to="/dashboard"
+                    to="/auth/register"
                     class="hidden md:flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium bg-linear-to-r from-green-400 to-emerald-600 text-white transition shadow-lg shadow-green-500/20"
                 >
                     <Icon name="mdi:rocket-launch-outline" class="w-4 h-4" />

@@ -5,9 +5,9 @@ import AboutCard from '~/components/common/AboutCard.vue';
 </script>
 
 <template>
-  <div class="min-h-100 flex flex-col items-center m-10 gap-6">
-    <MainCard/>
-    <MainBlock/>    
-    <AboutCard class="w-300"/>
+  <div class="min-h-screen flex flex-col items-center mx-4 my-10 md:m-10 gap-8">
+    <MainCard class="w-full max-w-7xl"/>
+    <MainBlock class="w-full max-w-7xl"/>    
+    <AboutCard class="w-full max-w-7xl"/>
   </div>
 </template>
