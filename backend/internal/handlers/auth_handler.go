@@ -5,7 +5,9 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/lanxre/frameby/internal/config"
+	"github.com/lanxre/frameby/internal/middleware"
 	"github.com/lanxre/frameby/internal/models/dto"
 	"github.com/lanxre/frameby/internal/services"
 )
@@ -74,25 +76,45 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	})
 }
 
+func (h *AuthHandler) GetMe(c *gin.Context) {
+	userIdAny, err := c.Get(middleware.UserIDKey)
+	if !err {
+        c.JSON(http.StatusUnauthorized, gin.H{"error": "Пользователь не авторизован"})
+        return
+    }
+    
+    userId, ok := userIdAny.(uuid.UUID)
+    if !ok {
+        c.JSON(http.StatusUnauthorized, gin.H{"error": "Неверный формат ID пользователя"})
+        return
+    }
+    
+	userDto, _ := h.authSvc.GetMe(c.Request.Context(), userId)
+	
+	c.JSON(http.StatusOK, gin.H{
+		"message":  "Пользователь получен",
+		"user":     userDto,
+	})
+}
+
 func (h *AuthHandler) Logout(c *gin.Context) {
 	c.SetCookie(
 		"FRAMEBY_ACCESS_TOKEN",
 		"",
-		int((time.Hour * 24 * 30).Seconds()),
+		-1,
 		"/",
-		"localhost",
+		"",
 		false,
-		false,
+		true,
 	)
 
 	c.JSON(http.StatusOK, gin.H{"message": "Выход выполнен"})
-	c.Redirect(http.StatusFound, "/login")
 }
 
 func (h *AuthHandler) CheckAuth(c *gin.Context) {
-	userID, _ := c.Get("userID")
-	role, _ := c.Get("role")
-
+	userID, _ := c.Get(middleware.UserIDKey)
+	role, _ := c.Get(middleware.UserRoleKey)
+	
 	c.JSON(http.StatusOK, gin.H{
 		"authorized": true,
 		"userID":     userID,

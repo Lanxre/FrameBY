@@ -4,8 +4,9 @@ import { onClickOutside } from '@vueuse/core'
 
 interface DropdownItem {
   label: string
-  to: string
+  to?: string
   icon?: string
+  action?: () => Promise<void>
 }
 
 const props = defineProps<{
@@ -42,12 +43,12 @@ onClickOutside(dropdownRef, close)
     >
       <div
         v-if="isOpen"
-        class="absolute left-0 mt-2 w-100 rounded-xl z-50
+        class="absolute left-0 mt-2 w-full rounded-xl z-50
                glass-strong shadow-xl"
       >
         <ul class="py-2">
           <li v-for="item in items" :key="item.label">
-            <NuxtLink
+            <NuxtLink v-if="item.to"
               :to="item.to"
               @click="close"
               class="flex items-center gap-2 px-4 py-2 text-sm"
@@ -61,6 +62,19 @@ onClickOutside(dropdownRef, close)
                   {{ item.label }}
               </span>
             </NuxtLink>
+            <button v-else
+              @click="item.action"
+              class="flex items-center gap-2 px-4 py-2 text-sm cursor-pointer"
+            >
+              <Icon
+                v-if="item.icon"
+                :name="item.icon"
+      ~          class="w-6 h-6 opacity-70 shrink-0"
+              />
+              <span class="hover:text-emerald-600/70">
+                  {{ item.label }}
+              </span>
+            </button>
           </li>
         </ul>
       </div>

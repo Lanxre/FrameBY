@@ -1,6 +1,8 @@
 import type { MenuItem } from '~/types/frontend/header';
 import type { FooterSection } from '~/types/frontend/footer';
 
+const authStore = useAuthStore();
+
 export const PROJECT_NAME = 'FrameBY';
 
 export const GITHUB_URL = 'https://github.com/Lanxre';
@@ -22,8 +24,10 @@ export const REQUIRE_SECTION_MENU: MenuItem[] = [
 
 export const PROFILE_MENU: MenuItem[] = [
   { label: 'Профиль', to: '/profile', icon: 'mdi:account' },
-  { label: 'Настройки', to: '/settings', icon: 'mdi:cog-outline' },
-  { label: 'Выход', to: '/logout', icon: 'mdi:logout' }
+  { label: 'Выход', action: async () => {
+    await authStore.logout();
+    navigateTo('/auth/login');
+  }, icon: 'mdi:logout' }
 ]
 
 export const FOOTER_SECTIONS: FooterSection[] = [

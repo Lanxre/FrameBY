@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 
+	"github.com/google/uuid"
 	"github.com/lanxre/frameby/internal/models/dto"
 	"github.com/lanxre/frameby/internal/repositories"
 	"golang.org/x/crypto/bcrypt"
@@ -30,10 +31,10 @@ func (s *AuthService) Register(ctx context.Context, email, login, password strin
 	return err
 }
 
-func (s *AuthService) Login(ctx context.Context, email, password string) (string, *dto.UserDTO, error) {
+func (s *AuthService) Login(ctx context.Context, email, password string) (string, *dto.LoginUserDTO, error) {
 	user, err := s.repo.GetByEmail(ctx, email)
 	
-	userDto := &dto.UserDTO{
+	userDto := &dto.LoginUserDTO{
 		ID:        user.ID,
 		Email:     user.Email,
 		Login:     user.Login,
@@ -56,4 +57,27 @@ func (s *AuthService) Login(ctx context.Context, email, password string) (string
 	}
 
 	return token, userDto, nil
+}
+
+func (s *AuthService) GetMe(ctx context.Context, userId uuid.UUID) (*dto.UserDto, error) {
+	user, err := s.repo.GetByID(ctx, userId)
+	if err != nil {
+		return nil, err
+	}
+
+	userDto := &dto.UserDto{
+		ID: user.ID,
+		Login: user.Login,
+		Email: user.Email,
+		Role: user.Role,
+		
+		CreatedAt: user.CreatedAt,
+		UpdatedAt: user.UpdatedAt,
+		
+		FullName: &user.FullName,
+		Subrole: &user.Subrole,
+		EnterpriseID: user.EnterpriseID,
+	}
+
+	return userDto, nil 
 }

@@ -6,6 +6,9 @@ import {
     REQUIRE_SECTION_MENU,
     PROFILE_MENU,
 } from "~/const/index";
+
+const authStore = useAuthStore();
+const { isAuthenticated, user } = storeToRefs(authStore);
 </script>
 
 <template>
@@ -82,7 +85,7 @@ import {
                 </NuxtLink>
             </nav>
 
-            <div class="flex items-center gap-2">
+            <div v-if="!isAuthenticated" class="flex items-center gap-2">
                 <NuxtLink
                     to="/auth/register"
                     class="hidden md:flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium bg-linear-to-r from-green-400 to-emerald-600 text-white transition shadow-lg shadow-green-500/20"
@@ -93,6 +96,37 @@ import {
                     >
                 </NuxtLink>
             </div>
+            <div v-else class="flex items-center">
+              <Dropdown :items="PROFILE_MENU">
+                <template #trigger>
+                  <div class="flex items-center gap-2 p-1.5 pr-3
+                              rounded-xl
+                              bg-white/70 backdrop-blur
+                              border border-emerald-100
+                              shadow-sm
+                              hover:bg-emerald-50
+                              cursor-pointer transition">
+            
+                    <div class="w-9 h-9 rounded-full
+                                bg-linear-to-r from-emerald-400 to-green-600
+                                flex items-center justify-center
+                                text-white text-sm font-semibold">
+                      {{ user?.login?.charAt(0).toUpperCase() }}
+                    </div>
+            
+                    <span class="text-sm font-semibold text-gray-700 hidden sm:block">
+                      {{ user?.login }}
+                    </span>
+                    <Icon
+                      name="mdi:chevron-down"
+                      class="w-4 h-4 text-gray-500"
+                    />
+                  </div>
+                </template>
+              </Dropdown>
+            
+            </div>
+            
         </div>
     </header>
 </template>

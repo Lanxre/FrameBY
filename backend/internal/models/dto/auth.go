@@ -19,14 +19,28 @@ type LoginRequest struct {
 
 type LoginResponse struct {
 	Token string `json:"token"`
-	User  UserDTO `json:"user"`
+	User  LoginUserDTO `json:"user"`
 }
 
-type UserDTO struct {
+type LoginUserDTO struct {
 	ID        uuid.UUID  `json:"id"`
 	Email     string 	 `json:"email"`
 	Login     string 	 `json:"login"`
 	Role      string 	 `json:"role"`
 	CreatedAt time.Time  `json:"created_at"`
 	UpdatedAt time.Time  `json:"updated_at"`
+}
+
+type UserDto struct {
+	ID        uuid.UUID  `json:"id"`
+	Email     string 	 `json:"email"`
+	Login     string 	 `json:"login"`
+	Role      string 	 `json:"role"`
+	CreatedAt time.Time  `json:"created_at"`
+	UpdatedAt time.Time  `json:"updated_at"`
+	
+	
+	FullName     *string `json:"full_name"`
+	Subrole      *string `json:"subrole"`    // только для BRSM
+	EnterpriseID *uuid.UUID `json:"enterprise_id"` // только для Customer
 }

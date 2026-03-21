@@ -27,5 +27,6 @@ func (rts *AuthRoutes) Register(cfg *config.Config, r *gin.Engine) {
 		authGroup.POST("/logout", rts.AuthHandler.Logout)
 		
 		authGroup.GET("/check", rts.AuthMid.Authenticate(), rts.AuthHandler.CheckAuth)
+		authGroup.GET("/me", rts.AuthMid.Authenticate(), rts.AuthHandler.GetMe)
 	}
 }
