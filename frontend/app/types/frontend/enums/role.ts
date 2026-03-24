@@ -4,6 +4,7 @@ export enum FramebyAppRole {
   UNIVERSITY = "university",
   CUSTOMER = "customer",
   BRSM = "brsm",
+  ADMIN = "admin",
 }
 
 export const ROLE_WEIGHTS: Record<FramebyAppRole, number> = {
@@ -12,4 +13,5 @@ export const ROLE_WEIGHTS: Record<FramebyAppRole, number> = {
 	[FramebyAppRole.UNIVERSITY]: 3,
 	[FramebyAppRole.CUSTOMER]: 4,
 	[FramebyAppRole.BRSM]: 5,
+	[FramebyAppRole.ADMIN]: 6,
 };

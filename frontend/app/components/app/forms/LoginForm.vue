@@ -113,7 +113,7 @@ const showPassword = ref(false);
 
       <div class="text-center text-sm text-gray-500">
         Нет аккаунта?
-        <NuxtLink to="/register" class="text-emerald-600 hover:underline">
+        <NuxtLink to="/auth/register" class="text-emerald-600 hover:underline">
           Зарегистрироваться
         </NuxtLink>
       </div>

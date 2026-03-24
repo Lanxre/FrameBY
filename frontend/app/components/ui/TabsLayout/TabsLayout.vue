@@ -36,8 +36,10 @@ const activeComponent = computed(() => {
           ? 'bg-emerald-50 text-emerald-600'
           : 'text-gray-600 hover:bg-emerald-50/60'"
       >
-        <Icon v-if="tab.icon" :name="tab.icon" size="18" />
-        <span>{{ tab.label }}</span>
+        <div v-if="tab.hasPermission" class="flex items-center gap-2">
+            <Icon v-if="tab.icon" :name="tab.icon" size="18" />
+            <span>{{ tab.label }}</span>
+        </div>
       </div>
 
     </div>

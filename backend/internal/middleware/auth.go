@@ -35,3 +35,20 @@ func (m *AuthMiddleware) Authenticate() gin.HandlerFunc {
 		c.Next()
 	}
 }
+
+func (m *AuthMiddleware) RequireRole(requiredRole string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		role, exists := c.Get(UserRoleKey)
+		if !exists {
+			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "role not found"})
+			return
+		}
+
+		if role != requiredRole {
+			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "insufficient permissions"})
+			return
+		}
+
+		c.Next()
+	}
+}

@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/google/uuid"
 	"github.com/lanxre/frameby/internal/models/dto"
@@ -62,6 +63,7 @@ func (s *AuthService) Login(ctx context.Context, email, password string) (string
 func (s *AuthService) GetMe(ctx context.Context, userId uuid.UUID) (*dto.UserDto, error) {
 	user, err := s.repo.GetByID(ctx, userId)
 	if err != nil {
+		fmt.Print("failed to get user by id: %w", err)
 		return nil, err
 	}
 
@@ -73,6 +75,7 @@ func (s *AuthService) GetMe(ctx context.Context, userId uuid.UUID) (*dto.UserDto
 		
 		CreatedAt: user.CreatedAt,
 		UpdatedAt: user.UpdatedAt,
+		Avatar:  user.Avatar,
 		
 		FullName: &user.FullName,
 		Subrole: &user.Subrole,

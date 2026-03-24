@@ -18,7 +18,7 @@ const {
 </script>
 
 <template>
-<div class="space-y-6">
+<div class="min-h-120">
 
   <div class="flex items-center gap-2">
     <Icon name="ph:gear" size="22" class="text-emerald-500" />
@@ -37,7 +37,8 @@ const {
       <div class="flex items-center gap-4 cursor-pointer" @click="openFileDialog">
         <div class="w-16 h-16 rounded-full overflow-hidden
                     bg-emerald-100 flex items-center justify-center">
-          <img v-if="avatarPreview" :src="avatarPreview" class="w-full h-full object-cover" />
+                        
+          <img v-if="avatarPreview && avatarPreview.length !== 1" :src="avatarPreview" class="w-full h-full object-cover" />
           <Icon v-else name="ph:user" size="26" class="text-emerald-500" />
         </div>
 
@@ -65,7 +66,7 @@ const {
               class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
     
         <input
-          v-model="form.username"
+          v-model="form.login"
           type="text"
           placeholder="Новый логин"
           class="w-full pl-9 pr-3 py-2 rounded-xl

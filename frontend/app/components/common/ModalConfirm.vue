@@ -74,7 +74,7 @@ const confirm = () => {
                disabled:opacity-50 disabled:cursor-not-allowed"
       >
         <span v-if="loading">Загрузка...</span>
-        <span v-else>{{ confirmText || 'Подтвердить' }}</span>
+        <span v-else class="cursor-pointer">{{ confirmText || 'Подтвердить' }}</span>
       </button>
     </template>
   </ModalWindow>

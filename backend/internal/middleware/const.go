@@ -15,6 +15,7 @@ const (
 	RoleBRSM      	types.RoleName   = "brsm"
 	RoleUniversity  types.RoleName   = "university"
 	RoleCustomer  	types.RoleName   = "customer"
+	RoleAdmin     	types.RoleName   = "admin"
 )
 
 var roleWeights = map[types.RoleName]int{
@@ -23,4 +24,5 @@ var roleWeights = map[types.RoleName]int{
 	RoleUniversity: 3,
 	RoleCustomer:  4,
 	RoleBRSM:      5,
+	RoleAdmin:     6,
 }

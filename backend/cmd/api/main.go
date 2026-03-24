@@ -20,29 +20,43 @@ func main() {
 	fx.New(
 		// fx.WithLogger(func() fxevent.Logger { return fxevent.NopLogger }),
 		fx.WithLogger(func(log *slog.Logger) fxevent.Logger {
-					return &fxevent.SlogLogger{Logger: log}
-			}),
+			return &fxevent.SlogLogger{Logger: log}
+		}),
 
 		fx.Provide(
 			config.Load,
-			logger.New,			
+			logger.New,
 			storage.NewPostgresDB,
 			app.NewValidator,
-			
+
 			repositories.NewUserRepository,
-			
+			repositories.NewProfileRepository,
+			repositories.NewUniversityDepartmentRepository,
+			repositories.NewEnterpriseRepository,
+
 			services.NewTokenService,
 			services.NewAuthService,
 			services.NewUserService,
-			
+			services.NewProfileService,
+			services.NewUniversityDepartmentService,
+			services.NewEnterpriseService,
+
 			handlers.NewHealthHandler,
 			handlers.NewAuthHandler,
+			handlers.NewUserHandler,
+			handlers.NewProfileHandler,
+			handlers.NewUniversityDepartmentHandler,
+			handlers.NewEnterpriseHandler,
 
 			middleware.NewAuthMiddleware,
-			
+
 			app.AsRoute(routes.NewHealthRoutes),
 			app.AsRoute(routes.NewAuthRoutes),
-			
+			app.AsRoute(routes.NewUserRoutes),
+			app.AsRoute(routes.NewProfileRoutes),
+			app.AsRoute(routes.NewUniversityDepartmentRoutes),
+			app.AsRoute(routes.NewEnterpriseRoutes),
+
 			fx.Annotate(
 				app.NewGinRouter,
 				fx.ParamTags(``, `group:"routes"`, ``),

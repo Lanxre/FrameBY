@@ -12,6 +12,7 @@ type UserEntity struct {
 	Login        string
 	PasswordHash string
 	Role         string
+	Avatar       *string
 	CreatedAt    time.Time
 	UpdatedAt    time.Time
 

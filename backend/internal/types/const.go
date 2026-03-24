@@ -8,4 +8,5 @@ const (
 	RoleBRSM      	RoleName   = "brsm"
 	RoleUniversity  RoleName   = "university"
 	RoleCustomer  	RoleName   = "customer"
+	RoleAdmin     	RoleName   = "admin"
 )

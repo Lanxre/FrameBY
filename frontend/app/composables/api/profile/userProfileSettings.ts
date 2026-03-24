@@ -1,16 +1,20 @@
 import { ref, reactive } from 'vue'
+import { $api } from '../useApi'
 
 export function useProfileSettings() {
   const showConfirm = ref(false)
   const isLoading = ref(false)
-
-  const avatarPreview = ref<string | null>(null)
+  
+  const authStore = useAuthStore();
+  const { notify } = useNotificationStore();
+  
+  const avatarPreview = ref<string | null>(formatAvatar(authStore.user!.login, authStore.user?.avatar) || null)
   const avatarFile = ref<File | null>(null)
 
   const fileInputRef = ref<HTMLInputElement | null>(null)
 
   const form = reactive({
-    username: '',
+    login: '',
     password: '',
     passwordConfirm: ''
   })
@@ -44,15 +48,34 @@ export function useProfileSettings() {
     isLoading.value = true
 
     try {
-      console.log({
-        username: form.username,
-        password: form.password,
-        avatar: avatarFile.value
+      const formData = new FormData()
+      formData.append('login', form.login)
+      formData.append('password', form.password)
+      
+      if (avatarFile.value) {
+        formData.append('avatar', avatarFile.value)
+      }
+      
+      await $api<any>("/user", {
+        method: 'PATCH',
+        body: formData
       })
 
       showConfirm.value = false
+      await authStore.fetchUser()
+      notify({
+        type: "success",
+        title: "Успех",
+        content: "Профиль успешно обновлен",
+      })
+      
     } catch (e) {
       errorMessage.value = 'Ошибка при обновлении'
+      notify({
+        type: "error",
+        title: "Ошибка",
+        content: "Ошибка при обновлении профиля",
+      })
     } finally {
       isLoading.value = false
     }

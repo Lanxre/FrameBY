@@ -1,35 +1,72 @@
 <script setup lang="ts">
 import type { UserEntity } from '@/types/backend/user'
 import { formatDate, formatRole } from '@/utils/str'
-import type { FramebyAppRole } from '~/types/frontend/enums/role';
+import { FramebyAppRole } from '~/types/frontend/enums/role';
 
 import Tooltip from '@/components/ui/ToolTip.vue'
 import ModalWindow from '@/components/common/ModalWindow.vue';
 import TabsLayout from '@/components/ui/TabsLayout/TabsLayout.vue';
 import SettingsTabs from '@/components/app/profile-tabs/SettingsTabs.vue';
+import StudentTabs from '@/components/app/profile-tabs/StudentTabs.vue';
+import BRSMTabs from '@/components/app/profile-tabs/BRSMTabs.vue';
+import UniversityTabs from '@/components/app/profile-tabs/UniversityTabs.vue';
+import CustomerTabs from '@/components/app/profile-tabs/CustomerTabs.vue';
+import { useRolePermissions } from '~/composables/api/role/useRolePermissions';
+
+import { formatAvatar } from '@/utils/str';
 
 const props = defineProps<{
   user: UserEntity
 }>()
 
+
 const authStore = useAuthStore();
+const { isExactRole, hasPermission } = useRolePermissions();
 
 const isModalSettingsOpen = ref(false);
 
-const tabs = [
+const tabs = computed(() => [
   {
     label: 'Настройки',
     value: 'settings',
     icon: 'ph:gear',
-    component: SettingsTabs
+    component: SettingsTabs,
+    hasPermission: true
   },
-]
+  {
+    label: 'Для студентов',
+    value: 'student',
+    icon: 'ph:student',
+    component: StudentTabs,
+    hasPermission: isExactRole(FramebyAppRole.USER)
+  },
+  {
+    label: 'Для представителей БРСМ',
+    value: 'brsm',
+    icon: 'ph:users-three',
+    component: BRSMTabs,
+    hasPermission: isExactRole(FramebyAppRole.USER)
+  },
+  {
+    label: 'Для представителей Университетов',
+    value: 'university',
+    icon: 'ph:graduation-cap',
+    component: UniversityTabs,
+    hasPermission: isExactRole(FramebyAppRole.USER)
+  },
+  {
+    label: 'Для представителей Организаций',
+    value: 'organization',
+    icon: 'ph:buildings',
+    component: CustomerTabs,
+    hasPermission: isExactRole(FramebyAppRole.USER)
+  },
+])
 
 const handleLogout = async () => {
   await authStore.logout();
   navigateTo('/auth/login');
 };
-
 
 </script>
 
@@ -48,7 +85,10 @@ const handleLogout = async () => {
                     bg-linear-to-r from-emerald-400 to-green-600
                     flex items-center justify-center
                     text-white text-xl font-semibold">
-          {{ user.login.charAt(0).toUpperCase() }}
+                        
+         
+         <img v-if="user.avatar" :src="formatAvatar(user.login, user.avatar)" alt="Avatar" class="w-full h-full object-cover rounded-full" />
+         <span v-else>{{ user.login.charAt(0).toUpperCase() }}</span>
         </div>
 
         <span class="absolute bottom-0 right-0 w-3 h-3
@@ -68,6 +108,18 @@ const handleLogout = async () => {
       </div>
     </div>
     <div class="flex items-center gap-2">
+        <Tooltip v-if="user.role === FramebyAppRole.ADMIN" text="Панель управления">
+            <NuxtLink
+                to="/dashboard"
+                class="p-2 rounded-xl
+                        bg-white/70
+                        border border-emerald-100
+                        hover:bg-emerald-50
+                        transition flex items-center cursor-pointer"
+            >
+                <Icon name="ph:monitor-play" size="20" class="text-emerald-600" />
+            </NuxtLink>
+        </Tooltip>
         <Tooltip text="Настройки">
             <button
                 @click="isModalSettingsOpen = true"
@@ -154,7 +206,7 @@ const handleLogout = async () => {
     customWidth="150vh"
     @close="isModalSettingsOpen = false"
   >
-    <TabsLayout :tabs="tabs"/>
+    <TabsLayout :tabs="tabs.filter(t => t.hasPermission)"/>
   </ModalWindow>
 </div>
 </template>

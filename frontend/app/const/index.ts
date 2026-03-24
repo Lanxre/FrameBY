@@ -1,9 +1,9 @@
-import type { MenuItem } from '~/types/frontend/header';
-import type { FooterSection } from '~/types/frontend/footer';
+import type { MenuItem } from '@/types/frontend/header';
+import type { FooterSection } from '@/types/frontend/footer';
 
-const authStore = useAuthStore();
 
 export const PROJECT_NAME = 'FrameBY';
+export const BASE_URL = 'http://localhost:8080';
 
 export const GITHUB_URL = 'https://github.com/Lanxre';
 export const TELEGRAM_URL = 'https://t.me/Lanxre';
@@ -20,14 +20,6 @@ export const REQUIRE_SECTION_MENU: MenuItem[] = [
   { label: 'Классификатор "Специальности и квалификации" (ОКРБ 011-2022)', to: '/normative-okrb', icon: 'ph:star' },
   { label: 'Рекомендации ОАЦ при Президенте Республики Беларусь по обеспечению безопасности информации', to: '/normative-oac', icon: 'ph:star' },
   { label: 'Рекомендации по прогнозированию потребности, численности и структуры подготовки специалистов', to: '/normative-prognosis', icon: 'ph:star' },
-]
-
-export const PROFILE_MENU: MenuItem[] = [
-  { label: 'Профиль', to: '/profile', icon: 'mdi:account' },
-  { label: 'Выход', action: async () => {
-    await authStore.logout();
-    navigateTo('/auth/login');
-  }, icon: 'mdi:logout' }
 ]
 
 export const FOOTER_SECTIONS: FooterSection[] = [

@@ -3,4 +3,5 @@ export interface TabItem {
   value: string
   icon?: string
   component: any
+  hasPermission: boolean
 }

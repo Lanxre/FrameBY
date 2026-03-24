@@ -4,11 +4,20 @@ import {
     PROJECT_NAME,
     REQUIRE_MENU,
     REQUIRE_SECTION_MENU,
-    PROFILE_MENU,
-} from "~/const/index";
+} from "@/const/index";
+
+import type { MenuItem } from "@/types/frontend/header";
 
 const authStore = useAuthStore();
 const { isAuthenticated, user } = storeToRefs(authStore);
+
+const PROFILE_MENU: MenuItem[] = [
+  { label: 'Профиль', to: '/profile', icon: 'mdi:account' },
+  { label: 'Выход', action: async () => {
+    await authStore.logout();
+    navigateTo('/auth/login');
+  }, icon: 'mdi:logout' }
+]
 </script>
 
 <template>
@@ -111,7 +120,8 @@ const { isAuthenticated, user } = storeToRefs(authStore);
                                 bg-linear-to-r from-emerald-400 to-green-600
                                 flex items-center justify-center
                                 text-white text-sm font-semibold">
-                      {{ user?.login?.charAt(0).toUpperCase() }}
+                        <img v-if="user!.avatar" :src="formatAvatar(user!.login, user!.avatar)" alt="Avatar" class="w-full h-full object-cover rounded-full" />
+                        <span v-else>{{ user!.login.charAt(0).toUpperCase() }}</span>
                     </div>
             
                     <span class="text-sm font-semibold text-gray-700 hidden sm:block">
