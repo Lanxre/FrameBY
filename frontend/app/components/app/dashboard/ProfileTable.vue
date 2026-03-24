@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { formatDate } from '@/utils/str'
 import { getProfileTypeInfo } from '@/types/dashboard/profile'
-import type { ProfileRow } from '@/types/dashboard/profile'
+import type { ProfileRow, UniversityDepartmentInfo, EnterpriseInfo } from '@/types/dashboard/profile'
+import ToolTip from '@/components/ui/ToolTip.vue';
+import { FramebyAppRole } from '~/types/frontend/enums/role';
 
 const props = defineProps<{
   profiles: ProfileRow[]
@@ -14,17 +16,55 @@ const props = defineProps<{
 const emit = defineEmits<{
   'edit': [profile: ProfileRow]
   'page-change': [page: number]
+  'delete': [profile: ProfileRow]
 }>()
+
+const handleDeleteClick = (profile: ProfileRow) => {
+  emit('delete', profile)
+}
+
+const getProfileField = (profile: ProfileRow['profile'], field: string) => {
+  return (profile as any)?.[field] ?? null
+}
+
+const getUniversity = (profile: ProfileRow['profile']): UniversityDepartmentInfo | null => {
+  return (profile as any)?.university ?? null
+}
+
+const getEnterprise = (profile: ProfileRow['profile']): EnterpriseInfo | null => {
+  return (profile as any)?.enterprise ?? null
+}
+
+const hasSubrole = (profile: ProfileRow['profile']): boolean => {
+  return 'subrole' in profile
+}
+
+const hasStudentFields = (profile: ProfileRow['profile']): boolean => {
+  return 'specialty' in profile || 'grade' in profile
+}
+
+const hasUniversityFields = (profile: ProfileRow['profile']): boolean => {
+  return 'university' in profile
+}
+
+const hasEnterpriseFields = (profile: ProfileRow['profile']): boolean => {
+  return 'enterprise' in profile
+}
+
+const hasPosition = (profile: ProfileRow['profile']): boolean => {
+  return 'position' in profile && profile.position !== null
+}
 
 const columns = [
   { key: 'user', label: 'Пользователь', width: 'w-48' },
   { key: 'type', label: 'Роль', width: 'w-36' },
   { key: 'fullName', label: 'ФИО', width: 'w-44' },
   { key: 'phone', label: 'Телефон', width: 'w-36' },
-  { key: 'profile', label: 'Профиль', width: 'w-52' },
+  { key: 'profile', label: 'Профиль', width: 'w-102' },
   { key: 'subrole', label: 'Суброль', width: 'w-36' },
   { key: 'updated', label: 'Обновлено', width: 'w-36' },
-  { key: 'actions', label: '', width: 'w-16' }
+  { key: 'actions_edit', label: '', width: 'w-16' },
+  { key: 'actions_delete', label: '', width: 'w-16' }
 ]
 
 </script>
@@ -32,9 +72,9 @@ const columns = [
 <template>
   <div class="rounded-2xl bg-white/80 border border-emerald-100 shadow-lg overflow-hidden flex flex-col max-h-[calc(100vh-220px)]">
     <div class="overflow-x-auto overflow-y-auto flex-1 scrollbar-thin scrollbar-thumb-emerald-200 scrollbar-track-transparent">
-      <table class="w-full">
+    <table class="w-full">
         <thead class="sticky top-0 z-10">
-          <tr class="bg-emerald-50/80">
+          <tr class="bg-emerald-50">
             <th 
               v-for="col in columns" 
               :key="col.key"
@@ -91,27 +131,34 @@ const columns = [
               </td>
               
               <td class="px-4 py-3 text-center">
-                <span class="text-sm text-gray-800">{{ row.full_name || '-' }}</span>
+                <span class="text-sm text-gray-800">{{ getProfileField(row.profile, 'full_name') || '-' }}</span>
               </td>
               
               <td class="px-4 py-3 text-center">
-                <span class="text-sm text-gray-700">{{ row.phone || '-' }}</span>
+                <span class="text-sm text-gray-700">{{ getProfileField(row.profile, 'phone') || '-' }}</span>
               </td>
               
               <td class="px-4 py-3">
                 <div class="flex flex-col gap-2 text-xs text-gray-600 space-y-0.5 text-center">
-                  <p v-if="row.faculty">Факультет: {{ row.faculty }}</p>
-                  <p v-if="row.specialty">Специальность: {{ row.specialty }}</p>
-                  <p v-if="row.grade">Оценка: {{ row.grade }}</p>
-                  <p v-if="row.department">Кафедра: {{ row.department }}</p>
-                  <p v-if="row.position">Должность: {{ row.position }}</p>
-                  <p v-if="!row.faculty && !row.specialty && !row.grade && !row.department && !row.position" class="text-gray-400">-</p>
+                  <template v-if="getUniversity(row.profile)">
+                    <p class="font-medium">{{ getUniversity(row.profile)?.university_name }}</p>
+                    <p>{{ getUniversity(row.profile)?.department_name }}</p>
+                    <p v-if="getUniversity(row.profile)?.address" class="text-gray-400">{{ getUniversity(row.profile)?.address }}</p>
+                    <p v-if="getProfileField(row.profile, 'specialty')">Специальность: {{ getProfileField(row.profile, 'specialty') }}</p>
+                    <p v-if="getProfileField(row.profile, 'grade')">Оценка: {{ getProfileField(row.profile, 'grade') }}</p>
+                  </template>
+                  <template v-else-if="getEnterprise(row.profile)">
+                    <p class="font-medium">{{ getEnterprise(row.profile)?.name }}</p>
+                    <p v-if="getEnterprise(row.profile)?.address" class="text-gray-400">{{ getEnterprise(row.profile)?.address }}</p>
+                  </template>
+                  <p v-if="hasPosition(row.profile) && row.role !== FramebyAppRole.STUDENT">Должность: {{ getProfileField(row.profile, 'position') }}</p>
+                  <p v-if="!hasStudentFields(row.profile) && !hasUniversityFields(row.profile) && !hasEnterpriseFields(row.profile) && !hasPosition(row.profile) && !getUniversity(row.profile) && !getEnterprise(row.profile)" class="text-gray-400">-</p>
                 </div>
               </td>
               
               <td class="px-4 py-3 text-center">
-                <span class="text-sm" :class="row.subrole ? 'text-gray-700' : 'text-gray-400'">
-                  {{ row.subrole || 'Не назначена' }}
+                <span class="text-sm" :class="hasSubrole(row.profile) && getProfileField(row.profile, 'subrole') ? 'text-gray-700' : 'text-gray-400'">
+                  {{ hasSubrole(row.profile) ? (getProfileField(row.profile, 'subrole') || 'Не назначена') : '-' }}
                 </span>
               </td>
               
@@ -121,14 +168,33 @@ const columns = [
               
               <td class="px-4 py-3">
                 <div class="flex items-center justify-center">
-                  <button
-                    @click="emit('edit', row)"
-                    class="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-emerald-100 transition cursor-pointer"
-                    title="Редактировать"
-                  >
-                    <Icon name="ph:pencil-simple" size="18" class="text-emerald-500" />
-                  </button>
-                </div>
+                    <ToolTip 
+                    text="Редактировать профиль"
+                    position="left"
+                    >
+                      <button
+                        @click="emit('edit', row)"
+                        class="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-emerald-100 transition cursor-pointer"
+                      >
+                        <Icon name="ph:pencil-simple" size="18" class="text-emerald-500" />
+                      </button>
+                    </ToolTip>
+                  </div>
+              </td>
+              <td class="px-4 py-3">
+                <div class="flex items-center justify-center">
+                    <ToolTip 
+                    text="Удалить профиль"
+                    position="left"
+                    >
+                      <button
+                        @click="handleDeleteClick(row)"
+                        class="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-red-50 transition cursor-pointer"
+                      >
+                        <Icon name="ph:trash" size="18" class="text-red-400 hover:text-red-500" />
+                      </button>
+                    </ToolTip>
+                  </div>
               </td>
             </tr>
           </template>

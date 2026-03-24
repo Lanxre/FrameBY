@@ -58,3 +58,15 @@ func (r *EnterpriseRepository) GetByID(ctx context.Context, id uuid.UUID) (*db.E
 
 	return &e, nil
 }
+
+func (r *EnterpriseRepository) Create(ctx context.Context, name string, address *string) (*db.EnterpriseEntity, error) {
+	var e db.EnterpriseEntity
+	err := r.db.QueryRow(ctx, `
+		INSERT INTO enterprises (name, address) VALUES ($1, $2)
+		RETURNING id, name, address, created_at
+	`, name, address).Scan(&e.ID, &e.Name, &e.Address, &e.CreatedAt)
+	if err != nil {
+		return nil, err
+	}
+	return &e, nil
+}

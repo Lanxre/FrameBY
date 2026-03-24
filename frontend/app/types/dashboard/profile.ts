@@ -1,18 +1,61 @@
+export interface BrsmProfileData {
+  full_name: string;
+  subrole: string | null;
+  position: string | null;
+  phone: string | null;
+}
+
+export interface UniversityDepartmentInfo {
+  id: string;
+  university_name: string;
+  department_name: string;
+  address: string | null;
+}
+
+export interface StudentProfileData {
+  full_name: string;
+  faculty: string | null;
+  specialty: string | null;
+  grade: number | null;
+  position: string | null;
+  phone: string | null;
+  university?: UniversityDepartmentInfo;
+}
+
+export interface UniversityProfileData {
+  full_name: string;
+  subrole: string | null;
+  faculty: string | null;
+  department: string | null;
+  position: string | null;
+  phone: string | null;
+  university?: UniversityDepartmentInfo;
+}
+
+export interface EnterpriseInfo {
+  id: string;
+  name: string;
+  address: string | null;
+}
+
+export interface CustomerProfileData {
+  full_name: string;
+  enterprise?: EnterpriseInfo;
+  position: string | null;
+  phone: string | null;
+}
+
+export interface UserProfileData {
+  full_name: string;
+}
+
 export interface ProfileRow {
   user_id: string;
   email: string;
   login: string;
   role: string;
   avatar: string | null;
-  full_name: string;
-  subrole: string | null;
-  position: string | null;
-  phone: string | null;
-  faculty: string | null;
-  specialty: string | null;
-  grade: number | null;
-  department: string | null;
-  enterprise_id: string | null;
+  profile: BrsmProfileData | StudentProfileData | UniversityProfileData | CustomerProfileData | UserProfileData;
   updated_at: string;
 }
 

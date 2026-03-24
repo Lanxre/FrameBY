@@ -22,12 +22,19 @@ type UpdateProfileData struct {
 }
 
 type ProfileService struct {
-	repo     *repositories.ProfileRepository
-	userRepo *repositories.UserRepository
+	repo               *repositories.ProfileRepository
+	userRepo           *repositories.UserRepository
+	universityDeptRepo *repositories.UniversityDepartmentRepository
+	enterpriseRepo     *repositories.EnterpriseRepository
 }
 
-func NewProfileService(repo *repositories.ProfileRepository, userRepo *repositories.UserRepository) *ProfileService {
-	return &ProfileService{repo: repo, userRepo: userRepo}
+func NewProfileService(repo *repositories.ProfileRepository, userRepo *repositories.UserRepository, universityDeptRepo *repositories.UniversityDepartmentRepository, enterpriseRepo *repositories.EnterpriseRepository) *ProfileService {
+	return &ProfileService{
+		repo:               repo,
+		userRepo:           userRepo,
+		universityDeptRepo: universityDeptRepo,
+		enterpriseRepo:     enterpriseRepo,
+	}
 }
 
 func (s *ProfileService) GetBrsmProfile(ctx context.Context, userID uuid.UUID) (*db.BrsmProfileEntity, error) {
@@ -51,11 +58,11 @@ func (s *ProfileService) GetStudentProfile(ctx context.Context, userID uuid.UUID
 }
 
 func (s *ProfileService) CreateStudentProfile(ctx context.Context, userID uuid.UUID, req *dto.StudentProfileRequest) error {
-	return s.repo.CreateStudentProfile(ctx, userID, req.FullName, req.Faculty, req.Specialty, req.Grade, req.Position, req.Phone)
+	return s.repo.CreateStudentProfile(ctx, userID, req.FullName, req.Specialty, req.Grade, req.Position, req.Phone, req.UniversityDepartmentID)
 }
 
 func (s *ProfileService) UpdateStudentProfile(ctx context.Context, userID uuid.UUID, req *dto.StudentProfileRequest) error {
-	return s.repo.UpdateStudentProfile(ctx, userID, req.FullName, req.Faculty, req.Specialty, req.Grade, req.Position, req.Phone)
+	return s.repo.UpdateStudentProfile(ctx, userID, req.FullName, req.Specialty, req.Grade, req.Position, req.Phone, req.UniversityDepartmentID)
 }
 
 func (s *ProfileService) DeleteStudentProfile(ctx context.Context, userID uuid.UUID) error {
@@ -67,11 +74,11 @@ func (s *ProfileService) GetUniversityProfile(ctx context.Context, userID uuid.U
 }
 
 func (s *ProfileService) CreateUniversityProfile(ctx context.Context, userID uuid.UUID, req *dto.UniversityProfileRequest) error {
-	return s.repo.CreateUniversityProfile(ctx, userID, req.FullName, req.Subrole, req.Faculty, req.Department, req.Position, req.Phone)
+	return s.repo.CreateUniversityProfile(ctx, userID, req.FullName, req.Subrole, req.Position, req.Phone, req.UniversityDepartmentID)
 }
 
 func (s *ProfileService) UpdateUniversityProfile(ctx context.Context, userID uuid.UUID, req *dto.UniversityProfileRequest) error {
-	return s.repo.UpdateUniversityProfile(ctx, userID, req.FullName, req.Subrole, req.Faculty, req.Department, req.Position, req.Phone)
+	return s.repo.UpdateUniversityProfile(ctx, userID, req.FullName, req.Subrole, req.Position, req.Phone, req.UniversityDepartmentID)
 }
 
 func (s *ProfileService) DeleteUniversityProfile(ctx context.Context, userID uuid.UUID) error {
@@ -92,6 +99,10 @@ func (s *ProfileService) UpdateCustomerProfile(ctx context.Context, userID uuid.
 
 func (s *ProfileService) DeleteCustomerProfile(ctx context.Context, userID uuid.UUID) error {
 	return s.repo.DeleteCustomerProfile(ctx, userID)
+}
+
+func (s *ProfileService) DeleteProfile(ctx context.Context, userID uuid.UUID) error {
+	return s.repo.DeleteAllProfiles(ctx, userID)
 }
 
 func (s *ProfileService) UpdateProfileByRole(ctx context.Context, userID uuid.UUID, role string, req interface{}) error {
@@ -134,24 +145,85 @@ func (s *ProfileService) GetAllProfiles(ctx context.Context, profileType, search
 	profilesResponse := make([]dto.ProfileResponse, len(profiles))
 	for i, p := range profiles {
 		profilesResponse[i] = dto.ProfileResponse{
-			UserID:     p.UserID.String(),
-			Email:      p.Email,
-			Login:      p.Login,
-			Role:       p.Role,
-			Avatar:     p.Avatar,
-			FullName:   p.FullName,
-			Subrole:    p.Subrole,
-			Position:   p.Position,
-			Phone:      p.Phone,
-			Faculty:    p.Faculty,
-			Specialty:  p.Specialty,
-			Grade:      p.Grade,
-			Department: p.Department,
-			UpdatedAt:  p.UpdatedAt,
+			UserID:    p.UserID.String(),
+			Email:     p.Email,
+			Login:     p.Login,
+			Role:      p.Role,
+			Avatar:    p.Avatar,
+			UpdatedAt: p.UpdatedAt,
 		}
-		if p.EnterpriseID != nil {
-			eid := p.EnterpriseID.String()
-			profilesResponse[i].EnterpriseID = &eid
+
+		switch p.Role {
+		case string(types.RoleBRSM):
+			profilesResponse[i].Profile = dto.BrsmProfileData{
+				FullName: p.FullName,
+				Subrole:  p.Subrole,
+				Position: p.Position,
+				Phone:    p.Phone,
+			}
+		case string(types.RoleStudent):
+			var universityInfo *dto.UniversityDepartmentInfo
+			if p.StudentUniversityDeptID != nil {
+				dept, _ := s.universityDeptRepo.GetByID(ctx, *p.StudentUniversityDeptID)
+				if dept != nil && dept.University != nil && dept.Department != nil {
+					universityInfo = &dto.UniversityDepartmentInfo{
+						ID:             dept.ID.String(),
+						UniversityName: dept.University.Name,
+						DepartmentName: dept.Department.Name,
+						Address:        dept.Address,
+					}
+				}
+			}
+			profilesResponse[i].Profile = dto.StudentProfileData{
+				FullName:   p.FullName,
+				Specialty:  p.Specialty,
+				Grade:      p.Grade,
+				Position:   p.Position,
+				Phone:      p.Phone,
+				University: universityInfo,
+			}
+		case string(types.RoleUniversity):
+			var universityInfo *dto.UniversityDepartmentInfo
+			if p.UniversityUniversityDeptID != nil {
+				dept, _ := s.universityDeptRepo.GetByID(ctx, *p.UniversityUniversityDeptID)
+				if dept != nil && dept.University != nil && dept.Department != nil {
+					universityInfo = &dto.UniversityDepartmentInfo{
+						ID:             dept.ID.String(),
+						UniversityName: dept.University.Name,
+						DepartmentName: dept.Department.Name,
+						Address:        dept.Address,
+					}
+				}
+			}
+			profilesResponse[i].Profile = dto.UniversityProfileData{
+				FullName:   p.FullName,
+				Subrole:    p.Subrole,
+				Position:   p.Position,
+				Phone:      p.Phone,
+				University: universityInfo,
+			}
+		case string(types.RoleCustomer):
+			var enterpriseInfo *dto.EnterpriseInfo
+			if p.EnterpriseID != nil {
+				enterprise, _ := s.enterpriseRepo.GetByID(ctx, *p.EnterpriseID)
+				if enterprise != nil {
+					enterpriseInfo = &dto.EnterpriseInfo{
+						ID:      enterprise.ID.String(),
+						Name:    enterprise.Name,
+						Address: enterprise.Address,
+					}
+				}
+			}
+			profilesResponse[i].Profile = dto.CustomerProfileData{
+				FullName:   p.FullName,
+				Enterprise: enterpriseInfo,
+				Position:   p.Position,
+				Phone:      p.Phone,
+			}
+		default:
+			profilesResponse[i].Profile = dto.UserProfileData{
+				FullName: p.FullName,
+			}
 		}
 	}
 
@@ -182,7 +254,7 @@ func (s *ProfileService) UpdateSubrole(ctx context.Context, userID uuid.UUID, ro
 		if profile == nil {
 			return errors.New("profile not found")
 		}
-		return s.repo.UpdateUniversityProfile(ctx, userID, profile.FullName, subrole, ptrToStr(profile.Faculty), ptrToStr(profile.Department), profile.Position, profile.Phone)
+		return s.repo.UpdateUniversityProfile(ctx, userID, profile.FullName, subrole, profile.Position, profile.Phone, profile.UniversityDepartmentID)
 	default:
 		return errors.New("subrole not applicable for this role")
 	}
@@ -212,32 +284,46 @@ func (s *ProfileService) UpdateProfile(ctx context.Context, userID uuid.UUID, re
 	case string(types.RoleBRSM):
 		profile, _ := s.repo.GetBrsmProfile(ctx, userID)
 		fullName := ptrToStr(req.FullName)
+		position := req.Position
+		phone := req.Phone
 		if profile != nil {
 			if req.FullName != nil && *req.FullName != "" {
 				fullName = *req.FullName
 			} else {
 				fullName = profile.FullName
 			}
-			position := req.Position
-			phone := profile.Phone
+			if req.Position == nil {
+				position = profile.Position
+			}
+			if req.Phone == nil {
+				phone = profile.Phone
+			}
 			return s.repo.UpdateBrsmProfile(ctx, userID, fullName, ptrToStr(req.Subrole), position, phone)
 		}
-		return s.repo.CreateBrsmProfile(ctx, userID, fullName, ptrToStr(req.Subrole), req.Position, nil)
+		if fullName == "" {
+			return errors.New("full_name обязательно для заполнения")
+		}
+		return s.repo.CreateBrsmProfile(ctx, userID, fullName, ptrToStr(req.Subrole), position, phone)
 
 	case string(types.RoleStudent):
 		profile, _ := s.repo.GetStudentProfile(ctx, userID)
 		fullName := ptrToStr(req.FullName)
-		faculty := req.Faculty
 		specialty := req.Specialty
 		grade := req.Grade
+		position := req.Position
+		phone := req.Phone
+		var univDeptID *uuid.UUID
+		if req.UniversityDepartmentID != nil {
+			id, err := uuid.Parse(*req.UniversityDepartmentID)
+			if err == nil {
+				univDeptID = &id
+			}
+		}
 		if profile != nil {
 			if req.FullName != nil && *req.FullName != "" {
 				fullName = *req.FullName
 			} else {
 				fullName = profile.FullName
-			}
-			if faculty == nil {
-				faculty = profile.Faculty
 			}
 			if specialty == nil {
 				specialty = profile.Specialty
@@ -245,49 +331,79 @@ func (s *ProfileService) UpdateProfile(ctx context.Context, userID uuid.UUID, re
 			if grade == nil {
 				grade = profile.Grade
 			}
-			position := req.Position
-			phone := profile.Phone
-			return s.repo.UpdateStudentProfile(ctx, userID, fullName, ptrToStr(faculty), ptrToStr(specialty), grade, position, phone)
+			if req.Position == nil {
+				position = profile.Position
+			}
+			if req.Phone == nil {
+				phone = profile.Phone
+			}
+			if univDeptID == nil {
+				univDeptID = profile.UniversityDepartmentID
+			}
+			return s.repo.UpdateStudentProfile(ctx, userID, fullName, specialty, grade, position, phone, univDeptID)
 		}
-		return s.repo.CreateStudentProfile(ctx, userID, fullName, ptrToStr(faculty), ptrToStr(specialty), grade, req.Position, nil)
+		if fullName == "" {
+			return errors.New("full_name обязательно для заполнения")
+		}
+		return s.repo.CreateStudentProfile(ctx, userID, fullName, specialty, grade, position, phone, univDeptID)
 
 	case string(types.RoleUniversity):
 		profile, _ := s.repo.GetUniversityProfile(ctx, userID)
 		fullName := ptrToStr(req.FullName)
-		faculty := req.Faculty
-		department := req.Department
+		position := req.Position
+		phone := req.Phone
+		var univDeptID *uuid.UUID
+		if req.UniversityDepartmentID != nil {
+			id, err := uuid.Parse(*req.UniversityDepartmentID)
+			if err == nil {
+				univDeptID = &id
+			}
+		}
 		if profile != nil {
 			if req.FullName != nil && *req.FullName != "" {
 				fullName = *req.FullName
 			} else {
 				fullName = profile.FullName
 			}
-			if faculty == nil {
-				faculty = profile.Faculty
+			if req.Position == nil {
+				position = profile.Position
 			}
-			if department == nil {
-				department = profile.Department
+			if req.Phone == nil {
+				phone = profile.Phone
 			}
-			position := req.Position
-			phone := profile.Phone
-			return s.repo.UpdateUniversityProfile(ctx, userID, fullName, ptrToStr(req.Subrole), ptrToStr(faculty), ptrToStr(department), position, phone)
+			if univDeptID == nil {
+				univDeptID = profile.UniversityDepartmentID
+			}
+			return s.repo.UpdateUniversityProfile(ctx, userID, fullName, ptrToStr(req.Subrole), position, phone, univDeptID)
 		}
-		return s.repo.CreateUniversityProfile(ctx, userID, fullName, ptrToStr(req.Subrole), ptrToStr(faculty), ptrToStr(department), req.Position, nil)
+		if fullName == "" {
+			return errors.New("full_name обязательно для заполнения")
+		}
+		return s.repo.CreateUniversityProfile(ctx, userID, fullName, ptrToStr(req.Subrole), position, phone, univDeptID)
 
 	case string(types.RoleCustomer):
 		profile, _ := s.repo.GetCustomerProfile(ctx, userID)
 		fullName := ptrToStr(req.FullName)
+		position := req.Position
+		phone := req.Phone
 		if profile != nil {
 			if req.FullName != nil && *req.FullName != "" {
 				fullName = *req.FullName
 			} else {
 				fullName = profile.FullName
 			}
-			position := req.Position
-			phone := profile.Phone
+			if req.Position == nil {
+				position = profile.Position
+			}
+			if req.Phone == nil {
+				phone = profile.Phone
+			}
 			return s.repo.UpdateCustomerProfile(ctx, userID, fullName, profile.EnterpriseID, position, phone)
 		}
-		return s.repo.CreateCustomerProfile(ctx, userID, fullName, nil, req.Position, nil)
+		if fullName == "" {
+			return errors.New("full_name обязательно для заполнения")
+		}
+		return s.repo.CreateCustomerProfile(ctx, userID, fullName, nil, position, phone)
 	}
 
 	return nil

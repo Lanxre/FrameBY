@@ -83,18 +83,22 @@ func (r *ProfileRepository) DeleteBrsmProfile(ctx context.Context, userID uuid.U
 func (r *ProfileRepository) GetStudentProfile(ctx context.Context, userID uuid.UUID) (*db.StudentProfileEntity, error) {
 	p := &db.StudentProfileEntity{}
 	query := `
-		SELECT user_id, full_name, position, phone, faculty, specialty, grade, updated_at
+		SELECT user_id, full_name, position, phone, specialty, grade, university_department_id, updated_at
 		FROM student_profiles
 		WHERE user_id = $1`
+
+	var specialty sql.NullString
+	var grade sql.Null[float64]
+	var univDeptID sql.Null[uuid.UUID]
 
 	err := r.db.QueryRow(ctx, query, userID).Scan(
 		&p.UserID,
 		&p.FullName,
 		&p.Position,
 		&p.Phone,
-		&p.Faculty,
-		&p.Specialty,
-		&p.Grade,
+		&specialty,
+		&grade,
+		&univDeptID,
 		&p.UpdatedAt,
 	)
 	if err != nil {
@@ -103,32 +107,41 @@ func (r *ProfileRepository) GetStudentProfile(ctx context.Context, userID uuid.U
 		}
 		return nil, err
 	}
+	if specialty.Valid {
+		p.Specialty = &specialty.String
+	}
+	if grade.Valid {
+		p.Grade = &grade.V
+	}
+	if univDeptID.Valid {
+		p.UniversityDepartmentID = &univDeptID.V
+	}
 	return p, nil
 }
 
-func (r *ProfileRepository) CreateStudentProfile(ctx context.Context, userID uuid.UUID, fullName, faculty, specialty string, grade *float64, position, phone *string) error {
+func (r *ProfileRepository) CreateStudentProfile(ctx context.Context, userID uuid.UUID, fullName string, specialty *string, grade *float64, position, phone *string, universityDeptID *uuid.UUID) error {
 	query := `
-		INSERT INTO student_profiles (user_id, full_name, faculty, specialty, grade, position, phone)
+		INSERT INTO student_profiles (user_id, full_name, specialty, grade, position, phone, university_department_id)
 		VALUES ($1, $2, $3, $4, $5, $6, $7)
 		ON CONFLICT (user_id) DO UPDATE SET
 			full_name = EXCLUDED.full_name,
-			faculty = EXCLUDED.faculty,
 			specialty = EXCLUDED.specialty,
 			grade = EXCLUDED.grade,
 			position = EXCLUDED.position,
-			phone = EXCLUDED.phone`
+			phone = EXCLUDED.phone,
+			university_department_id = EXCLUDED.university_department_id`
 
-	_, err := r.db.Exec(ctx, query, userID, fullName, faculty, specialty, grade, position, phone)
+	_, err := r.db.Exec(ctx, query, userID, fullName, specialty, grade, position, phone, universityDeptID)
 	return err
 }
 
-func (r *ProfileRepository) UpdateStudentProfile(ctx context.Context, userID uuid.UUID, fullName, faculty, specialty string, grade *float64, position, phone *string) error {
+func (r *ProfileRepository) UpdateStudentProfile(ctx context.Context, userID uuid.UUID, fullName string, specialty *string, grade *float64, position, phone *string, universityDeptID *uuid.UUID) error {
 	query := `
 		UPDATE student_profiles
-		SET full_name = $2, faculty = $3, specialty = $4, grade = $5, position = $6, phone = $7
+		SET full_name = $2, specialty = $3, grade = $4, position = $5, phone = $6, university_department_id = $7
 		WHERE user_id = $1`
 
-	result, err := r.db.Exec(ctx, query, userID, fullName, faculty, specialty, grade, position, phone)
+	result, err := r.db.Exec(ctx, query, userID, fullName, specialty, grade, position, phone, universityDeptID)
 	if err != nil {
 		return err
 	}
@@ -147,19 +160,19 @@ func (r *ProfileRepository) DeleteStudentProfile(ctx context.Context, userID uui
 func (r *ProfileRepository) GetUniversityProfile(ctx context.Context, userID uuid.UUID) (*db.UniversityProfileEntity, error) {
 	p := &db.UniversityProfileEntity{}
 	query := `
-		SELECT user_id, full_name, subrole, faculty, department, position, phone, updated_at
+		SELECT user_id, full_name, subrole, position, phone, university_department_id, updated_at
 		FROM university_profiles
 		WHERE user_id = $1`
 
-	var faculty sql.NullString
+	var univDeptID sql.Null[uuid.UUID]
+
 	err := r.db.QueryRow(ctx, query, userID).Scan(
 		&p.UserID,
 		&p.FullName,
 		&p.Subrole,
-		&faculty,
-		&p.Department,
 		&p.Position,
 		&p.Phone,
+		&univDeptID,
 		&p.UpdatedAt,
 	)
 	if err != nil {
@@ -168,35 +181,34 @@ func (r *ProfileRepository) GetUniversityProfile(ctx context.Context, userID uui
 		}
 		return nil, err
 	}
-	if faculty.Valid {
-		p.Faculty = &faculty.String
+	if univDeptID.Valid {
+		p.UniversityDepartmentID = &univDeptID.V
 	}
 	return p, nil
 }
 
-func (r *ProfileRepository) CreateUniversityProfile(ctx context.Context, userID uuid.UUID, fullName, subrole, faculty, department string, position, phone *string) error {
+func (r *ProfileRepository) CreateUniversityProfile(ctx context.Context, userID uuid.UUID, fullName, subrole string, position, phone *string, universityDeptID *uuid.UUID) error {
 	query := `
-		INSERT INTO university_profiles (user_id, full_name, subrole, faculty, department, position, phone)
-		VALUES ($1, $2, $3, $4, $5, $6, $7)
+		INSERT INTO university_profiles (user_id, full_name, subrole, position, phone, university_department_id)
+		VALUES ($1, $2, $3, $4, $5, $6)
 		ON CONFLICT (user_id) DO UPDATE SET
 			full_name = EXCLUDED.full_name,
 			subrole = EXCLUDED.subrole,
-			faculty = EXCLUDED.faculty,
-			department = EXCLUDED.department,
 			position = EXCLUDED.position,
-			phone = EXCLUDED.phone`
+			phone = EXCLUDED.phone,
+			university_department_id = EXCLUDED.university_department_id`
 
-	_, err := r.db.Exec(ctx, query, userID, fullName, subrole, faculty, department, position, phone)
+	_, err := r.db.Exec(ctx, query, userID, fullName, subrole, position, phone, universityDeptID)
 	return err
 }
 
-func (r *ProfileRepository) UpdateUniversityProfile(ctx context.Context, userID uuid.UUID, fullName, subrole, faculty, department string, position, phone *string) error {
+func (r *ProfileRepository) UpdateUniversityProfile(ctx context.Context, userID uuid.UUID, fullName, subrole string, position, phone *string, universityDeptID *uuid.UUID) error {
 	query := `
 		UPDATE university_profiles
-		SET full_name = $2, subrole = $3, faculty = $4, department = $5, position = $6, phone = $7
+		SET full_name = $2, subrole = $3, position = $4, phone = $5, university_department_id = $6
 		WHERE user_id = $1`
 
-	result, err := r.db.Exec(ctx, query, userID, fullName, subrole, faculty, department, position, phone)
+	result, err := r.db.Exec(ctx, query, userID, fullName, subrole, position, phone, universityDeptID)
 	if err != nil {
 		return err
 	}
@@ -291,11 +303,11 @@ func (r *ProfileRepository) GetAllProfiles(ctx context.Context, profileType, sea
 			COALESCE(bp.subrole, up.subrole, cp.subrole, NULL) as subrole,
 			COALESCE(bp.position, sp.position, up.position, cp.position, NULL) as position,
 			COALESCE(bp.phone, sp.phone, up.phone, cp.phone, NULL) as phone,
-			COALESCE(sp.faculty, up.faculty, NULL) as faculty,
 			sp.specialty,
 			sp.grade,
-			up.department,
 			cp.enterprise_id,
+			sp.university_department_id,
+			up.university_department_id,
 			COALESCE(
 				TO_CHAR(bp.updated_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"'),
 				TO_CHAR(sp.updated_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"'),
@@ -368,7 +380,7 @@ func (r *ProfileRepository) GetAllProfiles(ctx context.Context, profileType, sea
 
 	for rows.Next() {
 		var row db.AllProfilesResult
-		var faculty, department, enterpriseID sql.NullString
+		var enterpriseID, studentUnivDeptID, universityUnivDeptID sql.Null[uuid.UUID]
 		var specialty sql.NullString
 		var grade sql.Null[float64]
 
@@ -382,36 +394,61 @@ func (r *ProfileRepository) GetAllProfiles(ctx context.Context, profileType, sea
 			&row.Subrole,
 			&row.Position,
 			&row.Phone,
-			&faculty,
 			&specialty,
 			&grade,
-			&department,
 			&enterpriseID,
+			&studentUnivDeptID,
+			&universityUnivDeptID,
 			&row.UpdatedAt,
 		)
 		if err != nil {
 			return nil, 0, err
 		}
 
-		if faculty.Valid {
-			row.Faculty = &faculty.String
-		}
 		if specialty.Valid {
 			row.Specialty = &specialty.String
 		}
 		if grade.Valid {
 			row.Grade = &grade.V
 		}
-		if department.Valid {
-			row.Department = &department.String
-		}
 		if enterpriseID.Valid {
-			eid, _ := uuid.Parse(enterpriseID.String)
-			row.EnterpriseID = &eid
+			row.EnterpriseID = &enterpriseID.V
+		}
+		if studentUnivDeptID.Valid {
+			row.StudentUniversityDeptID = &studentUnivDeptID.V
+		}
+		if universityUnivDeptID.Valid {
+			row.UniversityUniversityDeptID = &universityUnivDeptID.V
 		}
 
 		results = append(results, row)
 	}
 
 	return results, total, nil
+}
+
+func (r *ProfileRepository) DeleteAllProfiles(ctx context.Context, userID uuid.UUID) error {
+	tx, err := r.db.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+
+	if _, err := tx.Exec(ctx, `DELETE FROM brsm_profiles WHERE user_id = $1`, userID); err != nil {
+		return err
+	}
+	if _, err := tx.Exec(ctx, `DELETE FROM student_profiles WHERE user_id = $1`, userID); err != nil {
+		return err
+	}
+	if _, err := tx.Exec(ctx, `DELETE FROM university_profiles WHERE user_id = $1`, userID); err != nil {
+		return err
+	}
+	if _, err := tx.Exec(ctx, `DELETE FROM customer_profiles WHERE user_id = $1`, userID); err != nil {
+		return err
+	}
+	if _, err := tx.Exec(ctx, `UPDATE users SET role = $1 WHERE id = $2`, "user", userID); err != nil {
+		return err
+	}
+
+	return tx.Commit(ctx)
 }

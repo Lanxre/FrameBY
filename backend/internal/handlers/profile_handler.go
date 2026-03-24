@@ -373,7 +373,7 @@ func (h *ProfileHandler) GetAllProfiles(c *gin.Context) {
 }
 
 func (h *ProfileHandler) UpdateSubrole(c *gin.Context) {
-	userIDStr := c.Param("userId")
+	userIDStr := c.Param(string(middleware.UserIDKey))
 	userID, err := uuid.Parse(userIDStr)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверный формат ID пользователя"})
@@ -393,4 +393,21 @@ func (h *ProfileHandler) UpdateSubrole(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Профиль успешно обновлён"})
+}
+
+func (h *ProfileHandler) DeleteProfile(c *gin.Context) {
+	userIDStr := c.Param(string(middleware.UserIDKey))
+	userID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверный формат ID пользователя"})
+		return
+	}
+
+	err = h.profileService.DeleteProfile(c.Request.Context(), userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка удаления профиля: " + err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Профиль успешно удалён"})
 }

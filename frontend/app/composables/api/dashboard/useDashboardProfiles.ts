@@ -66,12 +66,31 @@ export function useDashboardProfiles() {
     }
   }
 
+  const deleteProfile = async (userId: string) => {
+    try {
+      const defaults = {
+        baseURL: '/api',
+        headers: useRequestHeaders(['cookie']),
+      }
+
+      await $fetch(`/api/admin/profiles/${userId}`, {
+        ...defaults,
+        method: 'DELETE'
+      })
+      return true
+    } catch (e: any) {
+      errorMessage.value = e.data?.error || e.message || 'Ошибка удаления профиля'
+      return false
+    }
+  }
+
   return {
     profiles,
     total,
     isLoading,
     errorMessage,
     fetchProfiles,
-    updateSubrole
+    updateSubrole,
+    deleteProfile
   }
 }

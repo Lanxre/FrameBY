@@ -25,4 +25,11 @@ func (rts *UniversityDepartmentRoutes) Register(cfg *config.Config, r *gin.Engin
 	{
 		apiGroup.GET("/university-departments", rts.Handler.GetAll)
 	}
+
+	adminGroup := r.Group("/api")
+	adminGroup.Use(rts.AuthMid.Authenticate())
+	adminGroup.Use(rts.AuthMid.RequireRole("admin"))
+	{
+		adminGroup.POST("/university-departments", rts.Handler.Create)
+	}
 }

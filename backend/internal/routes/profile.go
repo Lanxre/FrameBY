@@ -59,7 +59,8 @@ func (rts *ProfileRoutes) Register(cfg *config.Config, r *gin.Engine) {
 		admin.Use(rts.AuthMid.RequireRole("admin"))
 		{
 			admin.GET("", rts.ProfileHandler.GetAllProfiles)
-			admin.PATCH("/:userId/subrole", rts.ProfileHandler.UpdateSubrole)
+			admin.PATCH("/:userID/subrole", rts.ProfileHandler.UpdateSubrole)
+			admin.DELETE("/:userID", rts.ProfileHandler.DeleteProfile)
 		}
 	}
 }

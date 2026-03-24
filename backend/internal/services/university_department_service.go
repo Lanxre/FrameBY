@@ -39,8 +39,21 @@ func (s *UniversityDepartmentService) GetByID(ctx context.Context, id uuid.UUID)
 	if err != nil {
 		return nil, err
 	}
-	if department == nil {
+	if department == nil || department.University == nil || department.Department == nil {
 		return nil, nil
+	}
+	return &dto.UniversityDepartmentResponse{
+		ID:             department.ID.String(),
+		UniversityName: department.University.Name,
+		DepartmentName: department.Department.Name,
+		Address:        department.Address,
+	}, nil
+}
+
+func (s *UniversityDepartmentService) Create(ctx context.Context, universityName, departmentName string, address *string) (*dto.UniversityDepartmentResponse, error) {
+	department, err := s.repo.Create(ctx, universityName, departmentName, address)
+	if err != nil {
+		return nil, err
 	}
 	return &dto.UniversityDepartmentResponse{
 		ID:             department.ID.String(),
