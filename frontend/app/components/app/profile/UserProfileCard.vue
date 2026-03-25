@@ -108,7 +108,7 @@ const handleLogout = async () => {
       </div>
     </div>
     <div class="flex items-center gap-2">
-        <Tooltip v-if="user.role === FramebyAppRole.ADMIN" text="Панель управления">
+        <Tooltip v-if="hasPermission(FramebyAppRole.STUDENT)" text="Панель управления">
             <NuxtLink
                 to="/dashboard"
                 class="p-2 rounded-xl

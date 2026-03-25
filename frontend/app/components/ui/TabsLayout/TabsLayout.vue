@@ -5,6 +5,7 @@ import type { TabItem } from '@/types/frontend/tabs-layout';
 const props = defineProps<{
   tabs: TabItem[]
   defaultTab?: string
+  activeTabClass?: string
 }>()
 
 const activeTab = ref(props.defaultTab || props.tabs[0]?.value)
@@ -33,8 +34,8 @@ const activeComponent = computed(() => {
                text-sm font-semibold
                cursor-pointer transition"
         :class="activeTab === tab.value
-          ? 'bg-emerald-50 text-emerald-600'
-          : 'text-gray-600 hover:bg-emerald-50/60'"
+          ? (activeTabClass || 'bg-emerald-50 text-emerald-600')
+          : 'text-gray-600 hover:bg-emerald-50/60 hover:text-gray-700'"
       >
         <div v-if="tab.hasPermission" class="flex items-center gap-2">
             <Icon v-if="tab.icon" :name="tab.icon" size="18" />

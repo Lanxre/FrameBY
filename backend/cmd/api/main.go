@@ -33,6 +33,8 @@ func main() {
 			repositories.NewProfileRepository,
 			repositories.NewUniversityDepartmentRepository,
 			repositories.NewEnterpriseRepository,
+			repositories.NewStudentSquadRepository,
+			repositories.NewEmploymentRepository,
 
 			services.NewTokenService,
 			services.NewAuthService,
@@ -40,6 +42,8 @@ func main() {
 			services.NewProfileService,
 			services.NewUniversityDepartmentService,
 			services.NewEnterpriseService,
+			services.NewStudentSquadService,
+			services.NewEmploymentService,
 
 			handlers.NewHealthHandler,
 			handlers.NewAuthHandler,
@@ -47,6 +51,8 @@ func main() {
 			handlers.NewProfileHandler,
 			handlers.NewUniversityDepartmentHandler,
 			handlers.NewEnterpriseHandler,
+			handlers.NewStudentSquadHandler,
+			handlers.NewEmploymentHandler,
 
 			middleware.NewAuthMiddleware,
 
@@ -56,6 +62,8 @@ func main() {
 			app.AsRoute(routes.NewProfileRoutes),
 			app.AsRoute(routes.NewUniversityDepartmentRoutes),
 			app.AsRoute(routes.NewEnterpriseRoutes),
+			app.AsRoute(routes.NewStudentSquadRoutes),
+			app.AsRoute(routes.NewEmploymentRoutes),
 
 			fx.Annotate(
 				app.NewGinRouter,

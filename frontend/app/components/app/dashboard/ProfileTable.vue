@@ -158,7 +158,7 @@ const columns = [
               
               <td class="px-4 py-3 text-center">
                 <span class="text-sm" :class="hasSubrole(row.profile) && getProfileField(row.profile, 'subrole') ? 'text-gray-700' : 'text-gray-400'">
-                  {{ hasSubrole(row.profile) ? (getProfileField(row.profile, 'subrole') || 'Не назначена') : '-' }}
+                  {{ hasSubrole(row.profile) ? (getProfileField(row.profile, 'subrole') || '-') : '-' }}
                 </span>
               </td>
               

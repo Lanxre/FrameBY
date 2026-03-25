@@ -6,7 +6,13 @@
   "scripts": {
     "dev": "concurrently \"bun run backend\" \"bun run frontend\"",
     "backend": "cd backend && go run cmd/api/main.go",
-    "frontend": "cd frontend && bun run dev"
+    "frontend": "cd frontend && bun run dev",
+    
+    "frontend:install": "cd frontend && bun install",
+    "frontend:build": "cd frontend && bun run build",
+    
+    "install:all": "bun install && cd frontend && bun install",
+    "install:frontend": "cd frontend && bun install"
   },
   "devDependencies": {
     "@types/bun": "latest"

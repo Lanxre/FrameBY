@@ -4,6 +4,10 @@ import { FramebyAppRole } from '~/types/frontend/enums/role'
 import { useRolePermissions } from '~/composables/api/role/useRolePermissions'
 
 import AdminDashboard from '~/components/app/dashboard/AdminDashboard.vue'
+import BrsmDashboard from '~/components/app/squads/BrsmDashboard.vue'
+import StudentDashboard from '~/components/app/squads/StudentDashboard.vue'
+import UniversityDashboard from '~/components/app/university/UniversityDashboard.vue'
+import CustomerDashboard from '~/components/app/customer/CustomerDashboard.vue'
 
 
 definePageMeta({
@@ -33,12 +37,16 @@ const currentDashboard = computed(() => {
         <Icon name="ph:squares-four" size="28" class="text-emerald-500" />
         Панель управления
       </h1>
-      <p class="mt-2 text-gray-600">
+      <p v-if="currentDashboard === FramebyAppRole.ADMIN" class="mt-2 text-gray-600">
         Управление данными и профилями системы
       </p>
     </div>
 
     <AdminDashboard v-if="currentDashboard === FramebyAppRole.ADMIN" />
+    <BrsmDashboard v-else-if="currentDashboard === FramebyAppRole.BRSM" />
+    <StudentDashboard v-else-if="currentDashboard === FramebyAppRole.STUDENT" />
+    <UniversityDashboard v-else-if="currentDashboard === FramebyAppRole.UNIVERSITY" />
+    <CustomerDashboard v-else-if="currentDashboard === FramebyAppRole.CUSTOMER" />
     <div v-else class="rounded-2xl bg-white/80 border border-emerald-100 p-8 shadow-lg text-center">
       <Icon name="ph:info" size="48" class="text-emerald-400 mx-auto mb-4" />
       <p class="text-gray-600">Выберите профиль для заполнения данных в настройках.</p>
