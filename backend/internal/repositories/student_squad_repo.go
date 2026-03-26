@@ -27,6 +27,8 @@ func (r *StudentSquadRepository) GetAll(ctx context.Context, status string, limi
 		SELECT ss.id, ss.organizer_id,
 			   COALESCE(bp.full_name, up.full_name, cp.full_name, '') as organizer_name,
 			   u.role as organizer_role,
+			   bp.position as organizer_position,
+			   bp.phone as organizer_phone,
 			   ss.title, ss.description, ss.profile,
 			   ss.max_participants,
 			   (SELECT COUNT(*) FROM student_squad_participants WHERE squad_id = ss.id) as current_count,
@@ -79,6 +81,7 @@ func (r *StudentSquadRepository) GetAll(ctx context.Context, status string, limi
 		var s db.StudentSquadWithDetails
 		err := rows.Scan(
 			&s.ID, &s.OrganizerID, &s.OrganizerName, &s.OrganizerRole,
+			&s.OrganizerPosition, &s.OrganizerPhone,
 			&s.Title, &s.Description, &s.Profile, &s.MaxParticipants,
 			&s.CurrentCount, &s.StatusID, &s.StatusName,
 			&s.CreatedAt, &s.UpdatedAt,
@@ -251,12 +254,16 @@ func (r *StudentSquadRepository) Join(ctx context.Context, squadID, userID uuid.
 		return errors.New("squad is full")
 	}
 
-	var statusID int
-	err = tx.QueryRow(ctx, `SELECT status_id FROM student_squads WHERE id = $1`, squadID).Scan(&statusID)
+	var statusName string
+	err = tx.QueryRow(ctx, `
+		SELECT ss2.name FROM student_squads ss
+		JOIN squad_statuses ss2 ON ss.status_id = ss2.id
+		WHERE ss.id = $1
+	`, squadID).Scan(&statusName)
 	if err != nil {
 		return err
 	}
-	if statusID != 1 {
+	if statusName != "recruitment_open" {
 		return errors.New("recruitment is closed")
 	}
 
@@ -314,6 +321,7 @@ func (r *StudentSquadRepository) ensureStatusesExist(ctx context.Context) {
 		INSERT INTO squad_statuses (name, description) VALUES 
 			('pending', 'Ожидает подтверждения'),
 			('recruitment_open', 'Идёт набор'),
+			('rejected', 'Отклонена'),
 			('closed', 'Закрыта')
 		ON CONFLICT (name) DO NOTHING
 	`)
@@ -324,6 +332,8 @@ func (r *StudentSquadRepository) GetByOrganizer(ctx context.Context, organizerID
 		SELECT ss.id, ss.organizer_id,
 			   COALESCE(bp.full_name, up.full_name, cp.full_name, '') as organizer_name,
 			   u.role as organizer_role,
+			   bp.position as organizer_position,
+			   bp.phone as organizer_phone,
 			   ss.title, ss.description, ss.profile,
 			   ss.max_participants,
 			   (SELECT COUNT(*) FROM student_squad_participants WHERE squad_id = ss.id) as current_count,
@@ -348,7 +358,7 @@ func (r *StudentSquadRepository) GetByOrganizer(ctx context.Context, organizerID
 	for rows.Next() {
 		var s db.StudentSquadWithDetails
 		err := rows.Scan(
-			&s.ID, &s.OrganizerID, &s.OrganizerName, &s.OrganizerRole,
+			&s.ID, &s.OrganizerID, &s.OrganizerName, &s.OrganizerRole, &s.OrganizerPosition, &s.OrganizerPhone,
 			&s.Title, &s.Description, &s.Profile, &s.MaxParticipants,
 			&s.CurrentCount, &s.StatusID, &s.StatusName,
 			&s.CreatedAt, &s.UpdatedAt,
@@ -366,6 +376,8 @@ func (r *StudentSquadRepository) GetByParticipant(ctx context.Context, userID uu
 		SELECT ss.id, ss.organizer_id,
 			   COALESCE(bp.full_name, up.full_name, cp.full_name, '') as organizer_name,
 			   u.role as organizer_role,
+			   bp.position as organizer_position,
+			   bp.phone as organizer_phone,
 			   ss.title, ss.description, ss.profile,
 			   ss.max_participants,
 			   (SELECT COUNT(*) FROM student_squad_participants WHERE squad_id = ss.id) as current_count,
@@ -392,6 +404,7 @@ func (r *StudentSquadRepository) GetByParticipant(ctx context.Context, userID uu
 		var s db.StudentSquadWithDetails
 		err := rows.Scan(
 			&s.ID, &s.OrganizerID, &s.OrganizerName, &s.OrganizerRole,
+			&s.OrganizerPosition, &s.OrganizerPhone,
 			&s.Title, &s.Description, &s.Profile, &s.MaxParticipants,
 			&s.CurrentCount, &s.StatusID, &s.StatusName,
 			&s.CreatedAt, &s.UpdatedAt,
@@ -402,4 +415,10 @@ func (r *StudentSquadRepository) GetByParticipant(ctx context.Context, userID uu
 		results = append(results, s)
 	}
 	return results, nil
+}
+
+func (r *StudentSquadRepository) UpdateStatus(ctx context.Context, squadID uuid.UUID, statusName string) error {
+	query := `UPDATE student_squads SET status_id = (SELECT id FROM squad_statuses WHERE name = $1), updated_at = NOW() WHERE id = $2`
+	_, err := r.db.Exec(ctx, query, statusName, squadID)
+	return err
 }

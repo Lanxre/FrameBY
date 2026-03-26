@@ -90,3 +90,7 @@ type EmploymentParticipantsResponse struct {
 	Participants []EmploymentParticipantResponse `json:"participants"`
 	Total        int                             `json:"total"`
 }
+
+type ApproveEmploymentRequest struct {
+	Approved bool `json:"approved"`
+}

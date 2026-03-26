@@ -203,9 +203,31 @@ func (h *StudentSquadHandler) GetMySquads(c *gin.Context) {
 	}
 
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения отрядов"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения отрядов: " + err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"squads": squads})
+	c.JSON(http.StatusOK, gin.H{"squads": squads, "role": role, "userId": uid.String()})
+}
+
+func (h *StudentSquadHandler) Approve(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := uuid.Parse(idStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверный формат ID"})
+		return
+	}
+
+	var req dto.ApproveSquadRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверные данные"})
+		return
+	}
+
+	if err := h.service.Approve(c.Request.Context(), id, req.Approved); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка обновления статуса"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Статус обновлён"})
 }

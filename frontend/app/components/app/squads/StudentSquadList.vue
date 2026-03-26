@@ -1,27 +1,35 @@
 <script setup lang="ts">
 import { useVirtualList } from '@vueuse/core'
-import SquadCard from './SquadCard.vue'
+import StudentSquadCard from './StudentSquadCard.vue'
 import Select from '@/components/ui/Select/Select.vue'
 import Pagination from '@/components/ui/Pagination/Pagination.vue'
+import { SQUAD_STATUS_OPTIONS } from '@/const/squad'
 
 import { useStudentSquads, useMySquads } from '@/composables/api/squads/useStudentSquads'
 import { useJoinSquad } from '@/composables/api/squads/useJoinLeaveSquad'
+import { FramebyAppRole } from '~/types/frontend/enums/role'
 
-const statusOptions = [
-  { id: 'all', name: 'Все' },
-  { id: 'pending', name: 'Ожидает' },
-  { id: 'recruitment_open', name: 'Набор' },
-  { id: 'closed', name: 'Закрыта' }
-]
+const { user } = useAuthStore()
+
+
+const statusOptions = computed(() => {
+  if (user?.role === FramebyAppRole.STUDENT) {
+    return SQUAD_STATUS_OPTIONS.filter(option => option.id !== 'closed' && option.id !== 'rejected')
+  }
+  
+  return SQUAD_STATUS_OPTIONS
+})
 
 const showOnlyMine = ref(false)
-const selectedStatus = ref(statusOptions[0])
+const selectedStatus = ref(statusOptions.value[0]!)
 const page = ref(1)
 const limit = ref(10)
 
-const { squads, total, isLoading, errorMessage, fetchSquads } = useStudentSquads()
+const { squads, total, errorMessage, fetchSquads } = useStudentSquads()
 const { squads: mySquads, fetchMySquads } = useMySquads()
-const { join, isLoading: isJoining, errorMessage: joinError, reset: resetJoin, isSuccess: joinSuccess } = useJoinSquad()
+const { join, isLoading: isJoining, errorMessage: joinError, reset: resetJoin } = useJoinSquad()
+
+const { notify } = useNotificationStore()
 
 const sourceList = ref<any[]>([])
 
@@ -47,10 +55,21 @@ const handlePageChange = (newPage: number) => {
 }
 
 const handleJoin = async (id: string) => {
-  const ok = await join(id)
-  if (ok) {
+  const success = await join(id)
+  if (success) {
     resetJoin()
-    await loadSquads()
+    notify({
+      title: 'Успех',
+      content: 'Вы успешно присоединились к отряду!',
+      type: 'success'
+    })
+    squads.value = squads.value.filter(squad => squad.id !== id)
+  } else {
+    notify({
+      title: 'Ошибка',
+      content: 'Не удалось присоединиться к отряду!',
+      type: 'error'
+    })
   }
 }
 
@@ -93,17 +112,12 @@ const { list, containerProps, wrapperProps } = useVirtualList(sourceList, {
       {{ joinError }}
     </div>
 
-    <div v-if="joinSuccess" class="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-sm text-emerald-600">
-      Вы успешно вступили в отряд
-    </div>
-
     <div
-      v-else
       v-bind="containerProps"
-      class="h-[600px] overflow-y-auto rounded-2xl border border-emerald-100 bg-white/60 backdrop-blur"
+      class="h-150 overflow-y-auto rounded-2xl border border-emerald-100 bg-white/60 backdrop-blur"
     >
       <div v-bind="wrapperProps" class="p-4 space-y-3">
-        <SquadCard
+        <StudentSquadCard
           v-for="{ data: squad } in list"
           :key="squad.id"
           :squad="squad"

@@ -5,15 +5,24 @@ export function useUpdateSquad() {
   const errorMessage = ref('')
   const isSuccess = ref(false)
 
-  const updateStatus = async (squadId: string, status: string): Promise<boolean> => {
+  const update = async (
+    squadId: string,
+    data: {
+      title?: string
+      description?: string
+      profile?: string
+      max_participants?: number
+      status?: string
+    }
+  ): Promise<boolean> => {
     isLoading.value = true
     errorMessage.value = ''
     isSuccess.value = false
 
     try {
       await $api(`/student-squads/${squadId}`, {
-        method: 'PUT',
-        body: { status }
+        method: 'PATCH',
+        body: data
       })
       isSuccess.value = true
       return true
@@ -26,19 +35,25 @@ export function useUpdateSquad() {
   }
 
   const closeRecruitment = async (squadId: string): Promise<boolean> => {
-    return updateStatus(squadId, 'closed')
+    return update(squadId, { status: 'closed' })
   }
 
   const openRecruitment = async (squadId: string): Promise<boolean> => {
-    return updateStatus(squadId, 'recruitment_open')
+    return update(squadId, { status: 'recruitment_open' })
+  }
+
+  const reset = () => {
+    errorMessage.value = ''
+    isSuccess.value = false
   }
 
   return {
     isLoading,
     errorMessage,
     isSuccess,
-    updateStatus,
+    update,
     closeRecruitment,
-    openRecruitment
+    openRecruitment,
+    reset
   }
 }

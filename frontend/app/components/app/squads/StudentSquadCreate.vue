@@ -1,16 +1,19 @@
 <script setup lang="ts">
+import { useAuthStore } from '@/stores/auth'
 import { useCreateSquad } from '@/composables/api/squads/useCreateSquad'
 
 const emit = defineEmits<{
   created: []
 }>()
 
+const { isBRSM } = useAuthStore()
 const { isLoading, errorMessage, isSuccess, create, reset } = useCreateSquad()
 
 const title = ref('')
 const description = ref('')
 const profile = ref('')
 const maxParticipants = ref<number>(10)
+
 
 const handleSubmit = async () => {
   if (!title.value.trim() || maxParticipants.value <= 0) {
@@ -49,7 +52,12 @@ const handleSubmit = async () => {
     </div>
 
     <div v-if="isSuccess" class="text-sm text-green-600 bg-green-50 border border-green-200 px-4 py-3 rounded-xl">
-      Заявка успешно создана! Ожидайте подтверждения от представителя университета.
+      <template v-if="isBRSM">
+        Отряд успешно создан и набор открыт!
+      </template>
+      <template v-else>
+        Заявка успешно создана! Ожидайте подтверждения от представителя университета.
+      </template>
     </div>
 
     <form @submit.prevent="handleSubmit" class="space-y-4">
@@ -62,7 +70,7 @@ const handleSubmit = async () => {
             type="text"
             placeholder="Например: Отряд по уборке территории"
             class="w-full pl-9 pr-4 py-2.5 rounded-xl text-sm
-                   bg-white border border-emerald-100
+                   bg-white border border-emerald-300
                    focus:outline-none focus:ring-2 focus:ring-emerald-400/40"
           />
         </div>
@@ -77,7 +85,7 @@ const handleSubmit = async () => {
             rows="3"
             placeholder="Опишите основные задачи и обязанности отряда"
             class="w-full pl-9 pr-4 py-2.5 rounded-xl text-sm resize-none
-                   bg-white border border-emerald-100
+                   bg-white border border-emerald-300
                    focus:outline-none focus:ring-2 focus:ring-emerald-400/40"
           />
         </div>
@@ -92,7 +100,7 @@ const handleSubmit = async () => {
             type="text"
             placeholder="Например: Строительные работы, уборка, благоустройство"
             class="w-full pl-9 pr-4 py-2.5 rounded-xl text-sm
-                   bg-white border border-emerald-100
+                   bg-white border border-emerald-300
                    focus:outline-none focus:ring-2 focus:ring-emerald-400/40"
           />
         </div>
@@ -109,7 +117,7 @@ const handleSubmit = async () => {
             max="100"
             placeholder="10"
             class="w-full pl-9 pr-4 py-2.5 rounded-xl text-sm
-                   bg-white border border-emerald-100
+                   bg-white border border-emerald-300
                    focus:outline-none focus:ring-2 focus:ring-emerald-400/40"
           />
         </div>
@@ -122,7 +130,7 @@ const handleSubmit = async () => {
                bg-linear-to-r from-emerald-400 to-green-600 text-white
                hover:opacity-90 transition
                disabled:opacity-50 disabled:cursor-not-allowed
-               shadow-lg shadow-emerald-500/20"
+               shadow-lg shadow-emerald-500/20 cursor-pointer"
       >
         <span v-if="isLoading">Создание...</span>
         <span v-else>Создать заявку</span>

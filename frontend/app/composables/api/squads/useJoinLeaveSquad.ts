@@ -78,6 +78,66 @@ export function useLeaveSquad() {
   }
 }
 
+export function useApproveSquad() {
+  const isLoading = ref(false)
+  const errorMessage = ref('')
+  const isSuccess = ref(false)
+
+  const approve = async (squadId: string): Promise<boolean> => {
+    isLoading.value = true
+    errorMessage.value = ''
+    isSuccess.value = false
+
+    try {
+      await $api(`/student-squads/${squadId}/approve`, {
+        method: 'POST',
+        body: { approved: true }
+      })
+      isSuccess.value = true
+      return true
+    } catch (e: any) {
+      errorMessage.value = e.message || 'Ошибка одобрения отряда'
+      return false
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  const reject = async (squadId: string): Promise<boolean> => {
+    isLoading.value = true
+    errorMessage.value = ''
+    isSuccess.value = false
+
+    try {
+      await $api(`/student-squads/${squadId}/approve`, {
+        method: 'POST',
+        body: { approved: false }
+      })
+      isSuccess.value = true
+      return true
+    } catch (e: any) {
+      errorMessage.value = e.message || 'Ошибка отклонения отряда'
+      return false
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  const reset = () => {
+    errorMessage.value = ''
+    isSuccess.value = false
+  }
+
+  return {
+    isLoading,
+    errorMessage,
+    isSuccess,
+    approve,
+    reject,
+    reset
+  }
+}
+
 export function useUpdateSquad() {
   const isLoading = ref(false)
   const errorMessage = ref('')

@@ -50,6 +50,7 @@ func (rts *EmploymentRoutes) Register(cfg *config.Config, r *gin.Engine) {
 		universityGroup.Use(rts.AuthMid.RequireRole(string(middleware.RoleUniversity)))
 		{
 			universityGroup.PUT("/employment-requests/:id/participants/:userId/status", rts.Handler.UpdateParticipantStatus)
+			universityGroup.POST("/employment-requests/:id/approve", rts.Handler.Approve)
 		}
 	}
 }

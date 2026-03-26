@@ -24,11 +24,23 @@ func (s *StudentSquadService) GetAll(ctx context.Context, status string, limit, 
 
 	response := make([]dto.StudentSquadResponse, len(squads))
 	for i, sq := range squads {
+		position := ""
+		if sq.OrganizerPosition != nil {
+			position = *sq.OrganizerPosition
+		}
+		phone := ""
+		if sq.OrganizerPhone != nil {
+			phone = *sq.OrganizerPhone
+		}
 		response[i] = dto.StudentSquadResponse{
-			ID:              sq.ID.String(),
-			OrganizerID:     sq.OrganizerID.String(),
-			OrganizerName:   sq.OrganizerName,
-			OrganizerRole:   sq.OrganizerRole,
+			ID: sq.ID.String(),
+			Organizer: dto.SquadOrganizer{
+				ID:       sq.OrganizerID.String(),
+				Name:     sq.OrganizerName,
+				Role:     sq.OrganizerRole,
+				Position: position,
+				Phone:    phone,
+			},
 			Title:           sq.Title,
 			Description:     sq.Description,
 			Profile:         sq.Profile,
@@ -65,10 +77,12 @@ func (s *StudentSquadService) GetByID(ctx context.Context, id uuid.UUID) (*dto.S
 
 	return &dto.StudentSquadDetailResponse{
 		StudentSquadResponse: dto.StudentSquadResponse{
-			ID:              squad.ID.String(),
-			OrganizerID:     squad.OrganizerID.String(),
-			OrganizerName:   squad.OrganizerName,
-			OrganizerRole:   squad.OrganizerRole,
+			ID: squad.ID.String(),
+			Organizer: dto.SquadOrganizer{
+				ID:   squad.OrganizerID.String(),
+				Name: squad.OrganizerName,
+				Role: squad.OrganizerRole,
+			},
 			Title:           squad.Title,
 			Description:     squad.Description,
 			Profile:         squad.Profile,
@@ -84,7 +98,10 @@ func (s *StudentSquadService) GetByID(ctx context.Context, id uuid.UUID) (*dto.S
 }
 
 func (s *StudentSquadService) Create(ctx context.Context, organizerID uuid.UUID, req *dto.CreateStudentSquadRequest) (*dto.StudentSquadResponse, error) {
-	statusName := "recruitment_open"
+	statusName := "pending"
+	if req.Role == "brsm" {
+		statusName = "recruitment_open"
+	}
 
 	squad, err := s.repo.Create(ctx, organizerID, req.Title, req.Description, req.Profile, req.MaxParticipants, statusName)
 	if err != nil {
@@ -92,8 +109,12 @@ func (s *StudentSquadService) Create(ctx context.Context, organizerID uuid.UUID,
 	}
 
 	return &dto.StudentSquadResponse{
-		ID:              squad.ID.String(),
-		OrganizerID:     squad.OrganizerID.String(),
+		ID: squad.ID.String(),
+		Organizer: dto.SquadOrganizer{
+			ID:   squad.OrganizerID.String(),
+			Name: "",
+			Role: "",
+		},
 		Title:           squad.Title,
 		Description:     squad.Description,
 		Profile:         squad.Profile,
@@ -151,11 +172,23 @@ func (s *StudentSquadService) GetByOrganizer(ctx context.Context, organizerID uu
 
 	response := make([]dto.StudentSquadResponse, len(squads))
 	for i, sq := range squads {
+		position := ""
+		if sq.OrganizerPosition != nil {
+			position = *sq.OrganizerPosition
+		}
+		phone := ""
+		if sq.OrganizerPhone != nil {
+			phone = *sq.OrganizerPhone
+		}
 		response[i] = dto.StudentSquadResponse{
-			ID:              sq.ID.String(),
-			OrganizerID:     sq.OrganizerID.String(),
-			OrganizerName:   sq.OrganizerName,
-			OrganizerRole:   sq.OrganizerRole,
+			ID: sq.ID.String(),
+			Organizer: dto.SquadOrganizer{
+				ID:       sq.OrganizerID.String(),
+				Name:     sq.OrganizerName,
+				Role:     sq.OrganizerRole,
+				Position: position,
+				Phone:    phone,
+			},
 			Title:           sq.Title,
 			Description:     sq.Description,
 			Profile:         sq.Profile,
@@ -178,11 +211,23 @@ func (s *StudentSquadService) GetByParticipant(ctx context.Context, userID uuid.
 
 	response := make([]dto.StudentSquadResponse, len(squads))
 	for i, sq := range squads {
+		position := ""
+		if sq.OrganizerPosition != nil {
+			position = *sq.OrganizerPosition
+		}
+		phone := ""
+		if sq.OrganizerPhone != nil {
+			phone = *sq.OrganizerPhone
+		}
 		response[i] = dto.StudentSquadResponse{
-			ID:              sq.ID.String(),
-			OrganizerID:     sq.OrganizerID.String(),
-			OrganizerName:   sq.OrganizerName,
-			OrganizerRole:   sq.OrganizerRole,
+			ID: sq.ID.String(),
+			Organizer: dto.SquadOrganizer{
+				ID:       sq.OrganizerID.String(),
+				Name:     sq.OrganizerName,
+				Role:     sq.OrganizerRole,
+				Position: position,
+				Phone:    phone,
+			},
 			Title:           sq.Title,
 			Description:     sq.Description,
 			Profile:         sq.Profile,
@@ -195,4 +240,14 @@ func (s *StudentSquadService) GetByParticipant(ctx context.Context, userID uuid.
 		}
 	}
 	return response, nil
+}
+
+func (s *StudentSquadService) Approve(ctx context.Context, squadID uuid.UUID, approved bool) error {
+	var statusName string
+	if approved {
+		statusName = "recruitment_open"
+	} else {
+		statusName = "rejected"
+	}
+	return s.repo.UpdateStatus(ctx, squadID, statusName)
 }

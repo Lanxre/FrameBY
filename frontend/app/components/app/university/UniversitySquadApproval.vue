@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { SQUAD_STATUS_LABELS, SQUAD_STATUS_COLORS } from '@/types/frontend/student-squad'
+import { SQUAD_STATUS_LABELS, SQUAD_STATUS_COLORS } from '@/const/squad'
 import { useStudentSquads } from '@/composables/api/squads/useStudentSquads'
-import { useUpdateSquad } from '@/composables/api/squads/useJoinLeaveSquad'
+import { useApproveSquad, useUpdateSquad } from '@/composables/api/squads/useJoinLeaveSquad'
 
 const { squads, total, isLoading, errorMessage, fetchSquads } = useStudentSquads()
-const { update, isLoading: isUpdating, errorMessage: updateError, reset: resetUpdate, isSuccess: updateSuccess } = useUpdateSquad()
+const { approve, reject, isLoading: isApproving, errorMessage: approveError, reset: resetApprove, isSuccess: approveSuccess } = useApproveSquad()
+const { closeRecruitment, isLoading: isClosing, errorMessage: closeError, reset: resetClose, isSuccess: closeSuccess } = useUpdateSquad()
 
 const statusFilter = ref('pending')
 const statusOptions = [
@@ -24,17 +25,43 @@ watch(statusFilter, loadSquads)
 onMounted(loadSquads)
 
 const handleApprove = async (squadId: string) => {
-  const success = await update(squadId, { status: 'recruitment_open' })
+  const success = await approve(squadId)
   if (success) {
-    loadSquads()
+    const squad = squads.value.find(s => s.id === squadId)
+    if (squad) {
+      squad.status = 'recruitment_open'
+    }
+  }
+}
+
+const handleReject = async (squadId: string) => {
+  const success = await reject(squadId)
+  if (success) {
+    if (statusFilter.value === 'pending') {
+      const index = squads.value.findIndex(s => s.id === squadId)
+      if (index !== -1) squads.value.splice(index, 1)
+      total.value--
+    } else {
+      const squad = squads.value.find(s => s.id === squadId)
+      if (squad) squad.status = 'rejected'
+    }
   }
 }
 
 const handleClose = async (squadId: string) => {
-  const success = await update(squadId, { status: 'closed' })
+  const success = await closeRecruitment(squadId)
   if (success) {
-    loadSquads()
+    const squad = squads.value.find(s => s.id === squadId)
+    if (squad) squad.status = 'closed'
   }
+}
+
+const isUpdating = computed(() => isApproving.value || isClosing.value)
+const updateError = computed(() => approveError.value || closeError.value)
+const updateSuccess = computed(() => approveSuccess.value || closeSuccess.value)
+const resetUpdate = () => {
+  resetApprove()
+  resetClose()
 }
 </script>
 
@@ -104,7 +131,7 @@ const handleClose = async (squadId: string) => {
             <div class="flex flex-wrap items-center gap-3 text-sm text-gray-500">
               <span class="flex items-center gap-1">
                 <Icon name="ph:user" size="16" />
-                {{ squad.organizer_name }} ({{ squad.organizer_role }})
+                {{ squad.organizer.name }} ({{ squad.organizer.role }})
               </span>
               <span v-if="squad.profile" class="flex items-center gap-1">
                 <Icon name="ph:briefcase" size="16" />
@@ -127,6 +154,16 @@ const handleClose = async (squadId: string) => {
               <Icon v-if="!isUpdating" name="ph:check-circle" size="18" />
               <div v-else class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
               Одобрить
+            </button>
+            <button
+              v-if="squad.status === 'pending'"
+              @click="handleReject(squad.id)"
+              :disabled="isUpdating"
+              class="px-4 py-2 bg-red-50 hover:bg-red-100 disabled:bg-red-50 text-red-600 text-sm font-medium rounded-lg transition-colors flex items-center gap-2"
+            >
+              <Icon v-if="!isUpdating" name="ph:x-circle" size="18" />
+              <div v-else class="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600"></div>
+              Отклонить
             </button>
             <button
               v-if="squad.status === 'recruitment_open'"

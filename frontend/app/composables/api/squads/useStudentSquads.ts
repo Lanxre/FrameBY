@@ -1,5 +1,6 @@
 import { $api } from '@/composables/api/useApi'
 import type { StudentSquad, SquadStatus } from '@/types/frontend/student-squad'
+import { FramebyAppRole } from '~/types/frontend/enums/role'
 
 export interface SquadsResponse {
   squads: StudentSquad[]
@@ -14,27 +15,22 @@ export function useStudentSquads() {
   const isLoading = ref(false)
   const errorMessage = ref('')
 
-  const fetchSquads = async (options: {
-    status?: string
-    limit?: number
-    offset?: number
-  } = {}) => {
+  const fetchSquads = async (options: { status?: string, limit?: number, offset?: number } = {}, role: FramebyAppRole) => {
     isLoading.value = true
-    errorMessage.value = ''
-
     try {
       const params = new URLSearchParams()
       if (options.status) params.append('status', options.status)
       if (options.limit) params.append('limit', options.limit.toString())
       if (options.offset) params.append('offset', options.offset.toString())
 
-      const query = params.toString() ? `?${params.toString()}` : ''
-
-      const response = await $api<SquadsResponse>(`/student-squads${query}`, {
-        method: 'GET'
-      })
-
-      squads.value = response.squads
+      const response = await $api<SquadsResponse>(`/student-squads?${params.toString()}`, { method: 'GET' })
+      
+      if (role === FramebyAppRole.STUDENT) {
+        squads.value = response.squads.filter(squad => squad.status !== 'closed' && squad.status !== 'rejected')
+      } else {
+        squads.value = response.squads
+      }
+      
       total.value = response.total
     } catch (e: any) {
       errorMessage.value = e.message || 'Ошибка загрузки отрядов'
@@ -43,13 +39,7 @@ export function useStudentSquads() {
     }
   }
 
-  return {
-    squads,
-    total,
-    isLoading,
-    errorMessage,
-    fetchSquads
-  }
+  return { squads, total, isLoading, errorMessage, fetchSquads }
 }
 
 export function useMySquads() {
@@ -59,12 +49,8 @@ export function useMySquads() {
 
   const fetchMySquads = async () => {
     isLoading.value = true
-    errorMessage.value = ''
-
     try {
-      const response = await $api<{ squads: StudentSquad[] }>('/student-squads/my', {
-        method: 'GET'
-      })
+      const response = await $api<{ squads: StudentSquad[] }>('/student-squads/my', { method: 'GET' })
       squads.value = response.squads
     } catch (e: any) {
       errorMessage.value = e.message || 'Ошибка загрузки'
@@ -73,39 +59,44 @@ export function useMySquads() {
     }
   }
 
-  return {
-    squads,
-    isLoading,
-    errorMessage,
-    fetchMySquads
-  }
+  return { squads, isLoading, errorMessage, fetchMySquads }
 }
 
 export function useSquadStatuses() {
   const statuses = ref<SquadStatus[]>([])
+  const fetchStatuses = async () => {
+    try {
+      const response = await $api<{ statuses: SquadStatus[] }>('/student-squads/statuses', { method: 'GET' })
+      statuses.value = response.statuses
+    } catch (e: any) {
+      console.error(e)
+    }
+  }
+  return { statuses, fetchStatuses }
+}
+
+export function useUpdateSquad() {
   const isLoading = ref(false)
   const errorMessage = ref('')
 
-  const fetchStatuses = async () => {
+  const updateStatus = async (squadId: string, status: string): Promise<boolean> => {
     isLoading.value = true
-    errorMessage.value = ''
-
     try {
-      const response = await $api<{ statuses: SquadStatus[] }>('/student-squads/statuses', {
-        method: 'GET'
+      await $api(`/student-squads/${squadId}`, {
+        method: 'PATCH',
+        body: { status }
       })
-      statuses.value = response.statuses
+      return true
     } catch (e: any) {
-      errorMessage.value = e.message || 'Ошибка загрузки статусов'
+      errorMessage.value = e.message || 'Ошибка обновления'
+      return false
     } finally {
       isLoading.value = false
     }
   }
 
-  return {
-    statuses,
-    isLoading,
-    errorMessage,
-    fetchStatuses
-  }
+  const closeRecruitment = (squadId: string) => updateStatus(squadId, 'closed')
+  const openRecruitment = (squadId: string) => updateStatus(squadId, 'pending')
+
+  return { isLoading, errorMessage, closeRecruitment, openRecruitment }
 }

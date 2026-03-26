@@ -30,12 +30,18 @@ func (rts *StudentSquadRoutes) Register(cfg *config.Config, r *gin.Engine) {
 
 		apiGroup.POST("/student-squads/join", rts.Handler.Join)
 		apiGroup.POST("/student-squads/leave", rts.Handler.Leave)
-		apiGroup.PATCH("/student-squads/:id", rts.Handler.Update)
 
 		creatorGroup := apiGroup.Group("")
-		creatorGroup.Use(rts.AuthMid.RequireAnyRole(string(middleware.RoleBRSM), string(middleware.RoleUniversity)))
+		creatorGroup.Use(rts.AuthMid.RequireAnyRole(string(middleware.RoleBRSM), string(middleware.RoleUniversity), string(middleware.RoleCustomer)))
 		{
+			creatorGroup.PATCH("/student-squads/:id", rts.Handler.Update)
 			creatorGroup.POST("/student-squads", rts.Handler.Create)
+		}
+
+		universityGroup := apiGroup.Group("")
+		universityGroup.Use(rts.AuthMid.RequireRole(string(middleware.RoleUniversity)))
+		{
+			universityGroup.POST("/student-squads/:id/approve", rts.Handler.Approve)
 		}
 	}
 }

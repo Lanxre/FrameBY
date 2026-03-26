@@ -2,6 +2,10 @@
 import CardLogo from "@/assets/images/main_card_bg.png"
 import Button from "@/components/ui/Button.vue"
 
+const handleButtonClick = () => {
+  navigateTo('/dashboard')
+}
+
 </script>
 
 <template>
@@ -18,10 +22,10 @@ import Button from "@/components/ui/Button.vue"
         Автоматизированная система
       </h1>
       <p class="text-2xl font-bold uppercase mt-4 text-shadow-lg">
-        На заказ кадров и их подбора, подготовка и отбор кандидатов
+        На заказ кадров и их подбора
       </p>
       <p class="text-xl mt-10 font-medium text-shadow-lg">
-        Быстрая и эффективная CRM система
+        Быстрая и эффективная система
       </p>
     </div>
 
@@ -30,6 +34,7 @@ import Button from "@/components/ui/Button.vue"
         variant="border-shadow" 
         size="lg"
         class="w-full sm:w-auto px-10"
+        @click="handleButtonClick"
       >
         Начать использовать
       </Button>

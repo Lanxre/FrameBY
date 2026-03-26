@@ -1,29 +1,52 @@
 <script setup lang="ts">
-import { EMPLOYMENT_STATUS_LABELS, EMPLOYMENT_STATUS_COLORS } from '@/types/frontend/employment'
-import { useMyEmploymentRequests } from '@/composables/api/employment/useEmploymentRequests'
+import EmploymentRequestCard from './EmploymentRequestCard.vue'
+import { useMyOrganizationRequests } from '@/composables/api/employment/useEmploymentRequests'
+import { useUpdateEmploymentStatus } from '@/composables/api/employment/useEmploymentActions'
+import ModalConfirm from '@/components/common/ModalConfirm.vue'
+import type { EmploymentRequest } from '@/types/frontend/employment'
 
-const emit = defineEmits<{
-  refresh: []
-}>()
+const { requests, isLoading, errorMessage, fetchRequests } = useMyOrganizationRequests()
+const { updateStatus, isLoading: isUpdating } = useUpdateEmploymentStatus()
 
-const { requests, isLoading, errorMessage, fetchMyRequests } = useMyEmploymentRequests()
+const showCloseModal = ref(false)
+const requestToClose = ref<EmploymentRequest | null>(null)
 
-const loadRequests = () => {
-  fetchMyRequests()
+const openCloseModal = (request: EmploymentRequest) => {
+  requestToClose.value = request
+  showCloseModal.value = true
 }
 
-onMounted(loadRequests)
+const openRecruitment = async (request: EmploymentRequest) => {
+  await updateStatus(request.id, 'approved')
+  await fetchRequests()
+}
 
-watch(() => emit('refresh'), loadRequests)
+const confirmClose = async () => {
+  if (!requestToClose.value) return
+  await updateStatus(requestToClose.value.id, 'closed')
+  showCloseModal.value = false
+  requestToClose.value = null
+  await fetchRequests()
+}
+
+onMounted(fetchRequests)
 </script>
 
 <template>
   <div class="space-y-4">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <Icon name="ph:list-bullets" size="22" class="text-emerald-500" />
+        <h2 class="text-lg font-semibold text-gray-800">Мои заявки на работу</h2>
+      </div>
+      <span class="text-sm text-gray-500">Всего: {{ requests.length }}</span>
+    </div>
+
     <div v-if="errorMessage" class="p-4 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
       {{ errorMessage }}
     </div>
 
-    <div v-if="isLoading" class="flex justify-center py-8">
+    <div v-if="isLoading && requests.length === 0" class="flex justify-center py-8">
       <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
     </div>
 
@@ -33,51 +56,23 @@ watch(() => emit('refresh'), loadRequests)
     </div>
 
     <div v-else class="space-y-3">
-      <div
+      <EmploymentRequestCard
         v-for="request in requests"
         :key="request.id"
-        class="bg-white/80 border border-emerald-100 rounded-xl p-4 shadow-sm"
-      >
-        <div class="flex items-start justify-between gap-4">
-          <div class="flex-1 min-w-0">
-            <div class="flex items-center gap-2 mb-2">
-              <h3 class="font-semibold text-gray-900 truncate">{{ request.title }}</h3>
-              <span
-                :class="[
-                  'px-2 py-0.5 rounded-full text-xs font-medium',
-                  EMPLOYMENT_STATUS_COLORS[request.status]?.bg || 'bg-gray-100',
-                  EMPLOYMENT_STATUS_COLORS[request.status]?.text || 'text-gray-600'
-                ]"
-              >
-                {{ EMPLOYMENT_STATUS_LABELS[request.status] || request.status }}
-              </span>
-            </div>
-
-            <p v-if="request.description" class="text-sm text-gray-600 mb-2 line-clamp-2">
-              {{ request.description }}
-            </p>
-
-            <div class="flex flex-wrap items-center gap-3 text-sm text-gray-500">
-              <span class="flex items-center gap-1">
-                <Icon name="ph:buildings" size="16" />
-                {{ request.enterprise_name }}
-              </span>
-              <span class="flex items-center gap-1">
-                <Icon name="ph:graduation-cap" size="16" />
-                {{ request.university_department_name }}
-              </span>
-              <span v-if="request.salary" class="flex items-center gap-1">
-                <Icon name="ph:currency-rub" size="16" />
-                {{ request.salary }}
-              </span>
-              <span v-if="request.employment_type" class="flex items-center gap-1">
-                <Icon name="ph:clock" size="16" />
-                {{ request.employment_type }}
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
+        :request="request"
+        show-actions
+        @close="openCloseModal"
+        @open="openRecruitment"
+      />
     </div>
+
+    <ModalConfirm
+      v-model="showCloseModal"
+      title="Закрыть заявку"
+      :description="`Закрыть заявку '${requestToClose?.title}'?`"
+      confirm-text="Закрыть"
+      :loading="isUpdating"
+      @confirm="confirmClose"
+    />
   </div>
 </template>

@@ -11,7 +11,7 @@
     "frontend:install": "cd frontend && bun install",
     "frontend:build": "cd frontend && bun run build",
     
-    "install:all": "bun install && cd frontend && bun install",
+    "install:all": "bun install && cd frontend && bun install && cd backend && go mod tidy",
     "install:frontend": "cd frontend && bun install"
   },
   "devDependencies": {

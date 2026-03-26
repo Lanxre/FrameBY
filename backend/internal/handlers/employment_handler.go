@@ -12,11 +12,15 @@ import (
 )
 
 type EmploymentHandler struct {
-	service *services.EmploymentService
+	service        *services.EmploymentService
+	profileService *services.ProfileService
 }
 
-func NewEmploymentHandler(service *services.EmploymentService) *EmploymentHandler {
-	return &EmploymentHandler{service: service}
+func NewEmploymentHandler(service *services.EmploymentService, profileService *services.ProfileService) *EmploymentHandler {
+	return &EmploymentHandler{
+		service:        service,
+		profileService: profileService,
+	}
 }
 
 func (h *EmploymentHandler) GetAll(c *gin.Context) {
@@ -75,13 +79,19 @@ func (h *EmploymentHandler) Create(c *gin.Context) {
 		return
 	}
 
+	profile, err := h.profileService.GetCustomerProfile(c.Request.Context(), uid)
+	if err != nil || profile == nil || profile.EnterpriseID == nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Профиль организации не найден"})
+		return
+	}
+
 	universityDeptID, err := uuid.Parse(req.UniversityDepartmentID)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверный формат ID университета"})
 		return
 	}
 
-	request, err := h.service.Create(c.Request.Context(), uid, universityDeptID, &req)
+	request, err := h.service.Create(c.Request.Context(), *profile.EnterpriseID, universityDeptID, &req)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка создания заявки"})
 		return
@@ -258,11 +268,39 @@ func (h *EmploymentHandler) GetMyOrganizationRequests(c *gin.Context) {
 	userID, _ := c.Get(middleware.UserIDKey)
 	uid := userID.(uuid.UUID)
 
-	requests, err := h.service.GetByEnterprise(c.Request.Context(), uid)
+	profile, err := h.profileService.GetCustomerProfile(c.Request.Context(), uid)
+	if err != nil || profile == nil || profile.EnterpriseID == nil {
+		c.JSON(http.StatusOK, gin.H{"requests": []interface{}{}})
+		return
+	}
+
+	requests, err := h.service.GetByEnterprise(c.Request.Context(), *profile.EnterpriseID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения заявок"})
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{"requests": requests})
+}
+
+func (h *EmploymentHandler) Approve(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := uuid.Parse(idStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверный формат ID"})
+		return
+	}
+
+	var req dto.ApproveEmploymentRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверные данные"})
+		return
+	}
+
+	if err := h.service.Approve(c.Request.Context(), id, req.Approved); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка обновления статуса"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Статус обновлён"})
 }

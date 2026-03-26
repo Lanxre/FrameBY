@@ -18,7 +18,6 @@ import (
 
 func main() {
 	fx.New(
-		// fx.WithLogger(func() fxevent.Logger { return fxevent.NopLogger }),
 		fx.WithLogger(func(log *slog.Logger) fxevent.Logger {
 			return &fxevent.SlogLogger{Logger: log}
 		}),

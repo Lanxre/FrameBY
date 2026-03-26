@@ -4,7 +4,7 @@ export interface UserEntityResponse {
 }
 
 export interface UserEntity {
-  id: number;
+  id: string;
   email: string;
   login: string;
   role: string;

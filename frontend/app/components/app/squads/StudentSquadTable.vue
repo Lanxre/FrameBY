@@ -1,41 +1,54 @@
 <script setup lang="ts">
-import { SQUAD_STATUS_LABELS, SQUAD_STATUS_COLORS } from '~/types/frontend/student-squad'
+import { useVirtualList } from '@vueuse/core'
+import { useAuthStore } from '@/stores/auth'
 import { useStudentSquads, useMySquads, useSquadStatuses } from '@/composables/api/squads/useStudentSquads'
 import { useUpdateSquad } from '@/composables/api/squads/useUpdateSquad'
-import type { StudentSquad } from '~/types/frontend/student-squad'
+import { SQUAD_STATUS_COLORS, SQUAD_STATUS_LABELS } from '@/const/squad'
+import type { StudentSquad } from '@/types/frontend/student-squad'
 import { formatDate } from '@/utils/str'
 import ModalConfirm from '@/components/common/ModalConfirm.vue'
+import ToolTip from '@/components/ui/ToolTip.vue'
+import StudentSquadEditModal from './StudentSquadEditModal.vue'
 
 const emit = defineEmits<{ updated: [] }>()
 
-const { squads, total, isLoading, errorMessage, fetchSquads } = useStudentSquads()
-const { squads: mySquads, fetchMySquads } = useMySquads()
+const { user } = useAuthStore()
+const { squads, total, isLoading: isGlobalLoading, errorMessage, fetchSquads } = useStudentSquads()
+const { squads: mySquads, fetchMySquads, isLoading: isMyLoading } = useMySquads()
 const { fetchStatuses } = useSquadStatuses()
 const { closeRecruitment, openRecruitment, isLoading: isUpdating } = useUpdateSquad()
 
 const showMySquadsOnly = ref(true)
 const showCloseModal = ref(false)
 const squadToClose = ref<StudentSquad | null>(null)
-
+const showEditModal = ref(false)
+const squadToEdit = ref<StudentSquad | null>(null)
 const limit = ref(10)
 const offset = ref(0)
 
+const isLoading = computed(() => isGlobalLoading.value || isMyLoading.value)
 const totalPages = computed(() => Math.ceil(total.value / limit.value))
 const currentPage = computed(() => Math.floor(offset.value / limit.value) + 1)
-
 const isMyView = computed(() => showMySquadsOnly.value)
 
-const displayedSquads = computed(() =>
-  isMyView.value ? mySquads.value : squads.value
-)
+const sourceList = ref<StudentSquad[]>([])
 
-watchEffect(async () => {
+watch([squads, mySquads, isMyView], () => {
+  sourceList.value = isMyView.value ? mySquads.value : squads.value
+}, { immediate: true })
+
+const loadData = async () => {
   if (isMyView.value) {
     await fetchMySquads()
   } else {
     await fetchSquads({ limit: limit.value, offset: offset.value })
   }
-  await fetchStatuses()
+}
+
+watch([isMyView, offset], loadData)
+
+onMounted(async () => {
+  await Promise.all([loadData(), fetchStatuses()])
 })
 
 const goToPage = (page: number) => {
@@ -48,29 +61,62 @@ const openCloseModal = (squad: StudentSquad) => {
   showCloseModal.value = true
 }
 
+const openEditModal = (squad: StudentSquad) => {
+  squadToEdit.value = squad
+  showEditModal.value = true
+}
+
+const handleRefresh = async () => {
+  await loadData()
+  emit('updated')
+}
+
 const confirmClose = async () => {
   if (!squadToClose.value) return
-  await closeRecruitment(squadToClose.value.id)
-  showCloseModal.value = false
-  squadToClose.value = null
-  emit('updated')
+  const success = await closeRecruitment(squadToClose.value.id)
+  if (success) {
+    const list = isMyView.value ? mySquads.value : squads.value
+    const squad = list.find(s => s.id === squadToClose.value!.id)
+    if (squad) squad.status = 'closed'
+    showCloseModal.value = false
+    squadToClose.value = null
+  }
 }
 
 const openRecruitmentFor = async (squad: StudentSquad) => {
-  await openRecruitment(squad.id)
-  emit('updated')
+  const success = await openRecruitment(squad.id)
+  if (success) {
+    const list = isMyView.value ? mySquads.value : squads.value
+    const item = list.find(s => s.id === squad.id)
+    if (item) item.status = 'pending'
+  }
 }
+
+const handleSquadSaved = (data: { id: string; title: string; description: string | null; profile: string | null; max_participants: number }) => {
+  const list = isMyView.value ? mySquads.value : squads.value
+  const squad = list.find(s => s.id === data.id)
+  if (squad) {
+    squad.title = data.title
+    squad.description = data.description
+    squad.profile = data.profile
+    squad.max_participants = data.max_participants
+  }
+  showEditModal.value = false
+  squadToEdit.value = null
+}
+
+const { list, containerProps, wrapperProps } = useVirtualList(sourceList, {
+  itemHeight: 220,
+  overscan: 8
+})
 </script>
 
 <template>
-  <div class="space-y-5">
-
+  <div class="space-y-5 min-h-100">
     <div class="flex items-center justify-between">
       <div class="flex items-center gap-2">
         <Icon name="ph:list-bullets" size="22" class="text-emerald-500" />
-        <h2 class="text-lg font-semibold text-gray-800">
-          Список наборов отрядов
-        </h2>
+        <h2 class="text-lg font-semibold text-gray-800">Список наборов отрядов</h2>
       </div>
 
       <div class="flex items-center gap-4">
@@ -81,8 +127,7 @@ const openRecruitmentFor = async (squad: StudentSquad) => {
           </div>
           <span class="text-sm text-gray-600">Только мои</span>
         </label>
-
-        <span class="text-sm text-gray-500">Всего: {{ total }}</span>
+        <span class="text-sm text-gray-500">Всего: {{ isMyView ? mySquads.length : total }}</span>
       </div>
     </div>
 
@@ -90,109 +135,120 @@ const openRecruitmentFor = async (squad: StudentSquad) => {
       {{ errorMessage }}
     </div>
 
-    <div v-if="isLoading" class="flex justify-center py-12">
-      <Icon name="ph:circle-notch" size="32" class="animate-spin text-emerald-500" />
-    </div>
+    <div
+      v-bind="containerProps"
+      class="h-150 overflow-y-auto rounded-2xl border border-emerald-100 bg-white/60 backdrop-blur"
+    >
+      <div v-bind="wrapperProps" class="p-4 space-y-3">
+        <div
+          v-for="{ data: squad } in list"
+          :key="squad.id"
+          class="p-5 rounded-2xl border border-emerald-100 bg-white shadow-lg"
+        >
+          <div class="flex justify-between gap-4">
+            <div class="flex-1">
+              <div class="flex items-center gap-2 mb-2">
+                <h3 class="font-semibold text-gray-800">{{ squad.title }}</h3>
+                <span
+                  class="px-2 py-0.5 text-xs rounded-full"
+                  :class="[SQUAD_STATUS_COLORS[squad.status]?.bg, SQUAD_STATUS_COLORS[squad.status]?.text]"
+                >
+                  {{ SQUAD_STATUS_LABELS[squad.status] }}
+                </span>
+              </div>
 
-    <div v-else-if="displayedSquads.length === 0" class="text-center py-12 text-gray-500">
-      <Icon name="ph:users-three" size="48" class="mx-auto mb-3 text-gray-300" />
-      <p>Отряды не найдены</p>
-    </div>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm text-gray-600 mb-3">
+                <div class="flex items-center gap-1">
+                  Необходимо участников: {{ squad.current_count }} / {{ squad.max_participants }}
+                  <Icon name="ph:users" size="14" />
+                </div>
 
-    <div v-else class="space-y-4">
-      <div
-        v-for="squad in displayedSquads"
-        :key="squad.id"
-        class="p-5 rounded-2xl border border-emerald-100 bg-white shadow-md"
-      >
-        <div class="flex justify-between gap-4">
+                <div class="flex flex-col gap-1">
+                  <div class="flex items-center gap-1">
+                    <Icon name="ph:calendar" size="14" />
+                    <span>{{ formatDate(squad.created_at) }}</span>
+                  </div>
+                  <div class="flex items-center gap-1">
+                    <Icon name="ph:clock" size="14" />
+                    <span>{{ formatDate(squad.updated_at) }}</span>
+                  </div>
+                </div>
 
-          <div class="flex-1">
-            <div class="flex items-center gap-2 mb-2">
-              <h3 class="font-semibold text-gray-800">
-                {{ squad.title }}
-              </h3>
-              <span
-                class="px-2 py-0.5 text-xs rounded-full"
-                :class="[
-                  SQUAD_STATUS_COLORS[squad.status]?.bg,
-                  SQUAD_STATUS_COLORS[squad.status]?.text
-                ]"
-              >
-                {{ SQUAD_STATUS_LABELS[squad.status] }}
-              </span>
+                <div class="col-span-2 flex flex-col gap-2">
+                  <div class="flex gap-1 items-center">
+                    <Icon name="ph:user" size="14" />
+                    {{ squad.organizer.name || 'Неизвестно' }}
+                  </div>
+                  <div class="flex gap-1 items-center">
+                    <Icon name="ph:briefcase" size="14" />
+                    {{ squad.organizer.position || 'Неизвестно' }}
+                  </div>
+                  <div class="flex gap-1 items-center">
+                    <Icon name="ph:phone" size="14" />
+                    {{ squad.organizer.phone || 'Неизвестно' }}
+                  </div>
+                </div>
+
+                <div v-if="squad.profile" class="col-span-2 text-xs text-emerald-600 font-medium">
+                  {{ squad.profile }}
+                </div>
+              </div>
+
+              <p v-if="squad.description" class="text-sm text-gray-500 line-clamp-2">
+                {{ squad.description }}
+              </p>
             </div>
 
-            <div class="grid grid-cols-2 gap-3 text-sm text-gray-600 mb-3">
-              <div class="flex items-center gap-1">
-                <Icon name="ph:users" size="14" />
-                {{ squad.current_count }} / {{ squad.max_participants }}
-              </div>
+            <div v-if="isMyView || squad.organizer.id === user?.id" class="flex flex-col gap-2">
+              <ToolTip text="Редактировать">
+                <button @click="openEditModal(squad)" class="p-1.5 text-gray-400 hover:text-emerald-500 transition rounded-lg">
+                  <Icon name="ph:pencil" size="18" />
+                </button>
+              </ToolTip>
 
-              <div class="flex items-center gap-1">
-                <Icon name="ph:calendar" size="14" />
-                {{ formatDate(squad.created_at) }}
-              </div>
+              <ToolTip v-if="squad.status === 'recruitment_open'" text="Закрыть">
+                <button @click="openCloseModal(squad)" class="p-1.5 text-gray-400 hover:text-red-500 transition rounded-lg">
+                  <Icon name="ph:x" size="18" />
+                </button>
+              </ToolTip>
 
-              <div class="flex items-center gap-1">
-                <Icon name="ph:user" size="14" />
-                {{ squad.organizer_name || 'Неизвестно' }}
-              </div>
-
-              <div v-if="squad.profile" class="truncate col-span-2">
-                {{ squad.profile }}
-              </div>
+              <ToolTip v-if="squad.status === 'closed'" text="Открыть">
+                <button @click="openRecruitmentFor(squad)" class="p-1.5 text-gray-400 hover:text-green-500 transition rounded-lg">
+                  <Icon name="ph:plus" size="18" />
+                </button>
+              </ToolTip>
             </div>
-
-            <p v-if="squad.description" class="text-sm text-gray-500 line-clamp-2">
-              {{ squad.description }}
-            </p>
-
           </div>
 
-          <div v-if="isMyView && squad.status !== 'closed'" class="flex flex-col gap-2">
-            <button
-              v-if="squad.status === 'recruitment_open'"
-              @click="openCloseModal(squad)"
-              class="btn-danger"
-            >
-              Закрыть
-            </button>
-
-            <button
-              v-if="squad.status === 'closed'"
-              @click="openRecruitmentFor(squad)"
-              class="btn-success"
-            >
-              Открыть
-            </button>
-          </div>
-
-        </div>
-
-        <div class="mt-4">
-          <div class="w-full h-2 bg-gray-200 rounded-full">
-            <div
-              class="h-2 rounded-full bg-emerald-500 transition-all"
-              :style="{ width: `${Math.min((squad.current_count / squad.max_participants) * 100, 100)}%` }"
-            />
+          <div class="mt-4">
+            <div class="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+              <div
+                class="h-full bg-emerald-500 transition-all"
+                :style="{ width: `${Math.min((squad.current_count / squad.max_participants) * 100, 100)}%` }"
+              />
+            </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Pagination -->
-    <div v-if="!isMyView && totalPages > 1" class="flex justify-center gap-3 pt-4">
-      <button @click="goToPage(currentPage - 1)" :disabled="currentPage === 1" class="page-btn">
-        <Icon name="ph:caret-left" />
+    <div v-if="!isMyView && totalPages > 1" class="flex justify-center items-center gap-3 pt-4">
+      <button
+        @click="goToPage(currentPage - 1)"
+        :disabled="currentPage === 1 || isLoading"
+        class="w-10 h-10 rounded-xl border border-emerald-100 bg-white/70 hover:bg-emerald-50 disabled:opacity-50 flex items-center justify-center"
+      >
+        <Icon name="ph:caret-left" size="18" />
       </button>
 
-      <span class="text-sm text-gray-600">
-        {{ currentPage }} / {{ totalPages }}
-      </span>
+      <span class="text-sm text-gray-600">{{ currentPage }} / {{ totalPages }}</span>
 
-      <button @click="goToPage(currentPage + 1)" :disabled="currentPage === totalPages" class="page-btn">
-        <Icon name="ph:caret-right" />
+      <button
+        @click="goToPage(currentPage + 1)"
+        :disabled="currentPage === totalPages || isLoading"
+        class="w-10 h-10 rounded-xl border border-emerald-100 bg-white/70 hover:bg-emerald-50 disabled:opacity-50 flex items-center justify-center"
+      >
+        <Icon name="ph:caret-right" size="18" />
       </button>
     </div>
 
@@ -205,5 +261,10 @@ const openRecruitmentFor = async (squad: StudentSquad) => {
       @confirm="confirmClose"
     />
 
+    <StudentSquadEditModal
+      v-model="showEditModal"
+      :squad="squadToEdit"
+      @saved="(data) => handleSquadSaved(data)"
+    />
   </div>
 </template>

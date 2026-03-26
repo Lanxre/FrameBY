@@ -477,6 +477,19 @@ func (r *EmploymentRepository) IsUserApplied(ctx context.Context, requestID, use
 	return exists, err
 }
 
+func (r *EmploymentRepository) UpdateStatus(ctx context.Context, id uuid.UUID, approved bool) error {
+	var statusName string
+	if approved {
+		statusName = "approved"
+	} else {
+		statusName = "rejected"
+	}
+
+	query := `UPDATE employment_requests SET status_id = (SELECT id FROM employment_statuses WHERE name = $1), updated_at = NOW() WHERE id = $2`
+	_, err := r.db.Exec(ctx, query, statusName, id)
+	return err
+}
+
 func (r *EmploymentRepository) GetUserApplications(ctx context.Context, userID uuid.UUID) ([]db.EmploymentRequestWithDetails, error) {
 	query := `
 		SELECT er.id, er.enterprise_id, e.name as enterprise_name, e.address as enterprise_address,

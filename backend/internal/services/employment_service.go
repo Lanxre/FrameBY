@@ -196,6 +196,10 @@ func (s *EmploymentService) IsUserApplied(ctx context.Context, requestID, userID
 	return s.repo.IsUserApplied(ctx, requestID, userID)
 }
 
+func (s *EmploymentService) Approve(ctx context.Context, id uuid.UUID, approved bool) error {
+	return s.repo.UpdateStatus(ctx, id, approved)
+}
+
 func (s *EmploymentService) mapToResponse(req db.EmploymentRequestWithDetails) dto.EmploymentRequestResponse {
 	return dto.EmploymentRequestResponse{
 		ID:                     req.ID.String(),

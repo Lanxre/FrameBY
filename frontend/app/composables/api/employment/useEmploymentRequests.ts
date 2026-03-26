@@ -52,17 +52,46 @@ export function useEmploymentRequests() {
   }
 }
 
-export function useMyEmploymentRequests() {
+export function useMyOrganizationRequests() {
   const requests = ref<EmploymentRequest[]>([])
   const isLoading = ref(false)
   const errorMessage = ref('')
 
-  const fetchMyRequests = async () => {
+  const fetchRequests = async () => {
     isLoading.value = true
     errorMessage.value = ''
 
     try {
-      const response = await $api<{ requests: EmploymentRequest[] }>('/employment-requests/my', {
+      const response = await $api<{ requests: EmploymentRequest[] }>('/employment-requests/my-organization', {
+        method: 'GET'
+      })
+      requests.value = response.requests || []
+    } catch (e: any) {
+      errorMessage.value = e.message || 'Ошибка загрузки'
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  return {
+    requests,
+    isLoading,
+    errorMessage,
+    fetchRequests
+  }
+}
+
+export function useMyApplications() {
+  const requests = ref<EmploymentRequest[]>([])
+  const isLoading = ref(false)
+  const errorMessage = ref('')
+
+  const fetchRequests = async () => {
+    isLoading.value = true
+    errorMessage.value = ''
+
+    try {
+      const response = await $api<{ requests: EmploymentRequest[] }>('/employment-requests/my-applications', {
         method: 'GET'
       })
       requests.value = response.requests
@@ -77,7 +106,7 @@ export function useMyEmploymentRequests() {
     requests,
     isLoading,
     errorMessage,
-    fetchMyRequests
+    fetchRequests
   }
 }
 
@@ -136,5 +165,54 @@ export function useParticipantStatuses() {
     isLoading,
     errorMessage,
     fetchStatuses
+  }
+}
+
+export function useUpdateEmploymentRequest() {
+  const isLoading = ref(false)
+  const errorMessage = ref('')
+  const isSuccess = ref(false)
+
+  const update = async (
+    requestId: string,
+    data: {
+      title?: string
+      description?: string
+      requirements?: string
+      salary?: string
+      schedule?: string
+      max_participants?: number
+    }
+  ): Promise<boolean> => {
+    isLoading.value = true
+    errorMessage.value = ''
+    isSuccess.value = false
+
+    try {
+      await $api(`/employment-requests/${requestId}`, {
+        method: 'PUT',
+        body: data
+      })
+      isSuccess.value = true
+      return true
+    } catch (e: any) {
+      errorMessage.value = e.message || 'Ошибка обновления заявки'
+      return false
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  const reset = () => {
+    errorMessage.value = ''
+    isSuccess.value = false
+  }
+
+  return {
+    isLoading,
+    errorMessage,
+    isSuccess,
+    update,
+    reset
   }
 }

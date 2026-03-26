@@ -1,26 +1,34 @@
 <script setup lang="ts">
 import TabsLayout from '@/components/ui/TabsLayout/TabsLayout.vue'
+import StudentSquadCreate from '@/components/app/squads/StudentSquadCreate.vue'
 import CustomerEmploymentCreate from './CustomerEmploymentCreate.vue'
-import CustomerEmploymentList from './CustomerEmploymentList.vue'
+import CustomerMyRequests from './CustomerMyRequests.vue'
 
 const tabs = [
   {
-    label: 'Создать заявку',
-    value: 'create',
-    icon: 'ph:plus-circle',
+    label: 'Заявка на создание отряда',
+    value: 'squad',
+    icon: 'ph:users-three',
+    component: StudentSquadCreate,
+    hasPermission: true
+  },
+  {
+    label: 'Заявка на работу',
+    value: 'employment',
+    icon: 'ph:briefcase',
     component: CustomerEmploymentCreate,
     hasPermission: true
   },
   {
     label: 'Мои заявки',
     value: 'list',
-    icon: 'ph:briefcase',
-    component: CustomerEmploymentList,
+    icon: 'ph:list-bullets',
+    component: CustomerMyRequests,
     hasPermission: true
   }
 ]
 </script>
 
 <template>
-  <TabsLayout :tabs="tabs" default-tab="create" active-tab-class="bg-amber-50 text-amber-600" />
+  <TabsLayout :tabs="tabs" default-tab="squad" />
 </template>

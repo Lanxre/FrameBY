@@ -32,19 +32,21 @@ type StudentSquadParticipant struct {
 }
 
 type StudentSquadWithDetails struct {
-	ID              uuid.UUID `json:"id"`
-	OrganizerID     uuid.UUID `json:"organizer_id"`
-	OrganizerName   string    `json:"organizer_name"`
-	OrganizerRole   string    `json:"organizer_role"`
-	Title           string    `json:"title"`
-	Description     *string   `json:"description"`
-	Profile         *string   `json:"profile"`
-	MaxParticipants int       `json:"max_participants"`
-	CurrentCount    int       `json:"current_count"`
-	StatusID        int       `json:"status_id"`
-	StatusName      string    `json:"status_name"`
-	CreatedAt       time.Time `json:"created_at"`
-	UpdatedAt       time.Time `json:"updated_at"`
+	ID                uuid.UUID `json:"id"`
+	OrganizerID       uuid.UUID `json:"organizer_id"`
+	OrganizerName     string    `json:"organizer_name"`
+	OrganizerRole     string    `json:"organizer_role"`
+	OrganizerPosition *string   `json:"organizer_position"`
+	OrganizerPhone    *string   `json:"organizer_phone"`
+	Title             string    `json:"title"`
+	Description       *string   `json:"description"`
+	Profile           *string   `json:"profile"`
+	MaxParticipants   int       `json:"max_participants"`
+	CurrentCount      int       `json:"current_count"`
+	StatusID          int       `json:"status_id"`
+	StatusName        string    `json:"status_name"`
+	CreatedAt         time.Time `json:"created_at"`
+	UpdatedAt         time.Time `json:"updated_at"`
 }
 
 type StudentSquadWithParticipants struct {

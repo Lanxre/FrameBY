@@ -12,7 +12,8 @@ export const TWITTER_URL = 'https://x.com/Lvnxrx';
 
 export const REQUIRE_MENU: MenuItem[] = [
   { label: 'Сведения о дополнительной потребности в трудовых ресурсах', to: '/normative-sovmin#item-1', icon: 'ph:star' },
-  { label: 'Заявки на подготовку рабочих, служащих и специалистов', to: '/normative-sovmin#item-15', icon: 'ph:star' }
+  { label: 'Заявки на подготовку рабочих, служащих и специалистов', to: '/normative-sovmin#item-15', icon: 'ph:star' },
+  { label: 'Окрытые заявки на вступление в студенческие отряды', to: '/student-squads', icon: 'ph:star' }
 ]
 
 export const REQUIRE_SECTION_MENU: MenuItem[] = [

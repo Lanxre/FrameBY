@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { SQUAD_STATUS_LABELS, SQUAD_STATUS_COLORS } from '~/types/frontend/student-squad'
+import { SQUAD_STATUS_LABELS, SQUAD_STATUS_COLORS } from '@/const/squad'
 
 const props = defineProps<{
   squad: any
@@ -48,7 +48,7 @@ const canJoin = (squad: any) =>
       <div class="flex flex-wrap gap-3 text-sm text-gray-500">
         <span class="flex items-center gap-1">
           <Icon name="ph:user" size="16" />
-          {{ squad.organizer_name }}
+          {{ squad.organizer.name }}
         </span>
 
         <span class="flex items-center gap-1">

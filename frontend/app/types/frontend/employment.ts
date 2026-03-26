@@ -2,15 +2,18 @@ export interface EmploymentRequest {
   id: string
   enterprise_id: string
   enterprise_name: string
+  enterprise_address: string | null
   university_department_id: string
-  university_department_name: string
+  university_name: string
+  department_name: string
+  university_address: string | null
   title: string
   description: string | null
   requirements: string | null
   salary: string | null
   schedule: string | null
-  location: string | null
-  employment_type: string
+  max_participants: number
+  current_participants: number
   status: string
   status_id: number
   created_at: string
@@ -18,32 +21,28 @@ export interface EmploymentRequest {
 }
 
 export interface EmploymentRequestDetail extends EmploymentRequest {
-  participant_ids: string[]
-  participants_count: number
+  participant_user_ids: string[]
 }
 
 export interface EmploymentParticipant {
   id: string
   request_id: string
   user_id: string
-  user_name: string
-  user_role: string
+  student_name: string
   status: string
   status_id: number
   applied_at: string
-  updated_at: string
+  contracted_at: string | null
 }
 
 export interface CreateEmploymentRequestData {
-  enterprise_id: string
   university_department_id: string
   title: string
   description?: string
   requirements?: string
   salary?: string
   schedule?: string
-  location?: string
-  employment_type: string
+  max_participants: number
 }
 
 export interface ApplyToRequestData {

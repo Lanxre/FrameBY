@@ -16,20 +16,26 @@ type UpdateStudentSquadRequest struct {
 	Status          *string `json:"status"`
 }
 
+type SquadOrganizer struct {
+	ID       string `json:"id"`
+	Name     string `json:"name"`
+	Role     string `json:"role"`
+	Position string `json:"position"`
+	Phone    string `json:"phone"`
+}
+
 type StudentSquadResponse struct {
-	ID              string  `json:"id"`
-	OrganizerID     string  `json:"organizer_id"`
-	OrganizerName   string  `json:"organizer_name"`
-	OrganizerRole   string  `json:"organizer_role"`
-	Title           string  `json:"title"`
-	Description     *string `json:"description,omitempty"`
-	Profile         *string `json:"profile,omitempty"`
-	MaxParticipants int     `json:"max_participants"`
-	CurrentCount    int     `json:"current_count"`
-	Status          string  `json:"status"`
-	StatusID        int     `json:"status_id"`
-	CreatedAt       string  `json:"created_at"`
-	UpdatedAt       string  `json:"updated_at"`
+	ID              string         `json:"id"`
+	Organizer       SquadOrganizer `json:"organizer"`
+	Title           string         `json:"title"`
+	Description     *string        `json:"description,omitempty"`
+	Profile         *string        `json:"profile,omitempty"`
+	MaxParticipants int            `json:"max_participants"`
+	CurrentCount    int            `json:"current_count"`
+	Status          string         `json:"status"`
+	StatusID        int            `json:"status_id"`
+	CreatedAt       string         `json:"created_at"`
+	UpdatedAt       string         `json:"updated_at"`
 }
 
 type StudentSquadDetailResponse struct {
@@ -52,4 +58,8 @@ type AllSquadsResponse struct {
 	Total  int                    `json:"total"`
 	Limit  int                    `json:"limit"`
 	Offset int                    `json:"offset"`
+}
+
+type ApproveSquadRequest struct {
+	Approved bool `json:"approved"`
 }

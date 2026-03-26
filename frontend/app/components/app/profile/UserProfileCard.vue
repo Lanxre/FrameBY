@@ -181,7 +181,7 @@ const handleLogout = async () => {
           <Icon name="ph:calendar" size="14" />
           Создан
         </p>
-        <p class="text-gray-800 font-semibold">
+        <p class="text-emerald-700 font-semibold">
           {{ formatDate(user.created_at) }}
         </p>
       </div>
@@ -193,7 +193,7 @@ const handleLogout = async () => {
           <Icon name="ph:clock-clockwise" size="14" />
           Обновлён
         </p>
-        <p class="text-gray-800 font-semibold">
+        <p class="text-emerald-700 font-semibold">
           {{ formatDate(user.updated_at) }}
         </p>
       </div>

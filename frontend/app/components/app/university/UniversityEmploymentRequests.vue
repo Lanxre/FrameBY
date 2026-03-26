@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { EMPLOYMENT_STATUS_LABELS, EMPLOYMENT_STATUS_COLORS } from '@/types/frontend/employment'
 import { useEmploymentRequests } from '@/composables/api/employment/useEmploymentRequests'
-import { useUpdateEmploymentStatus } from '@/composables/api/employment/useEmploymentActions'
+import { useApproveEmployment, useUpdateEmploymentStatus } from '@/composables/api/employment/useEmploymentActions'
 
 const { requests, total, isLoading, errorMessage, fetchRequests } = useEmploymentRequests()
-const { updateStatus, isLoading: isUpdating, errorMessage: updateError, reset: resetUpdate, isSuccess: updateSuccess } = useUpdateEmploymentStatus()
+const { approve, reject, isLoading: isApproving, errorMessage: approveError, reset: resetApprove, isSuccess: approveSuccess } = useApproveEmployment()
+const { updateStatus, isLoading: isClosing, errorMessage: closeError, reset: resetClose, isSuccess: closeSuccess } = useUpdateEmploymentStatus()
 
 const statusFilter = ref('pending')
 const statusOptions = [
@@ -24,21 +25,45 @@ watch(statusFilter, loadRequests)
 onMounted(loadRequests)
 
 const handleApprove = async (requestId: string) => {
-  const success = await updateStatus(requestId, 'approved')
+  const success = await approve(requestId)
   if (success) {
-    loadRequests()
+    const request = requests.value.find(r => r.id === requestId)
+    if (request) request.status = 'approved'
+  }
+}
+
+const handleReject = async (requestId: string) => {
+  const success = await reject(requestId)
+  if (success) {
+    if (statusFilter.value === 'pending') {
+      const index = requests.value.findIndex(r => r.id === requestId)
+      if (index !== -1) requests.value.splice(index, 1)
+      total.value--
+    } else {
+      const request = requests.value.find(r => r.id === requestId)
+      if (request) request.status = 'rejected'
+    }
   }
 }
 
 const handleClose = async (requestId: string) => {
   const success = await updateStatus(requestId, 'closed')
   if (success) {
-    loadRequests()
+    const request = requests.value.find(r => r.id === requestId)
+    if (request) request.status = 'closed'
   }
 }
 
 const getStatusColor = (status: string) => {
   return EMPLOYMENT_STATUS_COLORS[status] || { bg: 'bg-gray-100', text: 'text-gray-600' }
+}
+
+const isUpdating = computed(() => isApproving.value || isClosing.value)
+const updateError = computed(() => approveError.value || closeError.value)
+const updateSuccess = computed(() => approveSuccess.value || closeSuccess.value)
+const resetUpdate = () => {
+  resetApprove()
+  resetClose()
 }
 </script>
 
@@ -139,6 +164,16 @@ const getStatusColor = (status: string) => {
               <Icon v-if="!isUpdating" name="ph:check-circle" size="18" />
               <div v-else class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
               Одобрить
+            </button>
+            <button
+              v-if="request.status === 'pending'"
+              @click="handleReject(request.id)"
+              :disabled="isUpdating"
+              class="px-4 py-2 bg-red-50 hover:bg-red-100 disabled:bg-red-50 text-red-600 text-sm font-medium rounded-lg transition-colors flex items-center gap-2"
+            >
+              <Icon v-if="!isUpdating" name="ph:x-circle" size="18" />
+              <div v-else class="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600"></div>
+              Отклонить
             </button>
             <button
               v-if="request.status === 'approved'"
