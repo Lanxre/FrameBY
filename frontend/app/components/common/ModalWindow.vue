@@ -13,12 +13,14 @@ interface Props {
 	customHeight?: string;
 
 	centerTitle?: boolean;
+	position?: "center" | "bottom";
 }
 
 const props = withDefaults(defineProps<Props>(), {
 	modelValue: false,
 	width: "max-w-lg",
 	centerTitle: false,
+	position: "center",
 });
 
 const emit = defineEmits(["update:modelValue", "close"]);
@@ -30,13 +32,24 @@ const close = () => {
 
 useModalLogic(toRef(props, "modelValue"), close);
 
-/**
- * 🔥 inline style (если передан кастом)
- */
 const modalStyle = computed(() => ({
 	width: props.customWidth || undefined,
 	height: props.customHeight || undefined,
 }));
+
+const positionClass = computed(() => {
+	if (props.position === "bottom") {
+		return "fixed inset-x-0 bottom-0 rounded-t-2xl";
+	}
+	return "";
+});
+
+const justifyClass = computed(() => {
+	if (props.position === "bottom") {
+		return "items-end";
+	}
+	return "items-center justify-center";
+});
 </script>
 
 <template>
@@ -45,14 +58,15 @@ const modalStyle = computed(() => ({
     <div v-if="modelValue" class="relative z-100">
       <div
         class="fixed inset-0 bg-black/20 backdrop-blur-sm"
+        :class="position === 'bottom' ? 'h-[calc(100vh-80px)]' : ''"
         @click="close"
       />
 
-      <div class="fixed inset-0 flex items-center justify-center p-4">
+      <div class="fixed inset-0 flex p-4" :class="justifyClass">
         
         <div
           class="relative w-full transform transition-all"
-          :class="!customWidth ? width : ''"
+          :class="[!customWidth && position !== 'bottom' ? width : '', positionClass]"
           :style="modalStyle"
           @click.stop
         >
@@ -123,11 +137,19 @@ const modalStyle = computed(() => ({
 
 .modal-enter-from .transform {
   opacity: 0;
-  transform: translateY(8px) scale(0.96);
+  transform: translateY(20px);
 }
 
 .modal-leave-to .transform {
   opacity: 0;
-  transform: translateY(8px) scale(0.96);
+  transform: translateY(20px);
+}
+
+.modal-enter-from.modal .transform {
+  transform: translateY(20px);
+}
+
+.modal-leave-to.modal .transform {
+  transform: translateY(20px);
 }
 </style>

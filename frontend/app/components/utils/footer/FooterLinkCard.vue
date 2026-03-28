@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import type { FooterLink } from '@/types/frontend/footer';
+import type { FooterLink } from "@/types/frontend/footer";
 
 defineProps<{
-  link: FooterLink;
+	link: FooterLink;
 }>();
 </script>
 

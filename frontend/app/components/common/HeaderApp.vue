@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import Dropdown from "~/components/ui/Dropdown.vue";
 import {
-    PROJECT_NAME,
-    REQUIRE_MENU,
-    REQUIRE_SECTION_MENU,
+	PROJECT_NAME,
+	REQUIRE_MENU,
+	REQUIRE_SECTION_MENU,
 } from "@/const/index";
 
 import type { MenuItem } from "@/types/frontend/header";
@@ -12,12 +12,16 @@ const authStore = useAuthStore();
 const { isAuthenticated, user } = storeToRefs(authStore);
 
 const PROFILE_MENU: MenuItem[] = [
-  { label: 'Профиль', to: '/profile', icon: 'mdi:account' },
-  { label: 'Выход', action: async () => {
-    await authStore.logout();
-    navigateTo('/auth/login');
-  }, icon: 'mdi:logout' }
-]
+	{ label: "Профиль", to: "/profile", icon: "mdi:account" },
+	{
+		label: "Выход",
+		action: async () => {
+			await authStore.logout();
+			navigateTo("/auth/login");
+		},
+		icon: "mdi:logout",
+	},
+];
 </script>
 
 <template>
@@ -40,7 +44,7 @@ const PROFILE_MENU: MenuItem[] = [
                 </div>
 
                 <span
-                    class="bg-linear-to-r text-4xl from-green-400 to-emerald-600 bg-clip-text text-transparent"
+                    class="bg-linear-to-r h-12 text-4xl from-green-400 to-emerald-600 bg-clip-text text-transparent"
                 >
                     {{ PROJECT_NAME }}
                 </span>

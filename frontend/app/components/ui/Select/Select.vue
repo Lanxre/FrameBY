@@ -1,46 +1,46 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from "vue";
 
 interface Option {
-  id: string | number
-  name: string
+	id: string | number;
+	name: string;
 }
 
 const props = defineProps<{
-  modelValue: Option | null
-  options: Option[]
-  placeholder?: string
-  icon?: string
-  disabled?: boolean
-}>()
+	modelValue: Option | null;
+	options: Option[];
+	placeholder?: string;
+	icon?: string;
+	disabled?: boolean;
+}>();
 
-const emit = defineEmits(['update:modelValue'])
+const emit = defineEmits(["update:modelValue"]);
 
-const isOpen = ref(false)
-const rootRef = ref<HTMLElement | null>(null)
+const isOpen = ref(false);
+const rootRef = ref<HTMLElement | null>(null);
 
 const selectedLabel = computed(() => {
-  return props.modelValue?.name || props.placeholder || 'Выберите значение'
-})
+	return props.modelValue?.name || props.placeholder || "Выберите значение";
+});
 
 const select = (option: Option) => {
-  emit('update:modelValue', option)
-  isOpen.value = false
-}
+	emit("update:modelValue", option);
+	isOpen.value = false;
+};
 
 const handleClickOutside = (e: MouseEvent) => {
-  if (!rootRef.value?.contains(e.target as Node)) {
-    isOpen.value = false
-  }
-}
+	if (!rootRef.value?.contains(e.target as Node)) {
+		isOpen.value = false;
+	}
+};
 
 onMounted(() => {
-  window.addEventListener('click', handleClickOutside)
-})
+	window.addEventListener("click", handleClickOutside);
+});
 
 onBeforeUnmount(() => {
-  window.removeEventListener('click', handleClickOutside)
-})
+	window.removeEventListener("click", handleClickOutside);
+});
 </script>
 
 <template>
@@ -82,7 +82,7 @@ onBeforeUnmount(() => {
   <Transition name="fade">
     <div
       v-if="isOpen"
-      class="absolute z-50 mt-2 w-full
+      class="absolute z-50 mt-2 min-w-50
              rounded-xl
              bg-white/90 backdrop-blur-xl
              border border-emerald-100
@@ -93,7 +93,7 @@ onBeforeUnmount(() => {
         v-for="option in options"
         :key="option.id"
         @click="select(option)"
-        class="px-3 py-2 text-sm
+        class="px-2 py-2 text-sm
                cursor-pointer
                hover:bg-emerald-50
                transition

@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/google/uuid"
 	"github.com/lanxre/frameby/internal/models/db"
@@ -179,15 +180,22 @@ func (s *EmploymentService) GetByUniversityDepartment(ctx context.Context, unive
 	return response, nil
 }
 
-func (s *EmploymentService) GetUserApplications(ctx context.Context, userID uuid.UUID) ([]dto.EmploymentRequestResponse, error) {
-	requests, err := s.repo.GetUserApplications(ctx, userID)
+func (s *EmploymentService) GetUserApplications(ctx context.Context, userID uuid.UUID) ([]dto.EmploymentApplicationResponse, error) {
+	fmt.Println("GetUserApplications called with userID:", userID)
+	applications, err := s.repo.GetUserApplications(ctx, userID)
+	fmt.Println("GetUserApplications found requests:", len(applications))
 	if err != nil {
 		return nil, err
 	}
 
-	response := make([]dto.EmploymentRequestResponse, len(requests))
-	for i, req := range requests {
-		response[i] = s.mapToResponse(req)
+	response := make([]dto.EmploymentApplicationResponse, len(applications))
+	for i, app := range applications {
+		response[i] = dto.EmploymentApplicationResponse{
+			EmploymentRequestResponse: s.mapToResponse(app.EmploymentRequestWithDetails),
+			ParticipantStatus:         app.ParticipantStatusName,
+			ParticipantStatusID:       app.ParticipantStatusID,
+			ParticipantAppliedAt:      app.ParticipantAppliedAt.Format("2006-01-02T15:04:05Z"),
+		}
 	}
 	return response, nil
 }

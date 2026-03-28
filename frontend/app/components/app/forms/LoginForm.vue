@@ -1,13 +1,8 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import { useLogin } from '@/composables/api/auth/useLogin'
+import { ref } from "vue";
+import { useLogin } from "@/composables/api/auth/useLogin";
 
-const {
-  form,
-  isLoading,
-  errorMessage,
-  handleManualLogin
-} = useLogin();
+const { form, isLoading, errorMessage, handleManualLogin } = useLogin();
 
 const showPassword = ref(false);
 </script>

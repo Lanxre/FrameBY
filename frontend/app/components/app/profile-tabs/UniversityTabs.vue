@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import UniversityForm from '../forms/UniversityForm.vue';
+import UniversityForm from "../forms/UniversityForm.vue";
 </script>
 
 <template>

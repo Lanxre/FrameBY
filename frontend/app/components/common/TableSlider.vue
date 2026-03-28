@@ -1,20 +1,17 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref } from "vue";
 
-const current = ref(0)
+const current = ref(0);
 
-const slides = [
-  'table1',
-  'table2'
-]
+const slides = ["table1", "table2"];
 
 const next = () => {
-  if (current.value < slides.length - 1) current.value++
-}
+	if (current.value < slides.length - 1) current.value++;
+};
 
 const prev = () => {
-  if (current.value > 0) current.value--
-}
+	if (current.value > 0) current.value--;
+};
 </script>
 
 <template>

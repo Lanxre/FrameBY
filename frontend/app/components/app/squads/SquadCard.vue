@@ -1,15 +1,15 @@
 <script setup lang="ts">
-import { SQUAD_STATUS_LABELS, SQUAD_STATUS_COLORS } from '@/const/squad'
+import { SQUAD_STATUS_LABELS, SQUAD_STATUS_COLORS } from "@/const/squad";
 
 const props = defineProps<{
-  squad: any
-  isJoining: boolean
-  onJoin: (id: string) => void
-}>()
+	squad: any;
+	isJoining: boolean;
+	onJoin: (id: string) => void;
+}>();
 
 const canJoin = (squad: any) =>
-  squad.status === 'recruitment_open' &&
-  squad.current_count < squad.max_participants
+	squad.status === "recruitment_open" &&
+	squad.current_count < squad.max_participants;
 </script>
 
 <template>

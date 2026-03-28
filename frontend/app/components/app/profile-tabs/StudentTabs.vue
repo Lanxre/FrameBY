@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import StudentForm from '@/components/app/forms/StudentForm.vue';
+import StudentForm from "@/components/app/forms/StudentForm.vue";
 </script>
 
 <template>

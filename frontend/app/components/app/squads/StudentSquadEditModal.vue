@@ -1,69 +1,84 @@
 <script setup lang="ts">
-import type { StudentSquad } from '@/types/frontend/student-squad'
-import { useUpdateSquad } from '@/composables/api/squads/useUpdateSquad'
+import type { StudentSquad } from "@/types/frontend/student-squad";
+import { useUpdateSquad } from "@/composables/api/squads/useUpdateSquad";
 
 const props = defineProps<{
-  modelValue: boolean
-  squad: StudentSquad | null
-}>()
+	modelValue: boolean;
+	squad: StudentSquad | null;
+}>();
 
 const emit = defineEmits<{
-  'update:modelValue': [value: boolean]
-  saved: [data: { id: string; title: string; description: string | null; profile: string | null; max_participants: number }]
-}>()
+	"update:modelValue": [value: boolean];
+	saved: [
+		data: {
+			id: string;
+			title: string;
+			description: string | null;
+			profile: string | null;
+			max_participants: number;
+		},
+	];
+}>();
 
-const { update, isLoading, errorMessage, reset } = useUpdateSquad()
+const { update, isLoading, errorMessage, reset } = useUpdateSquad();
 
 const form = ref({
-  title: '',
-  description: '',
-  profile: '',
-  max_participants: 1
-})
+	title: "",
+	description: "",
+	profile: "",
+	max_participants: 1,
+});
 
-watch(() => props.squad, (squad) => {
-  if (squad) {
-    form.value = {
-      title: squad.title || '',
-      description: squad.description || '',
-      profile: squad.profile || '',
-      max_participants: squad.max_participants || 1
-    }
-  }
-}, { immediate: true })
+watch(
+	() => props.squad,
+	(squad) => {
+		if (squad) {
+			form.value = {
+				title: squad.title || "",
+				description: squad.description || "",
+				profile: squad.profile || "",
+				max_participants: squad.max_participants || 1,
+			};
+		}
+	},
+	{ immediate: true },
+);
 
-watch(() => props.modelValue, (open) => {
-  if (!open) {
-    reset()
-    errorMessage.value = ''
-  }
-})
+watch(
+	() => props.modelValue,
+	(open) => {
+		if (!open) {
+			reset();
+			errorMessage.value = "";
+		}
+	},
+);
 
 const close = () => {
-  emit('update:modelValue', false)
-}
+	emit("update:modelValue", false);
+};
 
 const handleSubmit = async () => {
-  if (!props.squad) return
+	if (!props.squad) return;
 
-  const success = await update(props.squad.id, {
-    title: form.value.title || undefined,
-    description: form.value.description || undefined,
-    profile: form.value.profile || undefined,
-    max_participants: form.value.max_participants || undefined
-  })
+	const success = await update(props.squad.id, {
+		title: form.value.title || undefined,
+		description: form.value.description || undefined,
+		profile: form.value.profile || undefined,
+		max_participants: form.value.max_participants || undefined,
+	});
 
-  if (success) {
-    emit('saved', {
-      id: props.squad!.id,
-      title: form.value.title,
-      description: form.value.description || null,
-      profile: form.value.profile || null,
-      max_participants: form.value.max_participants
-    })
-    close()
-  }
-}
+	if (success) {
+		emit("saved", {
+			id: props.squad!.id,
+			title: form.value.title,
+			description: form.value.description || null,
+			profile: form.value.profile || null,
+			max_participants: form.value.max_participants,
+		});
+		close();
+	}
+};
 </script>
 
 <template>

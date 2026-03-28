@@ -1,37 +1,38 @@
 <script setup lang="ts">
-import { useCreateUniversityDepartment } from '@/composables/api/dashboard/useCreateUniversityDepartment'
+import { useCreateUniversityDepartment } from "@/composables/api/dashboard/useCreateUniversityDepartment";
 
 const emit = defineEmits<{
-  created: []
-}>()
+	created: [];
+}>();
 
-const { isLoading, errorMessage, isSuccess, create, reset } = useCreateUniversityDepartment()
+const { isLoading, errorMessage, isSuccess, create, reset } =
+	useCreateUniversityDepartment();
 
-const universityName = ref('')
-const departmentName = ref('')
-const address = ref('')
+const universityName = ref("");
+const departmentName = ref("");
+const address = ref("");
 
 const handleSubmit = async () => {
-  if (!universityName.value.trim() || !departmentName.value.trim()) {
-    return
-  }
+	if (!universityName.value.trim() || !departmentName.value.trim()) {
+		return;
+	}
 
-  const success = await create({
-    university_name: universityName.value.trim(),
-    department_name: departmentName.value.trim(),
-    address: address.value.trim() || undefined
-  })
+	const success = await create({
+		university_name: universityName.value.trim(),
+		department_name: departmentName.value.trim(),
+		address: address.value.trim() || undefined,
+	});
 
-  if (success) {
-    universityName.value = ''
-    departmentName.value = ''
-    address.value = ''
-    emit('created')
-    setTimeout(() => {
-      reset()
-    }, 3000)
-  }
-}
+	if (success) {
+		universityName.value = "";
+		departmentName.value = "";
+		address.value = "";
+		emit("created");
+		setTimeout(() => {
+			reset();
+		}, 3000);
+	}
+};
 </script>
 
 <template>

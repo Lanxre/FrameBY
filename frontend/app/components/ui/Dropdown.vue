@@ -1,25 +1,25 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import { onClickOutside } from '@vueuse/core'
+import { ref } from "vue";
+import { onClickOutside } from "@vueuse/core";
 
 interface DropdownItem {
-  label: string
-  to?: string
-  icon?: string
-  action?: () => Promise<void>
+	label: string;
+	to?: string;
+	icon?: string;
+	action?: () => Promise<void>;
 }
 
 const props = defineProps<{
-  items: DropdownItem[]
-}>()
+	items: DropdownItem[];
+}>();
 
-const isOpen = ref(false)
-const dropdownRef = ref<HTMLElement | null>(null)
+const isOpen = ref(false);
+const dropdownRef = ref<HTMLElement | null>(null);
 
-const toggle = () => (isOpen.value = !isOpen.value)
-const close = () => (isOpen.value = false)
+const toggle = () => (isOpen.value = !isOpen.value);
+const close = () => (isOpen.value = false);
 
-onClickOutside(dropdownRef, close)
+onClickOutside(dropdownRef, close);
 </script>
 
 <template>

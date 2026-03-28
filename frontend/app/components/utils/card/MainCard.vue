@@ -1,11 +1,10 @@
 <script setup lang="ts">
-import CardLogo from "@/assets/images/main_card_bg.png"
-import Button from "@/components/ui/Button.vue"
+import CardLogo from "@/assets/images/main_card_bg.png";
+import Button from "@/components/ui/Button.vue";
 
 const handleButtonClick = () => {
-  navigateTo('/dashboard')
-}
-
+	navigateTo("/dashboard");
+};
 </script>
 
 <template>

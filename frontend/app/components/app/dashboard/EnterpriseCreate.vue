@@ -1,34 +1,35 @@
 <script setup lang="ts">
-import { useCreateEnterprise } from '@/composables/api/dashboard/useCreateEnterprise'
+import { useCreateEnterprise } from "@/composables/api/dashboard/useCreateEnterprise";
 
 const emit = defineEmits<{
-  created: []
-}>()
+	created: [];
+}>();
 
-const { isLoading, errorMessage, isSuccess, create, reset } = useCreateEnterprise()
+const { isLoading, errorMessage, isSuccess, create, reset } =
+	useCreateEnterprise();
 
-const name = ref('')
-const address = ref('')
+const name = ref("");
+const address = ref("");
 
 const handleSubmit = async () => {
-  if (!name.value.trim()) {
-    return
-  }
+	if (!name.value.trim()) {
+		return;
+	}
 
-  const success = await create({
-    name: name.value.trim(),
-    address: address.value.trim() || undefined
-  })
+	const success = await create({
+		name: name.value.trim(),
+		address: address.value.trim() || undefined,
+	});
 
-  if (success) {
-    name.value = ''
-    address.value = ''
-    emit('created')
-    setTimeout(() => {
-      reset()
-    }, 3000)
-  }
-}
+	if (success) {
+		name.value = "";
+		address.value = "";
+		emit("created");
+		setTimeout(() => {
+			reset();
+		}, 3000);
+	}
+};
 </script>
 
 <template>

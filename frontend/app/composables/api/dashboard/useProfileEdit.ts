@@ -1,146 +1,151 @@
-import { $api } from '@/composables/api/useApi'
-import { useUniversityDepartments } from '@/composables/api/useUniversityDepartments'
-import { PROFILE_TYPES, type ProfileRow } from '@/types/dashboard/profile'
-import { FramebyAppRole } from '~/types/frontend/enums/role'
+import { $api } from "@/composables/api/useApi";
+import { useUniversityDepartments } from "@/composables/api/useUniversityDepartments";
+import { PROFILE_TYPES, type ProfileRow } from "@/types/dashboard/profile";
+import { FramebyAppRole } from "~/types/frontend/enums/role";
 
 export interface RoleOption {
-  id: string
-  name: string
+	id: string;
+	name: string;
 }
 
 export function useProfileEdit() {
-  const roleOptions: RoleOption[] = PROFILE_TYPES
-    .filter(t => t.value !== 'all')
-    .map(t => ({
-      id: t.value,
-      name: t.label
-    }))
+	const roleOptions: RoleOption[] = PROFILE_TYPES.filter(
+		(t) => t.value !== "all",
+	).map((t) => ({
+		id: t.value,
+		name: t.label,
+	}));
 
-  const { departments, fetchDepartments } = useUniversityDepartments()
+	const { departments, fetchDepartments } = useUniversityDepartments();
 
-  const selectedRole = ref<RoleOption | null>(null)
-  const selectedUniversity = ref<{ id: string; name: string } | null>(null)
-  const fullName = ref('')
-  const subrole = ref('')
-  const specialty = ref('')
-  const grade = ref('')
-  const position = ref('')
-  const phone = ref('')
-  const isLoading = ref(false)
-  const errorMessage = ref('')
+	const selectedRole = ref<RoleOption | null>(null);
+	const selectedUniversity = ref<{ id: string; name: string } | null>(null);
+	const fullName = ref("");
+	const subrole = ref("");
+	const specialty = ref("");
+	const grade = ref("");
+	const position = ref("");
+	const phone = ref("");
+	const isLoading = ref(false);
+	const errorMessage = ref("");
 
-  const getProfileField = (profile: ProfileRow['profile'], field: string) => {
-    return (profile as any)?.[field] ?? null
-  }
+	const getProfileField = (profile: ProfileRow["profile"], field: string) => {
+		return (profile as any)?.[field] ?? null;
+	};
 
-  const populateForm = (profile: ProfileRow) => {
-    const roleOption = roleOptions.find(r => r.id === profile.role)
-    selectedRole.value = roleOption || null
+	const populateForm = (profile: ProfileRow) => {
+		const roleOption = roleOptions.find((r) => r.id === profile.role);
+		selectedRole.value = roleOption || null;
 
-    const universityInfo = getProfileField(profile.profile, 'university')
-    if (universityInfo?.id) {
-      const dept = departments.value.find(d => d.id === universityInfo.id)
-      selectedUniversity.value = dept || { id: universityInfo.id, name: universityInfo.university_name }
-    } else {
-      selectedUniversity.value = null
-    }
+		const universityInfo = getProfileField(profile.profile, "university");
+		if (universityInfo?.id) {
+			const dept = departments.value.find((d) => d.id === universityInfo.id);
+			selectedUniversity.value = dept || {
+				id: universityInfo.id,
+				name: universityInfo.university_name,
+			};
+		} else {
+			selectedUniversity.value = null;
+		}
 
-    fullName.value = getProfileField(profile.profile, 'full_name') || ''
-    subrole.value = getProfileField(profile.profile, 'subrole') || ''
-    specialty.value = getProfileField(profile.profile, 'specialty') || ''
-    grade.value = getProfileField(profile.profile, 'grade')?.toString() || ''
-    position.value = getProfileField(profile.profile, 'position') || ''
-    phone.value = getProfileField(profile.profile, 'phone') || ''
-  }
+		fullName.value = getProfileField(profile.profile, "full_name") || "";
+		subrole.value = getProfileField(profile.profile, "subrole") || "";
+		specialty.value = getProfileField(profile.profile, "specialty") || "";
+		grade.value = getProfileField(profile.profile, "grade")?.toString() || "";
+		position.value = getProfileField(profile.profile, "position") || "";
+		phone.value = getProfileField(profile.profile, "phone") || "";
+	};
 
-  const resetForm = () => {
-    errorMessage.value = ''
-  }
+	const resetForm = () => {
+		errorMessage.value = "";
+	};
 
-  const buildUpdateBody = (): Record<string, any> | null => {
-    if (!selectedRole.value) return null
+	const buildUpdateBody = (): Record<string, any> | null => {
+		if (!selectedRole.value) return null;
 
-    const body: any = {
-      role: selectedRole.value.id
-    }
+		const body: any = {
+			role: selectedRole.value.id,
+		};
 
-    if (selectedRole.value.id !== FramebyAppRole.USER) {
-      body.full_name = fullName.value || null
-    }
-    
-    if (selectedRole.value.id === FramebyAppRole.BRSM || 
-        selectedRole.value.id === FramebyAppRole.UNIVERSITY || 
-        selectedRole.value.id === FramebyAppRole.CUSTOMER) {
-      if (subrole.value) body.subrole = subrole.value
-    }
+		if (selectedRole.value.id !== FramebyAppRole.USER) {
+			body.full_name = fullName.value || null;
+		}
 
-    if (selectedRole.value.id === FramebyAppRole.STUDENT) {
-      if (selectedUniversity.value?.id) {
-        body.university_department_id = selectedUniversity.value.id
-      }
-      if (specialty.value) body.specialty = specialty.value
-      if (grade.value) body.grade = parseFloat(grade.value)
-    }
+		if (
+			selectedRole.value.id === FramebyAppRole.BRSM ||
+			selectedRole.value.id === FramebyAppRole.UNIVERSITY ||
+			selectedRole.value.id === FramebyAppRole.CUSTOMER
+		) {
+			if (subrole.value) body.subrole = subrole.value;
+		}
 
-    if (selectedRole.value.id === FramebyAppRole.UNIVERSITY) {
-      if (selectedUniversity.value?.id) {
-        body.university_department_id = selectedUniversity.value.id
-      }
-    }
+		if (selectedRole.value.id === FramebyAppRole.STUDENT) {
+			if (selectedUniversity.value?.id) {
+				body.university_department_id = selectedUniversity.value.id;
+			}
+			if (specialty.value) body.specialty = specialty.value;
+			if (grade.value) body.grade = parseFloat(grade.value);
+		}
 
-    if (selectedRole.value.id !== FramebyAppRole.USER && position.value) {
-      body.position = position.value
-    }
+		if (selectedRole.value.id === FramebyAppRole.UNIVERSITY) {
+			if (selectedUniversity.value?.id) {
+				body.university_department_id = selectedUniversity.value.id;
+			}
+		}
 
-    if (selectedRole.value.id !== FramebyAppRole.USER && phone.value) {
-      body.phone = phone.value
-    }
+		if (selectedRole.value.id !== FramebyAppRole.USER && position.value) {
+			body.position = position.value;
+		}
 
-    return body
-  }
+		if (selectedRole.value.id !== FramebyAppRole.USER && phone.value) {
+			body.phone = phone.value;
+		}
 
-  const save = async (userId: string): Promise<boolean> => {
-    if (!selectedRole.value) return false
+		return body;
+	};
 
-    isLoading.value = true
-    errorMessage.value = ''
+	const save = async (userId: string): Promise<boolean> => {
+		if (!selectedRole.value) return false;
 
-    try {
-      const body = buildUpdateBody()
-      if (!body) return false
+		isLoading.value = true;
+		errorMessage.value = "";
 
-      await $api(`/admin/profiles/${userId}/subrole`, {
-        method: 'PATCH',
-        body
-      })
-      return true
-    } catch (e: any) {
-      errorMessage.value = e.data?.error || e.message || 'Ошибка сохранения'
-      return false
-    } finally {
-      isLoading.value = false
-    }
-  }
+		try {
+			const body = buildUpdateBody();
+			if (!body) return false;
 
-  onMounted(() => {
-    fetchDepartments()
-  })
+			await $api(`/admin/profiles/${userId}/subrole`, {
+				method: "PATCH",
+				body,
+			});
+			return true;
+		} catch (e: any) {
+			errorMessage.value = e.data?.error || e.message || "Ошибка сохранения";
+			return false;
+		} finally {
+			isLoading.value = false;
+		}
+	};
 
-  return {
-    roleOptions,
-    departments,
-    selectedRole,
-    selectedUniversity,
-    fullName,
-    subrole,
-    specialty,
-    grade,
-    position,
-    phone,
-    isLoading,
-    errorMessage,
-    populateForm,
-    resetForm,
-    save
-  }
+	onMounted(() => {
+		fetchDepartments();
+	});
+
+	return {
+		roleOptions,
+		departments,
+		selectedRole,
+		selectedUniversity,
+		fullName,
+		subrole,
+		specialty,
+		grade,
+		position,
+		phone,
+		isLoading,
+		errorMessage,
+		populateForm,
+		resetForm,
+		save,
+	};
 }

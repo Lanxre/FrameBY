@@ -1,72 +1,79 @@
 <script setup lang="ts">
-import { formatDate } from '@/utils/str'
-import { getProfileTypeInfo } from '@/types/dashboard/profile'
-import type { ProfileRow, UniversityDepartmentInfo, EnterpriseInfo } from '@/types/dashboard/profile'
-import ToolTip from '@/components/ui/ToolTip.vue';
-import { FramebyAppRole } from '~/types/frontend/enums/role';
+import { formatDate } from "@/utils/str";
+import { getProfileTypeInfo } from "@/types/dashboard/profile";
+import type {
+	ProfileRow,
+	UniversityDepartmentInfo,
+	EnterpriseInfo,
+} from "@/types/dashboard/profile";
+import ToolTip from "@/components/ui/ToolTip.vue";
+import { FramebyAppRole } from "~/types/frontend/enums/role";
 
 const props = defineProps<{
-  profiles: ProfileRow[]
-  isLoading: boolean
-  total: number
-  currentPage: number
-  totalPages: number
-}>()
+	profiles: ProfileRow[];
+	isLoading: boolean;
+	total: number;
+	currentPage: number;
+	totalPages: number;
+}>();
 
 const emit = defineEmits<{
-  'edit': [profile: ProfileRow]
-  'page-change': [page: number]
-  'delete': [profile: ProfileRow]
-}>()
+	edit: [profile: ProfileRow];
+	"page-change": [page: number];
+	delete: [profile: ProfileRow];
+}>();
 
 const handleDeleteClick = (profile: ProfileRow) => {
-  emit('delete', profile)
-}
+	emit("delete", profile);
+};
 
-const getProfileField = (profile: ProfileRow['profile'], field: string) => {
-  return (profile as any)?.[field] ?? null
-}
+const getProfileField = (profile: ProfileRow["profile"], field: string) => {
+	return (profile as any)?.[field] ?? null;
+};
 
-const getUniversity = (profile: ProfileRow['profile']): UniversityDepartmentInfo | null => {
-  return (profile as any)?.university ?? null
-}
+const getUniversity = (
+	profile: ProfileRow["profile"],
+): UniversityDepartmentInfo | null => {
+	return (profile as any)?.university ?? null;
+};
 
-const getEnterprise = (profile: ProfileRow['profile']): EnterpriseInfo | null => {
-  return (profile as any)?.enterprise ?? null
-}
+const getEnterprise = (
+	profile: ProfileRow["profile"],
+): EnterpriseInfo | null => {
+	return (profile as any)?.enterprise ?? null;
+};
 
-const hasSubrole = (profile: ProfileRow['profile']): boolean => {
-  return 'subrole' in profile
-}
+const hasSubrole = (profile: ProfileRow["profile"]): boolean => {
+	return "subrole" in profile;
+};
 
-const hasStudentFields = (profile: ProfileRow['profile']): boolean => {
-  return 'specialty' in profile || 'grade' in profile
-}
+const hasStudentFields = (profile: ProfileRow["profile"]): boolean => {
+	return "specialty" in profile || "grade" in profile;
+};
 
-const hasUniversityFields = (profile: ProfileRow['profile']): boolean => {
-  return 'university' in profile
-}
+const hasUniversityFields = (profile: ProfileRow["profile"]): boolean => {
+	return "university" in profile;
+};
 
-const hasEnterpriseFields = (profile: ProfileRow['profile']): boolean => {
-  return 'enterprise' in profile
-}
+const hasEnterpriseFields = (profile: ProfileRow["profile"]): boolean => {
+	return "enterprise" in profile;
+};
 
-const hasPosition = (profile: ProfileRow['profile']): boolean => {
-  return 'position' in profile && profile.position !== null
-}
+const hasPosition = (profile: ProfileRow["profile"]): boolean => {
+	return "position" in profile && profile.position !== null;
+};
 
 const columns = [
-  { key: 'user', label: 'Пользователь', width: 'w-48' },
-  { key: 'type', label: 'Роль', width: 'w-36' },
-  { key: 'fullName', label: 'ФИО', width: 'w-44' },
-  { key: 'phone', label: 'Телефон', width: 'w-36' },
-  { key: 'profile', label: 'Профиль', width: 'w-102' },
-  { key: 'subrole', label: 'Суброль', width: 'w-36' },
-  { key: 'updated', label: 'Обновлено', width: 'w-36' },
-  { key: 'actions_edit', label: '', width: 'w-16' },
-  { key: 'actions_delete', label: '', width: 'w-16' }
-]
-
+	{ key: "user", label: "Пользователь", width: "w-48" },
+	{ key: "type", label: "Роль", width: "w-36" },
+	{ key: "fullName", label: "ФИО", width: "w-44" },
+	{ key: "phone", label: "Телефон", width: "w-36" },
+	{ key: "profile", label: "Профиль", width: "w-102" },
+	{ key: "subrole", label: "Суброль", width: "w-36" },
+	{ key: "updated", label: "Обновлено", width: "w-36" },
+	{ key: "actions_edit", label: "", width: "w-16" },
+	{ key: "actions_delete", label: "", width: "w-16" },
+];
 </script>
 
 <template>

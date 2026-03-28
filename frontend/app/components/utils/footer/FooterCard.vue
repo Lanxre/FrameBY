@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import type { FooterSection } from '@/types/frontend/footer';
-import FooterLinkCard from './FooterLinkCard.vue';
+import type { FooterSection } from "@/types/frontend/footer";
+import FooterLinkCard from "./FooterLinkCard.vue";
 
 defineProps<{
-  section: FooterSection;
+	section: FooterSection;
 }>();
 </script>
 

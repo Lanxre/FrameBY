@@ -1,6 +1,12 @@
 <script setup lang="ts">
-import { PROJECT_NAME, GITHUB_URL, TELEGRAM_URL, TWITTER_URL, FOOTER_SECTIONS } from '@/const';
-import FooterList from '@/components/utils/footer/FooterList.vue';
+import {
+	PROJECT_NAME,
+	GITHUB_URL,
+	TELEGRAM_URL,
+	TWITTER_URL,
+	FOOTER_SECTIONS,
+} from "@/const";
+import FooterList from "@/components/utils/footer/FooterList.vue";
 </script>
 
 <template>

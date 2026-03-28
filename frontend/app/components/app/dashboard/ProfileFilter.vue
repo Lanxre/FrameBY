@@ -1,39 +1,44 @@
 <script setup lang="ts">
-import { PROFILE_TYPES, type ProfileType } from '@/types/dashboard/profile'
+import { PROFILE_TYPES, type ProfileType } from "@/types/dashboard/profile";
 
 const props = defineProps<{
-  search: string
-  selectedType: string
-}>()
+	search: string;
+	selectedType: string;
+}>();
 
 const emit = defineEmits<{
-  'update:search': [value: string]
-  'update:selectedType': [value: string]
-}>()
+	"update:search": [value: string];
+	"update:selectedType": [value: string];
+}>();
 
-const isDropdownOpen = ref(false)
-const searchInput = ref(props.search)
+const isDropdownOpen = ref(false);
+const searchInput = ref(props.search);
 
-const selectedTypeInfo = computed(() => 
-  PROFILE_TYPES.find(t => t.value === props.selectedType) || PROFILE_TYPES[0]
-)
+const selectedTypeInfo = computed(
+	() =>
+		PROFILE_TYPES.find((t) => t.value === props.selectedType) ||
+		PROFILE_TYPES[0],
+);
 
-let searchTimeout: ReturnType<typeof setTimeout>
+let searchTimeout: ReturnType<typeof setTimeout>;
 watch(searchInput, (value) => {
-  clearTimeout(searchTimeout)
-  searchTimeout = setTimeout(() => {
-    emit('update:search', value)
-  }, 300)
-})
+	clearTimeout(searchTimeout);
+	searchTimeout = setTimeout(() => {
+		emit("update:search", value);
+	}, 300);
+});
 
-watch(() => props.search, (value) => {
-  searchInput.value = value
-})
+watch(
+	() => props.search,
+	(value) => {
+		searchInput.value = value;
+	},
+);
 
 const selectType = (type: ProfileType) => {
-  emit('update:selectedType', type.value)
-  isDropdownOpen.value = false
-}
+	emit("update:selectedType", type.value);
+	isDropdownOpen.value = false;
+};
 </script>
 
 <template>

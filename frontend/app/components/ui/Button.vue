@@ -1,34 +1,39 @@
 <script setup lang="ts">
-import type { PropType } from 'vue'
+import type { PropType } from "vue";
 
-type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'border-shadow' | 'ghost' | 'danger' | 'success'
+type ButtonVariant =
+	| "primary"
+	| "secondary"
+	| "outline"
+	| "border-shadow"
+	| "ghost"
+	| "danger"
+	| "success";
 
 const props = defineProps({
-  variant: {
-    type: String as PropType<ButtonVariant>,
-    default: 'primary'
-  },
-  size: {
-    type: String as PropType<'sm' | 'md' | 'lg'>,
-    default: 'md'
-  },
-  disabled: { type: Boolean, default: false },
-  loading: { type: Boolean, default: false },
-  type: {
-    type: String as PropType<'button' | 'submit' | 'reset'>,
-    default: 'button'
-  }
-})
+	variant: {
+		type: String as PropType<ButtonVariant>,
+		default: "primary",
+	},
+	size: {
+		type: String as PropType<"sm" | "md" | "lg">,
+		default: "md",
+	},
+	disabled: { type: Boolean, default: false },
+	loading: { type: Boolean, default: false },
+	type: {
+		type: String as PropType<"button" | "submit" | "reset">,
+		default: "button",
+	},
+});
 
-const emit = defineEmits<{
-  (e: 'click', event: MouseEvent): void
-}>()
+const emit = defineEmits<(e: "click", event: MouseEvent) => void>();
 
 const handleClick = (event: MouseEvent) => {
-  if (!props.disabled && !props.loading) {
-    emit('click', event)
-  }
-}
+	if (!props.disabled && !props.loading) {
+		emit("click", event);
+	}
+};
 </script>
 
 <template>

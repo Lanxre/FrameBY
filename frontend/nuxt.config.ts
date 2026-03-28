@@ -13,11 +13,11 @@ export default defineNuxtConfig({
 	modules: ["@pinia/nuxt", "@vueuse/nuxt", "@nuxtjs/color-mode", "@nuxt/icon"],
 
 	routeRules: {
-	  "/api/_nuxt_icon/**": { proxy: { to: "" } },
-    "/api/**": { 
-      proxy: "http://localhost:8080/api/**",
-    },
-  },
+		"/api/_nuxt_icon/**": { proxy: { to: "" } },
+		"/api/**": {
+			proxy: "http://localhost:8080/api/**",
+		},
+	},
 
 	colorMode: {
 		preference: "light",
@@ -27,12 +27,12 @@ export default defineNuxtConfig({
 	},
 
 	icon: {
-    clientBundle: {
-      scan: true,
-      includeCustomCollections: true,
-    },
-    serverBundle: "local",
-  },
+		clientBundle: {
+			scan: true,
+			includeCustomCollections: true,
+		},
+		serverBundle: "local",
+	},
 
 	vite: {
 		plugins: [tailwindcss()],

@@ -4,12 +4,11 @@ import { useAuthStore } from "@/stores/auth";
 import UserProfileCard from "~/components/app/profile/UserProfileCard.vue";
 
 definePageMeta({
-  middleware: ['auth'],
+	middleware: ["auth"],
 });
 
 const authStore = useAuthStore();
 const { user } = storeToRefs(authStore);
-
 </script>
 <template>
 <div class="max-w-5xl mx-auto px-4 py-10 sm:py-14" v-if="user">

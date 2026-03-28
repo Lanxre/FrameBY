@@ -1,17 +1,17 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import { useRegister } from '@/composables/api/auth/useRegister'
+import { ref } from "vue";
+import { useRegister } from "@/composables/api/auth/useRegister";
 
 const {
-  form,
-  isLoading,
-  errorMessage,
-  isSuccess,
-  registeredEmail,
-  handleManualRegister
+	form,
+	isLoading,
+	errorMessage,
+	isSuccess,
+	registeredEmail,
+	handleManualRegister,
 } = useRegister();
 
-const showPassword        = ref(false);
+const showPassword = ref(false);
 const showConfirmPassword = ref(false);
 </script>
 

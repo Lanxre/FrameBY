@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import FooterCard from './FooterCard.vue';
-import { FOOTER_SECTIONS } from '@/const';
+import FooterCard from "./FooterCard.vue";
+import { FOOTER_SECTIONS } from "@/const";
 </script>
 
 <template>

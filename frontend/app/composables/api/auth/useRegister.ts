@@ -2,12 +2,12 @@ import { reactive, ref } from "vue";
 import { useApi } from "@/composables/api/useApi";
 import { useRouter } from "vue-router";
 
-export function useRegister() {  
-  const router = useRouter();
-  
+export function useRegister() {
+	const router = useRouter();
+
 	const isLoading = ref(false);
 	const isSuccess = ref(false);
-	
+
 	const errorMessage = ref("");
 	const registeredEmail = ref("");
 
@@ -22,12 +22,7 @@ export function useRegister() {
 		errorMessage.value = "";
 		isSuccess.value = false;
 
-		if (
-			!form.email ||
-			!form.login ||
-			!form.password ||
-			!form.passwordConfirm
-		) {
+		if (!form.email || !form.login || !form.password || !form.passwordConfirm) {
 			errorMessage.value = "Заполните все поля";
 			return;
 		}
@@ -81,7 +76,7 @@ export function useRegister() {
 
 			isSuccess.value = true;
 			registeredEmail.value = data.value?.user?.email || form.email;
-			
+
 			router.push("/");
 		} catch (err: any) {
 			errorMessage.value = err.message || "Произошла ошибка при регистрации";

@@ -34,6 +34,7 @@ func main() {
 			repositories.NewEnterpriseRepository,
 			repositories.NewStudentSquadRepository,
 			repositories.NewEmploymentRepository,
+			repositories.NewChatRepository,
 
 			services.NewTokenService,
 			services.NewAuthService,
@@ -43,6 +44,7 @@ func main() {
 			services.NewEnterpriseService,
 			services.NewStudentSquadService,
 			services.NewEmploymentService,
+			services.NewChatService,
 
 			handlers.NewHealthHandler,
 			handlers.NewAuthHandler,
@@ -52,6 +54,7 @@ func main() {
 			handlers.NewEnterpriseHandler,
 			handlers.NewStudentSquadHandler,
 			handlers.NewEmploymentHandler,
+			handlers.NewChatHandler,
 
 			middleware.NewAuthMiddleware,
 
@@ -63,6 +66,7 @@ func main() {
 			app.AsRoute(routes.NewEnterpriseRoutes),
 			app.AsRoute(routes.NewStudentSquadRoutes),
 			app.AsRoute(routes.NewEmploymentRoutes),
+			app.AsRoute(routes.NewChatRoutes),
 
 			fx.Annotate(
 				app.NewGinRouter,

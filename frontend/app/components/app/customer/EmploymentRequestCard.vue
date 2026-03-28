@@ -1,27 +1,35 @@
 <script setup lang="ts">
-import { EMPLOYMENT_STATUS_LABELS, EMPLOYMENT_STATUS_COLORS } from '@/types/frontend/employment'
-import type { EmploymentRequest } from '@/types/frontend/employment'
-import { formatDate } from '@/utils/str'
-import ToolTip from '@/components/ui/ToolTip.vue'
+import {
+	EMPLOYMENT_STATUS_LABELS,
+	EMPLOYMENT_STATUS_COLORS,
+} from "@/types/frontend/employment";
+import type { EmploymentRequest } from "@/types/frontend/employment";
+import { formatDate } from "@/utils/str";
+import ToolTip from "@/components/ui/ToolTip.vue";
 
 const props = defineProps<{
-  request: EmploymentRequest
-  showActions?: boolean
-}>()
+	request: EmploymentRequest;
+	showActions?: boolean;
+	isUniversityMode?: boolean;
+	isLoading?: boolean;
+}>();
 
 const emit = defineEmits<{
-  edit: [request: EmploymentRequest]
-  close: [request: EmploymentRequest]
-  open: [request: EmploymentRequest]
-}>()
+	edit: [request: EmploymentRequest];
+	close: [request: EmploymentRequest];
+	open: [request: EmploymentRequest];
+	approve: [request: EmploymentRequest];
+	reject: [request: EmploymentRequest];
+}>();
 
-const isPending = computed(() => props.request.status === 'pending')
-const isApproved = computed(() => props.request.status === 'approved')
-const isClosed = computed(() => props.request.status === 'closed')
+const isPending = computed(() => props.request.status === "pending");
+const isApproved = computed(() => props.request.status === "approved");
+const isClosed = computed(() => props.request.status === "closed");
+const isRejected = computed(() => props.request.status === "rejected");
 </script>
 
 <template>
-  <div class="p-5 rounded-2xl border border-emerald-100 bg-white shadow-md hover:shadow-lg transition-shadow">
+  <div class="p-5 rounded-2xl border border-emerald-100 bg-white shadow-lg">
     <div class="flex justify-between gap-4">
       <div class="flex-1">
         <div class="flex items-center gap-2 mb-2">
@@ -76,32 +84,69 @@ const isClosed = computed(() => props.request.status === 'closed')
       </div>
 
       <div v-if="showActions" class="flex flex-col gap-2">
-        <ToolTip text="Редактировать">
-          <button
-            @click="emit('edit', request)"
-            class="p-1.5 text-gray-400 hover:text-emerald-500 transition rounded-lg cursor-pointer"
-          >
-            <Icon name="ph:pencil" size="18" />
-          </button>
-        </ToolTip>
+        <template v-if="isUniversityMode">
+          <ToolTip text="Одобрить">
+            <button
+              v-if="isPending"
+              @click="emit('approve', request)"
+              :disabled="isLoading"
+              class="p-1.5 text-gray-400 hover:text-emerald-500 transition rounded-lg cursor-pointer disabled:opacity-50"
+            >
+              <Icon name="ph:check-circle" size="18" />
+            </button>
+          </ToolTip>
 
-        <ToolTip v-if="isApproved || isPending" text="Закрыть">
-          <button
-            @click="emit('close', request)"
-            class="p-1.5 text-gray-400 hover:text-red-500 transition rounded-lg cursor-pointer"
-          >
-            <Icon name="ph:x" size="18" />
-          </button>
-        </ToolTip>
+          <ToolTip text="Отклонить">
+            <button
+              v-if="isPending"
+              @click="emit('reject', request)"
+              :disabled="isLoading"
+              class="p-1.5 text-gray-400 hover:text-red-500 transition rounded-lg cursor-pointer disabled:opacity-50"
+            >
+              <Icon name="ph:x-circle" size="18" />
+            </button>
+          </ToolTip>
 
-        <ToolTip v-if="isClosed" text="Открыть">
-          <button
-            @click="emit('open', request)"
-            class="p-1.5 text-gray-400 hover:text-green-500 transition rounded-lg"
-          >
-            <Icon name="ph:plus" size="18" />
-          </button>
-        </ToolTip>
+          <ToolTip text="Закрыть">
+            <button
+              v-if="isApproved"
+              @click="emit('close', request)"
+              :disabled="isLoading"
+              class="p-1.5 text-gray-400 hover:text-red-500 transition rounded-lg cursor-pointer disabled:opacity-50"
+            >
+              <Icon name="ph:x" size="18" />
+            </button>
+          </ToolTip>
+        </template>
+
+        <template v-else>
+          <ToolTip text="Редактировать">
+            <button
+              @click="emit('edit', request)"
+              class="p-1.5 text-gray-400 hover:text-emerald-500 transition rounded-lg cursor-pointer"
+            >
+              <Icon name="ph:pencil" size="18" />
+            </button>
+          </ToolTip>
+
+          <ToolTip v-if="isApproved || isPending" text="Закрыть">
+            <button
+              @click="emit('close', request)"
+              class="p-1.5 text-gray-400 hover:text-red-500 transition rounded-lg cursor-pointer"
+            >
+              <Icon name="ph:x" size="18" />
+            </button>
+          </ToolTip>
+
+          <ToolTip v-if="isClosed" text="Открыть">
+            <button
+              @click="emit('open', request)"
+              class="p-1.5 text-gray-400 hover:text-green-500 transition rounded-lg cursor-pointer"
+            >
+              <Icon name="ph:plus" size="18" />
+            </button>
+          </ToolTip>
+        </template>
       </div>
     </div>
 
@@ -118,6 +163,13 @@ const isClosed = computed(() => props.request.status === 'closed')
       <div class="flex items-center gap-2 text-amber-700 text-sm">
         <Icon name="ph:hourglass-medium" size="16" />
         <span>Заявка ожидает подтверждения от университета</span>
+      </div>
+    </div>
+
+    <div v-if="isRejected" class="mt-4 p-3 bg-red-50 rounded-lg border border-red-200">
+      <div class="flex items-center gap-2 text-red-700 text-sm">
+        <Icon name="ph:x-circle" size="16" />
+        <span>Заявка отклонена</span>
       </div>
     </div>
 

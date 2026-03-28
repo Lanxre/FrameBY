@@ -1,51 +1,70 @@
 <script setup lang="ts">
-import type { ProfileRow } from '@/types/dashboard/profile'
-import Select from '@/components/ui/Select/Select.vue'
-import { useProfileEdit } from '@/composables/api/dashboard/useProfileEdit'
-import { formatAvatar } from '@/utils/str'
-import { FramebyAppRole } from '~/types/frontend/enums/role';
+import type { ProfileRow } from "@/types/dashboard/profile";
+import Select from "@/components/ui/Select/Select.vue";
+import { useProfileEdit } from "@/composables/api/dashboard/useProfileEdit";
+import { formatAvatar } from "@/utils/str";
+import { FramebyAppRole } from "~/types/frontend/enums/role";
 
 const props = defineProps<{
-  modelValue: boolean
-  profile: ProfileRow | null
-}>()
+	modelValue: boolean;
+	profile: ProfileRow | null;
+}>();
 
 const emit = defineEmits<{
-  'update:modelValue': [value: boolean]
-  'saved': []
-}>()
+	"update:modelValue": [value: boolean];
+	saved: [];
+}>();
 
-const { 
-  roleOptions, departments, selectedRole, selectedUniversity, fullName, subrole, 
-  specialty, grade, position, phone, isLoading, errorMessage,
-  populateForm, resetForm, save 
-} = useProfileEdit()
+const {
+	roleOptions,
+	departments,
+	selectedRole,
+	selectedUniversity,
+	fullName,
+	subrole,
+	specialty,
+	grade,
+	position,
+	phone,
+	isLoading,
+	errorMessage,
+	populateForm,
+	resetForm,
+	save,
+} = useProfileEdit();
 
-watch(() => props.profile, (newProfile) => {
-  if (newProfile) {
-    populateForm(newProfile)
-  }
-}, { immediate: true })
+watch(
+	() => props.profile,
+	(newProfile) => {
+		if (newProfile) {
+			populateForm(newProfile);
+		}
+	},
+	{ immediate: true },
+);
 
-watch(() => props.modelValue, (isOpen) => {
-  if (!isOpen) {
-    resetForm()
-  }
-})
+watch(
+	() => props.modelValue,
+	(isOpen) => {
+		if (!isOpen) {
+			resetForm();
+		}
+	},
+);
 
 const close = () => {
-  emit('update:modelValue', false)
-}
+	emit("update:modelValue", false);
+};
 
 const handleSave = async () => {
-  if (!props.profile) return
+	if (!props.profile) return;
 
-  const success = await save(props.profile.user_id)
-  if (success) {
-    emit('saved')
-    close()
-  }
-}
+	const success = await save(props.profile.user_id);
+	if (success) {
+		emit("saved");
+		close();
+	}
+};
 </script>
 
 <template>

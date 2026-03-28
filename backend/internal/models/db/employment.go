@@ -79,3 +79,10 @@ type EmploymentParticipantWithDetails struct {
 	AppliedAt    time.Time  `json:"applied_at"`
 	ContractedAt *time.Time `json:"contracted_at"`
 }
+
+type EmploymentApplicationWithDetails struct {
+	EmploymentRequestWithDetails
+	ParticipantStatusID   int       `json:"participant_status_id"`
+	ParticipantStatusName string    `json:"participant_status_name"`
+	ParticipantAppliedAt  time.Time `json:"participant_applied_at"`
+}

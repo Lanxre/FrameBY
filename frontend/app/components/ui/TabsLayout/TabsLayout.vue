@@ -1,18 +1,18 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import type { TabItem } from '@/types/frontend/tabs-layout';
+import { ref, computed } from "vue";
+import type { TabItem } from "@/types/frontend/tabs-layout";
 
 const props = defineProps<{
-  tabs: TabItem[]
-  defaultTab?: string
-  activeTabClass?: string
-}>()
+	tabs: TabItem[];
+	defaultTab?: string;
+	activeTabClass?: string;
+}>();
 
-const activeTab = ref(props.defaultTab || props.tabs[0]?.value)
+const activeTab = ref(props.defaultTab || props.tabs[0]?.value);
 
 const activeComponent = computed(() => {
-  return props.tabs.find(t => t.value === activeTab.value)?.component
-})
+	return props.tabs.find((t) => t.value === activeTab.value)?.component;
+});
 </script>
 
 <template>

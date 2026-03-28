@@ -1,12 +1,12 @@
 <script setup lang="ts">
 interface ListItem {
-  title?: string
-  content: string
+	title?: string;
+	content: string;
 }
 
 const props = defineProps<{
-  items: ListItem[]
-}>()
+	items: ListItem[];
+}>();
 </script>
 
 <template>

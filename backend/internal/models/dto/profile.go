@@ -108,3 +108,57 @@ type AllProfilesResponse struct {
 	Limit    int               `json:"limit"`
 	Offset   int               `json:"offset"`
 }
+
+type UserSearchResult struct {
+	UserID    string  `json:"user_id"`
+	Email     string  `json:"email"`
+	Login     string  `json:"login"`
+	Role      string  `json:"role"`
+	Avatar    *string `json:"avatar"`
+	FullName  string  `json:"full_name"`
+	UpdatedAt string  `json:"updated_at"`
+}
+
+type UserSearchResponse struct {
+	Profiles []UserSearchResult `json:"profiles"`
+	Total    int                `json:"total"`
+}
+
+type UniversityStatsResponse struct {
+	UniversityName   string `json:"university_name"`
+	DepartmentName   string `json:"department_name"`
+	TotalStudents    int    `json:"total_students"`
+	StudentsInSquads int    `json:"students_in_squads"`
+	StudentsEmployed int    `json:"students_employed"`
+	TotalSquads      int    `json:"total_squads"`
+	JobInvitations   int    `json:"job_invitations"`
+}
+
+type StudentSquadInfo struct {
+	ID          string  `json:"id"`
+	Name        string  `json:"name"`
+	Description *string `json:"description"`
+	JoinedAt    string  `json:"joined_at"`
+}
+
+type WorkInfo struct {
+	ID        string `json:"id"`
+	Title     string `json:"title"`
+	Company   string `json:"company"`
+	Position  string `json:"position"`
+	Status    string `json:"status"`
+	StartedAt string `json:"started_at"`
+}
+
+type StudentEmploymentInfo struct {
+	Student       ProfileResponse    `json:"student"`
+	StudentSquads []StudentSquadInfo `json:"student_squads"`
+	Works         []WorkInfo         `json:"works"`
+}
+
+type StudentEmploymentListResponse struct {
+	Students []StudentEmploymentInfo `json:"students"`
+	Total    int                     `json:"total"`
+	Limit    int                     `json:"limit"`
+	Offset   int                     `json:"offset"`
+}

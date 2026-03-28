@@ -44,6 +44,7 @@ func (rts *EmploymentRoutes) Register(cfg *config.Config, r *gin.Engine) {
 			customerGroup.PUT("/employment-requests/:id", rts.Handler.Update)
 			customerGroup.DELETE("/employment-requests/:id", rts.Handler.Delete)
 			customerGroup.GET("/employment-requests/my-organization", rts.Handler.GetMyOrganizationRequests)
+			customerGroup.PATCH("/employment-requests/:id/participants/:userId/status", rts.Handler.UpdateParticipantStatus)
 		}
 
 		universityGroup := apiGroup.Group("")

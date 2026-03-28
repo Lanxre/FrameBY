@@ -1,24 +1,24 @@
 <script setup lang="ts">
-import type { UserEntity } from '@/types/backend/user'
-import { formatDate, formatRole } from '@/utils/str'
-import { FramebyAppRole } from '~/types/frontend/enums/role';
+import type { UserEntity } from "@/types/backend/user";
+import { formatDate, formatRole } from "@/utils/str";
+import { FramebyAppRole } from "~/types/frontend/enums/role";
 
-import Tooltip from '@/components/ui/ToolTip.vue'
-import ModalWindow from '@/components/common/ModalWindow.vue';
-import TabsLayout from '@/components/ui/TabsLayout/TabsLayout.vue';
-import SettingsTabs from '@/components/app/profile-tabs/SettingsTabs.vue';
-import StudentTabs from '@/components/app/profile-tabs/StudentTabs.vue';
-import BRSMTabs from '@/components/app/profile-tabs/BRSMTabs.vue';
-import UniversityTabs from '@/components/app/profile-tabs/UniversityTabs.vue';
-import CustomerTabs from '@/components/app/profile-tabs/CustomerTabs.vue';
-import { useRolePermissions } from '~/composables/api/role/useRolePermissions';
+import Tooltip from "@/components/ui/ToolTip.vue";
+import ModalWindow from "@/components/common/ModalWindow.vue";
+import TabsLayout from "@/components/ui/TabsLayout/TabsLayout.vue";
+import SettingsTabs from "@/components/app/profile-tabs/SettingsTabs.vue";
+import StudentTabs from "@/components/app/profile-tabs/StudentTabs.vue";
+import BRSMTabs from "@/components/app/profile-tabs/BRSMTabs.vue";
+import UniversityTabs from "@/components/app/profile-tabs/UniversityTabs.vue";
+import CustomerTabs from "@/components/app/profile-tabs/CustomerTabs.vue";
+import Chat from "@/components/app/chat/Chat.vue";
+import { useRolePermissions } from "~/composables/api/role/useRolePermissions";
 
-import { formatAvatar } from '@/utils/str';
+import { formatAvatar } from "@/utils/str";
 
 const props = defineProps<{
-  user: UserEntity
-}>()
-
+	user: UserEntity;
+}>();
 
 const authStore = useAuthStore();
 const { isExactRole, hasPermission } = useRolePermissions();
@@ -26,48 +26,54 @@ const { isExactRole, hasPermission } = useRolePermissions();
 const isModalSettingsOpen = ref(false);
 
 const tabs = computed(() => [
-  {
-    label: 'Настройки',
-    value: 'settings',
-    icon: 'ph:gear',
-    component: SettingsTabs,
-    hasPermission: true
-  },
-  {
-    label: 'Для студентов',
-    value: 'student',
-    icon: 'ph:student',
-    component: StudentTabs,
-    hasPermission: isExactRole(FramebyAppRole.USER)
-  },
-  {
-    label: 'Для представителей БРСМ',
-    value: 'brsm',
-    icon: 'ph:users-three',
-    component: BRSMTabs,
-    hasPermission: isExactRole(FramebyAppRole.USER)
-  },
-  {
-    label: 'Для представителей Университетов',
-    value: 'university',
-    icon: 'ph:graduation-cap',
-    component: UniversityTabs,
-    hasPermission: isExactRole(FramebyAppRole.USER)
-  },
-  {
-    label: 'Для представителей Организаций',
-    value: 'organization',
-    icon: 'ph:buildings',
-    component: CustomerTabs,
-    hasPermission: isExactRole(FramebyAppRole.USER)
-  },
-])
+	{
+		label: "Настройки",
+		value: "settings",
+		icon: "ph:gear",
+		component: SettingsTabs,
+		hasPermission: true,
+	},
+	{
+		label: "Для студентов",
+		value: "student",
+		icon: "ph:student",
+		component: StudentTabs,
+		hasPermission: isExactRole(FramebyAppRole.USER),
+	},
+	{
+		label: "Для представителей БРСМ",
+		value: "brsm",
+		icon: "ph:users-three",
+		component: BRSMTabs,
+		hasPermission: isExactRole(FramebyAppRole.USER),
+	},
+	{
+		label: "Для представителей Университетов",
+		value: "university",
+		icon: "ph:graduation-cap",
+		component: UniversityTabs,
+		hasPermission: isExactRole(FramebyAppRole.USER),
+	},
+	{
+		label: "Для представителей Организаций",
+		value: "organization",
+		icon: "ph:buildings",
+		component: CustomerTabs,
+		hasPermission: isExactRole(FramebyAppRole.USER),
+	},
+	{
+		label: "Чат",
+		value: "organization",
+		icon: "ph:chat",
+		component: Chat,
+		hasPermission: true,
+	},
+]);
 
 const handleLogout = async () => {
-  await authStore.logout();
-  navigateTo('/auth/login');
+	await authStore.logout();
+	navigateTo("/auth/login");
 };
-
 </script>
 
 <template>

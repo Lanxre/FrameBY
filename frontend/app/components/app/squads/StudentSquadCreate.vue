@@ -1,43 +1,42 @@
 <script setup lang="ts">
-import { useAuthStore } from '@/stores/auth'
-import { useCreateSquad } from '@/composables/api/squads/useCreateSquad'
+import { useAuthStore } from "@/stores/auth";
+import { useCreateSquad } from "@/composables/api/squads/useCreateSquad";
 
 const emit = defineEmits<{
-  created: []
-}>()
+	created: [];
+}>();
 
-const { isBRSM } = useAuthStore()
-const { isLoading, errorMessage, isSuccess, create, reset } = useCreateSquad()
+const { isBRSM } = useAuthStore();
+const { isLoading, errorMessage, isSuccess, create, reset } = useCreateSquad();
 
-const title = ref('')
-const description = ref('')
-const profile = ref('')
-const maxParticipants = ref<number>(10)
-
+const title = ref("");
+const description = ref("");
+const profile = ref("");
+const maxParticipants = ref<number>(10);
 
 const handleSubmit = async () => {
-  if (!title.value.trim() || maxParticipants.value <= 0) {
-    return
-  }
+	if (!title.value.trim() || maxParticipants.value <= 0) {
+		return;
+	}
 
-  const success = await create({
-    title: title.value.trim(),
-    description: description.value.trim() || undefined,
-    profile: profile.value.trim() || undefined,
-    max_participants: maxParticipants.value
-  })
+	const success = await create({
+		title: title.value.trim(),
+		description: description.value.trim() || undefined,
+		profile: profile.value.trim() || undefined,
+		max_participants: maxParticipants.value,
+	});
 
-  if (success) {
-    title.value = ''
-    description.value = ''
-    profile.value = ''
-    maxParticipants.value = 10
-    emit('created')
-    setTimeout(() => {
-      reset()
-    }, 3000)
-  }
-}
+	if (success) {
+		title.value = "";
+		description.value = "";
+		profile.value = "";
+		maxParticipants.value = 10;
+		emit("created");
+		setTimeout(() => {
+			reset();
+		}, 3000);
+	}
+};
 </script>
 
 <template>

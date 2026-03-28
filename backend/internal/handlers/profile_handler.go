@@ -347,6 +347,48 @@ func (h *ProfileHandler) hasOtherProfiles(c *gin.Context, userID uuid.UUID) (boo
 	return false, nil
 }
 
+func (h *ProfileHandler) GetStudentProfileByUserID(c *gin.Context) {
+	userIDStr := c.Query("user_id")
+	if userIDStr == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "user_id required"})
+		return
+	}
+
+	userID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user_id format"})
+		return
+	}
+
+	profile, err := h.profileService.GetStudentProfile(c.Request.Context(), userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения профиля"})
+		return
+	}
+	if profile == nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Профиль студента не найден"})
+		return
+	}
+
+	response := gin.H{
+		"full_name": profile.FullName,
+		"specialty": profile.Specialty,
+		"grade":     profile.Grade,
+		"position":  profile.Position,
+		"phone":     profile.Phone,
+	}
+
+	if profile.UniversityDepartmentID != nil {
+		dept, err := h.profileService.GetUniversityDepartmentInfo(c.Request.Context(), *profile.UniversityDepartmentID)
+		if err == nil && dept != nil {
+			response["university_name"] = dept.UniversityName
+			response["department_name"] = dept.DepartmentName
+		}
+	}
+
+	c.JSON(http.StatusOK, response)
+}
+
 func (h *ProfileHandler) GetAllProfiles(c *gin.Context) {
 	profileType := c.Query("profile_type")
 	search := c.Query("search")
@@ -370,6 +412,29 @@ func (h *ProfileHandler) GetAllProfiles(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, response)
+}
+
+func (h *ProfileHandler) GetUniversityStats(c *gin.Context) {
+	userID, _ := c.Get(middleware.UserIDKey)
+	uid := userID.(uuid.UUID)
+
+	profile, err := h.profileService.GetUniversityProfile(c.Request.Context(), uid)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения профиля"})
+		return
+	}
+	if profile == nil || profile.UniversityDepartmentID == nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Профиль университета не найден"})
+		return
+	}
+
+	stats, err := h.profileService.GetUniversityStats(c.Request.Context(), *profile.UniversityDepartmentID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения статистики"})
+		return
+	}
+
+	c.JSON(http.StatusOK, stats)
 }
 
 func (h *ProfileHandler) UpdateSubrole(c *gin.Context) {
@@ -410,4 +475,58 @@ func (h *ProfileHandler) DeleteProfile(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Профиль успешно удалён"})
+}
+
+func (h *ProfileHandler) SearchUsers(c *gin.Context) {
+	search := c.Query("search")
+	limitStr := c.DefaultQuery("limit", "10")
+
+	limit, err := strconv.Atoi(limitStr)
+	if err != nil || limit <= 0 {
+		limit = 10
+	}
+
+	response, err := h.profileService.SearchUsers(c.Request.Context(), search, limit)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, response)
+}
+
+func (h *ProfileHandler) GetStudentsWithEmployment(c *gin.Context) {
+	userID, _ := c.Get(middleware.UserIDKey)
+	uid := userID.(uuid.UUID)
+
+	profile, err := h.profileService.GetUniversityProfile(c.Request.Context(), uid)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения профиля"})
+		return
+	}
+	if profile == nil || profile.UniversityDepartmentID == nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Профиль университета не найден"})
+		return
+	}
+
+	limitStr := c.DefaultQuery("limit", "20")
+	offsetStr := c.DefaultQuery("offset", "0")
+
+	limit, err := strconv.Atoi(limitStr)
+	if err != nil || limit <= 0 {
+		limit = 20
+	}
+
+	offset, err := strconv.Atoi(offsetStr)
+	if err != nil || offset < 0 {
+		offset = 0
+	}
+
+	response, err := h.profileService.GetStudentsWithEmployment(c.Request.Context(), *profile.UniversityDepartmentID, limit, offset)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, response)
 }

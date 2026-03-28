@@ -1,114 +1,179 @@
 <script setup lang="ts">
-import { useVirtualList } from '@vueuse/core'
-import { useAuthStore } from '@/stores/auth'
-import { useStudentSquads, useMySquads, useSquadStatuses } from '@/composables/api/squads/useStudentSquads'
-import { useUpdateSquad } from '@/composables/api/squads/useUpdateSquad'
-import { SQUAD_STATUS_COLORS, SQUAD_STATUS_LABELS } from '@/const/squad'
-import type { StudentSquad } from '@/types/frontend/student-squad'
-import { formatDate } from '@/utils/str'
-import ModalConfirm from '@/components/common/ModalConfirm.vue'
-import ToolTip from '@/components/ui/ToolTip.vue'
-import StudentSquadEditModal from './StudentSquadEditModal.vue'
+import { useVirtualList } from "@vueuse/core";
+import { useAuthStore } from "@/stores/auth";
+import {
+	useStudentSquads,
+	useMySquads,
+	useSquadStatuses,
+} from "@/composables/api/squads/useStudentSquads";
+import { useUpdateSquad } from "@/composables/api/squads/useUpdateSquad";
+import { SQUAD_STATUS_COLORS, SQUAD_STATUS_LABELS } from "@/const/squad";
+import type { StudentSquad } from "@/types/frontend/student-squad";
+import { formatDate, formatTotalStudentSquads } from "@/utils/str";
+import ModalConfirm from "@/components/common/ModalConfirm.vue";
+import ToolTip from "@/components/ui/ToolTip.vue";
+import StudentSquadEditModal from "./StudentSquadEditModal.vue";
+import { FramebyAppRole } from "~/types/frontend/enums/role";
 
-const emit = defineEmits<{ updated: [] }>()
+const emit = defineEmits<{ updated: [] }>();
 
-const { user } = useAuthStore()
-const { squads, total, isLoading: isGlobalLoading, errorMessage, fetchSquads } = useStudentSquads()
-const { squads: mySquads, fetchMySquads, isLoading: isMyLoading } = useMySquads()
-const { fetchStatuses } = useSquadStatuses()
-const { closeRecruitment, openRecruitment, isLoading: isUpdating } = useUpdateSquad()
+const { user } = useAuthStore();
+const { notify } = useNotificationStore();
 
-const showMySquadsOnly = ref(true)
-const showCloseModal = ref(false)
-const squadToClose = ref<StudentSquad | null>(null)
-const showEditModal = ref(false)
-const squadToEdit = ref<StudentSquad | null>(null)
-const limit = ref(10)
-const offset = ref(0)
+const {
+	squads,
+	total,
+	isLoading: isGlobalLoading,
+	errorMessage,
+	fetchSquads,
+} = useStudentSquads();
+const {
+	squads: mySquads,
+	fetchMySquads,
+	isLoading: isMyLoading,
+} = useMySquads();
+const { fetchStatuses } = useSquadStatuses();
+const {
+	closeRecruitment,
+	openRecruitment,
+	isLoading: isUpdating,
+} = useUpdateSquad();
 
-const isLoading = computed(() => isGlobalLoading.value || isMyLoading.value)
-const totalPages = computed(() => Math.ceil(total.value / limit.value))
-const currentPage = computed(() => Math.floor(offset.value / limit.value) + 1)
-const isMyView = computed(() => showMySquadsOnly.value)
+const showMySquadsOnly = ref(true);
+const showCloseModal = ref(false);
+const squadToClose = ref<StudentSquad | null>(null);
+const showEditModal = ref(false);
+const squadToEdit = ref<StudentSquad | null>(null);
+const limit = ref(10);
+const offset = ref(0);
 
-const sourceList = ref<StudentSquad[]>([])
+const isLoading = computed(() => isGlobalLoading.value || isMyLoading.value);
+const totalPages = computed(() => Math.ceil(total.value / limit.value));
+const currentPage = computed(() => Math.floor(offset.value / limit.value) + 1);
+const isMyView = computed(() => showMySquadsOnly.value);
 
-watch([squads, mySquads, isMyView], () => {
-  sourceList.value = isMyView.value ? mySquads.value : squads.value
-}, { immediate: true })
+const sourceList = ref<StudentSquad[]>([]);
+
+watch(
+	[squads, mySquads, isMyView],
+	() => {
+		sourceList.value = isMyView.value ? mySquads.value : squads.value;
+	},
+	{ immediate: true },
+);
 
 const loadData = async () => {
-  if (isMyView.value) {
-    await fetchMySquads()
-  } else {
-    await fetchSquads({ limit: limit.value, offset: offset.value })
-  }
-}
+	if (isMyView.value) {
+		await fetchMySquads();
+	} else {
+		await fetchSquads({ limit: limit.value, offset: offset.value });
+	}
+};
 
-watch([isMyView, offset], loadData)
+watch([isMyView, offset], loadData);
 
 onMounted(async () => {
-  await Promise.all([loadData(), fetchStatuses()])
-})
+	await Promise.all([loadData(), fetchStatuses()]);
+});
 
 const goToPage = (page: number) => {
-  if (page < 1 || page > totalPages.value) return
-  offset.value = (page - 1) * limit.value
-}
+	if (page < 1 || page > totalPages.value) return;
+	offset.value = (page - 1) * limit.value;
+};
 
 const openCloseModal = (squad: StudentSquad) => {
-  squadToClose.value = squad
-  showCloseModal.value = true
-}
+	squadToClose.value = squad;
+	showCloseModal.value = true;
+};
 
 const openEditModal = (squad: StudentSquad) => {
-  squadToEdit.value = squad
-  showEditModal.value = true
-}
-
-const handleRefresh = async () => {
-  await loadData()
-  emit('updated')
-}
+	squadToEdit.value = squad;
+	showEditModal.value = true;
+};
 
 const confirmClose = async () => {
-  if (!squadToClose.value) return
-  const success = await closeRecruitment(squadToClose.value.id)
-  if (success) {
-    const list = isMyView.value ? mySquads.value : squads.value
-    const squad = list.find(s => s.id === squadToClose.value!.id)
-    if (squad) squad.status = 'closed'
-    showCloseModal.value = false
-    squadToClose.value = null
-  }
-}
+	if (!squadToClose.value) return;
+	const success = await closeRecruitment(squadToClose.value.id);
+	if (success) {
+		const list = isMyView.value ? mySquads.value : squads.value;
+		const squad = list.find((s) => s.id === squadToClose.value!.id);
+		if (squad) squad.status = "closed";
+		showCloseModal.value = false;
+		squadToClose.value = null;
+		notify({
+			title: "Отряд успешно закрыт",
+			content: "Закрытие отряда успешно выполнено",
+			type: "success",
+		});
+	} else {
+		notify({
+			title: "Ошибка закрытия отряда",
+			content: "Не удалось закрыть отряд",
+			type: "error",
+		});
+	}
+};
 
 const openRecruitmentFor = async (squad: StudentSquad) => {
-  const success = await openRecruitment(squad.id)
-  if (success) {
-    const list = isMyView.value ? mySquads.value : squads.value
-    const item = list.find(s => s.id === squad.id)
-    if (item) item.status = 'pending'
-  }
-}
+	const success = await openRecruitment(squad.id);
+	if (success) {
+		const list = isMyView.value ? mySquads.value : squads.value;
+		const item = list.find((s) => s.id === squad.id);
 
-const handleSquadSaved = (data: { id: string; title: string; description: string | null; profile: string | null; max_participants: number }) => {
-  const list = isMyView.value ? mySquads.value : squads.value
-  const squad = list.find(s => s.id === data.id)
-  if (squad) {
-    squad.title = data.title
-    squad.description = data.description
-    squad.profile = data.profile
-    squad.max_participants = data.max_participants
-  }
-  showEditModal.value = false
-  squadToEdit.value = null
-}
+		if (user!.role === FramebyAppRole.BRSM && item) {
+			item.status = "recruitment_open";
+		} else if (item) {
+			item.status = "pending";
+		}
+
+		notify({
+			title: "Успех",
+			content: "Отряд успешно открыт для набора",
+			type: "success",
+		});
+	} else {
+		notify({
+			title: "Ошибка открытия отряда для набора",
+			content: "Не удалось открыть отряд для набора",
+			type: "error",
+		});
+	}
+};
+
+const handleSquadSaved = (data: {
+	id: string;
+	title: string;
+	description: string | null;
+	profile: string | null;
+	max_participants: number;
+}) => {
+	const list = isMyView.value ? mySquads.value : squads.value;
+	const squad = list.find((s) => s.id === data.id);
+
+	const updatedTime = new Date(Date.now());
+	updatedTime.setHours(updatedTime.getHours() + 3);
+
+	if (squad) {
+		squad.title = data.title;
+		squad.description = data.description;
+		squad.profile = data.profile;
+		squad.max_participants = data.max_participants;
+		squad.updated_at = updatedTime;
+	}
+	showEditModal.value = false;
+	squadToEdit.value = null;
+
+	notify({
+		title: "Отряд успешно обновлен",
+		content: "Изменения сохранены",
+		type: "success",
+	});
+};
 
 const { list, containerProps, wrapperProps } = useVirtualList(sourceList, {
-  itemHeight: 220,
-  overscan: 8
-})
+	itemHeight: 220,
+	overscan: 8,
+});
 </script>
 
 <template>
@@ -127,7 +192,7 @@ const { list, containerProps, wrapperProps } = useVirtualList(sourceList, {
           </div>
           <span class="text-sm text-gray-600">Только мои</span>
         </label>
-        <span class="text-sm text-gray-500">Всего: {{ isMyView ? mySquads.length : total }}</span>
+        <span class="text-sm text-gray-500">Всего: {{ isMyView ? formatTotalStudentSquads(mySquads.length) : formatTotalStudentSquads(total) }}</span>
       </div>
     </div>
 
@@ -201,19 +266,19 @@ const { list, containerProps, wrapperProps } = useVirtualList(sourceList, {
 
             <div v-if="isMyView || squad.organizer.id === user?.id" class="flex flex-col gap-2">
               <ToolTip text="Редактировать">
-                <button @click="openEditModal(squad)" class="p-1.5 text-gray-400 hover:text-emerald-500 transition rounded-lg">
+                <button @click="openEditModal(squad)" class="p-1.5 text-gray-400 hover:text-emerald-500 transition rounded-lg cursor-pointer">
                   <Icon name="ph:pencil" size="18" />
                 </button>
               </ToolTip>
 
               <ToolTip v-if="squad.status === 'recruitment_open'" text="Закрыть">
-                <button @click="openCloseModal(squad)" class="p-1.5 text-gray-400 hover:text-red-500 transition rounded-lg">
+                <button @click="openCloseModal(squad)" class="p-1.5 text-gray-400 hover:text-red-500 transition rounded-lg cursor-pointer">
                   <Icon name="ph:x" size="18" />
                 </button>
               </ToolTip>
 
               <ToolTip v-if="squad.status === 'closed'" text="Открыть">
-                <button @click="openRecruitmentFor(squad)" class="p-1.5 text-gray-400 hover:text-green-500 transition rounded-lg">
+                <button @click="openRecruitmentFor(squad)" class="p-1.5 text-gray-400 hover:text-green-500 transition rounded-lg cursor-pointer">
                   <Icon name="ph:plus" size="18" />
                 </button>
               </ToolTip>

@@ -1,25 +1,23 @@
 <script setup lang="ts">
-import { useCustomerForm } from '~/composables/api/forms/useCustomerForm'
-import { useEnterprises } from '@/composables/api/useEnterprises'
-import Select from '@/components/ui/Select/Select.vue'
-import ModalConfirm from '@/components/common/ModalConfirm.vue'
+import { useCustomerForm } from "~/composables/api/forms/useCustomerForm";
+import { useEnterprises } from "@/composables/api/useEnterprises";
+import Select from "@/components/ui/Select/Select.vue";
+import ModalConfirm from "@/components/common/ModalConfirm.vue";
 
-const emit = defineEmits(['submit'])
+const emit = defineEmits(["submit"]);
+
+const { form, isLoading, errorMessage, showConfirm, handleSubmit, submit } =
+	useCustomerForm();
 
 const {
-  form,
-  isLoading,
-  errorMessage,
-  showConfirm,
-  handleSubmit,
-  submit
-} = useCustomerForm()
-
-const { enterprises, isLoading: isLoadingEnterprises, fetchEnterprises } = useEnterprises()
+	enterprises,
+	isLoading: isLoadingEnterprises,
+	fetchEnterprises,
+} = useEnterprises();
 
 onMounted(() => {
-  fetchEnterprises()
-})
+	fetchEnterprises();
+});
 </script>
 
 <template>

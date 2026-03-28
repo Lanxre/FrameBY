@@ -4,12 +4,14 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"log"
 	"strconv"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/lanxre/frameby/internal/models/db"
+	"github.com/lanxre/frameby/internal/models/dto"
 )
 
 type ProfileRepository struct {
@@ -427,6 +429,68 @@ func (r *ProfileRepository) GetAllProfiles(ctx context.Context, profileType, sea
 	return results, total, nil
 }
 
+type UniversityStats struct {
+	TotalStudents    int
+	StudentsInSquads int
+	StudentsEmployed int
+	TotalSquads      int
+	JobInvitations   int
+}
+
+func (r *ProfileRepository) GetUniversityStats(ctx context.Context, universityDeptID uuid.UUID) (*UniversityStats, error) {
+	stats := &UniversityStats{}
+
+	err := r.db.QueryRow(ctx, `
+		SELECT COUNT(*) FROM student_profiles WHERE university_department_id = $1
+	`, universityDeptID).Scan(&stats.TotalStudents)
+	if err != nil {
+		return nil, err
+	}
+
+	err = r.db.QueryRow(ctx, `
+		SELECT COUNT(DISTINCT ssp.user_id)
+		FROM student_squad_participants ssp
+		JOIN student_squads squads ON ssp.squad_id = squads.id
+		JOIN student_profiles sp ON ssp.user_id = sp.user_id
+		WHERE sp.university_department_id = $1
+	`, universityDeptID).Scan(&stats.StudentsInSquads)
+	if err != nil {
+		return nil, err
+	}
+
+	err = r.db.QueryRow(ctx, `
+		SELECT COUNT(DISTINCT ep.user_id)
+		FROM employment_participants ep
+		JOIN employment_requests er ON ep.request_id = er.id
+		JOIN student_profiles sp ON ep.user_id = sp.user_id
+		WHERE er.university_department_id = $1 AND ep.status_id >= 2
+	`, universityDeptID).Scan(&stats.StudentsEmployed)
+	if err != nil {
+		return nil, err
+	}
+
+	err = r.db.QueryRow(ctx, `
+		SELECT COUNT(DISTINCT ss.id)
+		FROM student_squads ss
+		JOIN student_profiles sp ON ss.organizer_id = sp.user_id
+		WHERE sp.university_department_id = $1
+	`, universityDeptID).Scan(&stats.TotalSquads)
+	if err != nil {
+		return nil, err
+	}
+
+	err = r.db.QueryRow(ctx, `
+		SELECT COUNT(*)
+		FROM employment_requests er
+		WHERE er.university_department_id = $1 AND er.status_id = 2
+	`, universityDeptID).Scan(&stats.JobInvitations)
+	if err != nil {
+		return nil, err
+	}
+
+	return stats, nil
+}
+
 func (r *ProfileRepository) DeleteAllProfiles(ctx context.Context, userID uuid.UUID) error {
 	tx, err := r.db.Begin(ctx)
 	if err != nil {
@@ -451,4 +515,237 @@ func (r *ProfileRepository) DeleteAllProfiles(ctx context.Context, userID uuid.U
 	}
 
 	return tx.Commit(ctx)
+}
+
+func (r *ProfileRepository) SearchUsers(ctx context.Context, search string, limit int) (*dto.AllProfilesResponse, error) {
+	searchPattern := "%" + search + "%"
+
+	query := `
+		SELECT u.id, u.email, u.login, u.role, u.avatar,
+			   COALESCE(bp.full_name, sp.full_name, up.full_name, cp.full_name, '') as full_name,
+			   COALESCE(bp.position, sp.position, up.position, cp.position, '') as position,
+			   COALESCE(bp.phone, sp.phone, up.phone, cp.phone, '') as phone,
+			   TO_CHAR(COALESCE(bp.updated_at, sp.updated_at, up.updated_at, cp.updated_at, u.updated_at), 'YYYY-MM-DD"T"HH24:MI:SS"Z"') as updated_at
+		FROM users u
+		LEFT JOIN brsm_profiles bp ON bp.user_id = u.id
+		LEFT JOIN student_profiles sp ON sp.user_id = u.id
+		LEFT JOIN university_profiles up ON up.user_id = u.id
+		LEFT JOIN customer_profiles cp ON cp.user_id = u.id
+		WHERE u.role != 'admin'
+		  AND (u.login ILIKE $1 OR u.email ILIKE $1 OR COALESCE(bp.full_name, sp.full_name, up.full_name, cp.full_name, '') ILIKE $1)
+		ORDER BY updated_at DESC
+		LIMIT $2`
+
+	rows, err := r.db.Query(ctx, query, searchPattern, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var profiles []dto.ProfileResponse
+	for rows.Next() {
+		var p dto.ProfileResponse
+		var fullName, position, phone sql.NullString
+
+		err := rows.Scan(
+			&p.UserID,
+			&p.Email,
+			&p.Login,
+			&p.Role,
+			&p.Avatar,
+			&fullName,
+			&position,
+			&phone,
+			&p.UpdatedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		profileData := make(map[string]interface{})
+		if fullName.Valid {
+			profileData["full_name"] = fullName.String
+		}
+		if position.Valid {
+			profileData["position"] = position.String
+		}
+		if phone.Valid {
+			profileData["phone"] = phone.String
+		}
+		p.Profile = profileData
+
+		profiles = append(profiles, p)
+	}
+
+	if profiles == nil {
+		profiles = []dto.ProfileResponse{}
+	}
+
+	return &dto.AllProfilesResponse{
+		Profiles: profiles,
+		Total:    len(profiles),
+		Limit:    limit,
+		Offset:   0,
+	}, nil
+}
+
+func (r *ProfileRepository) GetStudentsWithEmployment(ctx context.Context, universityDeptID uuid.UUID, limit, offset int) (*dto.StudentEmploymentListResponse, error) {
+	countQuery := `SELECT COUNT(*) FROM student_profiles WHERE university_department_id = $1`
+	var total int
+	if err := r.db.QueryRow(ctx, countQuery, universityDeptID).Scan(&total); err != nil {
+		return nil, err
+	}
+
+	studentsQuery := `
+		SELECT u.id, u.email, u.login, u.role, u.avatar,
+			   sp.full_name, sp.specialty, sp.grade, sp.position, sp.phone,
+			   TO_CHAR(sp.updated_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') as updated_at
+		FROM student_profiles sp
+		JOIN users u ON sp.user_id = u.id
+		WHERE sp.university_department_id = $1
+		ORDER BY sp.full_name ASC
+		LIMIT $2 OFFSET $3`
+
+	rows, err := r.db.Query(ctx, studentsQuery, universityDeptID, limit, offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var students []dto.StudentEmploymentInfo
+	for rows.Next() {
+		var p dto.ProfileResponse
+		var fullName, specialty, position, phone sql.NullString
+		var grade sql.Null[float64]
+
+		err := rows.Scan(
+			&p.UserID, &p.Email, &p.Login, &p.Role, &p.Avatar,
+			&fullName, &specialty, &grade, &position, &phone,
+			&p.UpdatedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		profileData := make(map[string]interface{})
+		if fullName.Valid {
+			profileData["full_name"] = fullName.String
+		}
+		if specialty.Valid {
+			profileData["specialty"] = specialty.String
+		}
+		if grade.Valid {
+			profileData["grade"] = grade.V
+		}
+		if position.Valid {
+			profileData["position"] = position.String
+		}
+		if phone.Valid {
+			profileData["phone"] = phone.String
+		}
+		p.Profile = profileData
+
+		studentUUID, _ := uuid.Parse(p.UserID)
+
+		squads, errSquads := r.GetStudentSquads(ctx, studentUUID)
+		if errSquads != nil {
+			log.Printf("Error getting squads for user %s: %v", p.UserID, errSquads)
+		}
+		works, errWorks := r.GetStudentWorks(ctx, studentUUID, universityDeptID)
+		if errWorks != nil {
+			log.Printf("Error getting works for user %s: %v", p.UserID, errWorks)
+		}
+
+		students = append(students, dto.StudentEmploymentInfo{
+			Student:       p,
+			StudentSquads: squads,
+			Works:         works,
+		})
+	}
+
+	if students == nil {
+		students = []dto.StudentEmploymentInfo{}
+	}
+
+	return &dto.StudentEmploymentListResponse{
+		Students: students,
+		Total:    total,
+		Limit:    limit,
+		Offset:   offset,
+	}, nil
+}
+
+func (r *ProfileRepository) GetStudentSquads(ctx context.Context, userID uuid.UUID) ([]dto.StudentSquadInfo, error) {
+	query := `
+		SELECT ss.id, ss.title, ss.description,
+			   TO_CHAR(ssp.joined_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') as joined_at
+		FROM student_squad_participants ssp
+		JOIN student_squads ss ON ssp.squad_id = ss.id
+		WHERE ssp.user_id = $1
+		ORDER BY ssp.joined_at DESC`
+
+	rows, err := r.db.Query(ctx, query, userID)
+	if err != nil {
+		log.Printf("GetStudentSquads query error: %v", err)
+		return []dto.StudentSquadInfo{}, nil
+	}
+	defer rows.Close()
+
+	var squads []dto.StudentSquadInfo
+	for rows.Next() {
+		var s dto.StudentSquadInfo
+		var desc sql.NullString
+
+		err := rows.Scan(&s.ID, &s.Name, &desc, &s.JoinedAt)
+		if err != nil {
+			log.Printf("GetStudentSquads scan error: %v", err)
+			continue
+		}
+		if desc.Valid {
+			s.Description = &desc.String
+		}
+		squads = append(squads, s)
+	}
+
+	if squads == nil {
+		squads = []dto.StudentSquadInfo{}
+	}
+	return squads, nil
+}
+
+func (r *ProfileRepository) GetStudentWorks(ctx context.Context, userID, universityDeptID uuid.UUID) ([]dto.WorkInfo, error) {
+	query := `
+		SELECT er.id, er.title, COALESCE(e.name, 'Unknown') as company, '' as position,
+			   COALESCE(eps.name, 'unknown') as status,
+			   TO_CHAR(ep.applied_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') as started_at
+		FROM employment_participants ep
+		JOIN employment_requests er ON ep.request_id = er.id
+		LEFT JOIN enterprises e ON er.enterprise_id = e.id
+		LEFT JOIN employment_participant_statuses eps ON ep.status_id = eps.id
+		WHERE ep.user_id = $1 AND er.university_department_id = $2 AND ep.status_id >= 2
+		ORDER BY ep.applied_at DESC`
+
+	rows, err := r.db.Query(ctx, query, userID, universityDeptID)
+	if err != nil {
+		log.Printf("GetStudentWorks query error: %v", err)
+		return []dto.WorkInfo{}, nil
+	}
+	defer rows.Close()
+
+	var works []dto.WorkInfo
+	for rows.Next() {
+		var w dto.WorkInfo
+
+		err := rows.Scan(&w.ID, &w.Title, &w.Company, &w.Position, &w.Status, &w.StartedAt)
+		if err != nil {
+			log.Printf("GetStudentWorks scan error: %v", err)
+			continue
+		}
+		works = append(works, w)
+	}
+
+	if works == nil {
+		works = []dto.WorkInfo{}
+	}
+	return works, nil
 }

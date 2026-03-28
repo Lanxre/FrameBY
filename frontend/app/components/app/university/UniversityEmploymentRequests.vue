@@ -1,87 +1,208 @@
 <script setup lang="ts">
-import { EMPLOYMENT_STATUS_LABELS, EMPLOYMENT_STATUS_COLORS } from '@/types/frontend/employment'
-import { useEmploymentRequests } from '@/composables/api/employment/useEmploymentRequests'
-import { useApproveEmployment, useUpdateEmploymentStatus } from '@/composables/api/employment/useEmploymentActions'
+import { useVirtualList } from "@vueuse/core";
+import type { EmploymentRequest } from "@/types/frontend/employment";
+import { useEmploymentRequests } from "@/composables/api/employment/useEmploymentRequests";
+import {
+	useApproveEmployment,
+	useUpdateEmploymentStatus,
+} from "@/composables/api/employment/useEmploymentActions";
+import { formatTotalStudentSquads } from "@/utils/str";
+import Select from "@/components/ui/Select/Select.vue";
+import EmploymentRequestCard from "@/components/app/customer/EmploymentRequestCard.vue";
 
-const { requests, total, isLoading, errorMessage, fetchRequests } = useEmploymentRequests()
-const { approve, reject, isLoading: isApproving, errorMessage: approveError, reset: resetApprove, isSuccess: approveSuccess } = useApproveEmployment()
-const { updateStatus, isLoading: isClosing, errorMessage: closeError, reset: resetClose, isSuccess: closeSuccess } = useUpdateEmploymentStatus()
+const { requests, total, isLoading, errorMessage, fetchRequests } =
+	useEmploymentRequests();
 
-const statusFilter = ref('pending')
+const {
+	approve,
+	reject,
+	isLoading: isApproving,
+	errorMessage: approveError,
+	isSuccess: approveSuccess,
+} = useApproveEmployment();
+
+const {
+	updateStatus,
+	isLoading: isClosing,
+	errorMessage: closeError,
+	reset: resetClose,
+	isSuccess: closeSuccess,
+} = useUpdateEmploymentStatus();
+
+const { notify } = useNotificationStore();
+
+const statusFilter = ref<{ id: string; name: string } | null>(null);
 const statusOptions = [
-  { label: 'Ожидает подтверждения', value: 'pending' },
-  { label: 'Все', value: 'all' }
-]
+	{ id: "pending", name: "Ожидает подтверждения" },
+	{ id: "all", name: "Все" },
+];
 
-const loadRequests = () => {
-  fetchRequests({
-    status: statusFilter.value === 'all' ? undefined : statusFilter.value,
-    limit: 50
-  })
-}
+const statusCache = ref<
+	Record<string, { requests: EmploymentRequest[]; total: number }>
+>({});
+const isCacheLoading = ref(false);
 
-watch(statusFilter, loadRequests)
+const loadRequests = async (status?: string) => {
+	const cacheKey = status || "all";
 
-onMounted(loadRequests)
+	if (statusCache.value[cacheKey] && status === undefined) {
+		const cached = statusCache.value[cacheKey];
+		requests.value = cached.requests;
+		total.value = cached.total;
+		return;
+	}
 
-const handleApprove = async (requestId: string) => {
-  const success = await approve(requestId)
-  if (success) {
-    const request = requests.value.find(r => r.id === requestId)
-    if (request) request.status = 'approved'
-  }
-}
+	isCacheLoading.value = true;
+	try {
+		await fetchRequests({
+			status: status === "all" ? undefined : status,
+			limit: 50,
+		});
 
-const handleReject = async (requestId: string) => {
-  const success = await reject(requestId)
-  if (success) {
-    if (statusFilter.value === 'pending') {
-      const index = requests.value.findIndex(r => r.id === requestId)
-      if (index !== -1) requests.value.splice(index, 1)
-      total.value--
-    } else {
-      const request = requests.value.find(r => r.id === requestId)
-      if (request) request.status = 'rejected'
-    }
-  }
-}
+		statusCache.value[cacheKey] = {
+			requests: [...requests.value],
+			total: total.value,
+		};
+	} finally {
+		isCacheLoading.value = false;
+	}
+};
 
-const handleClose = async (requestId: string) => {
-  const success = await updateStatus(requestId, 'closed')
-  if (success) {
-    const request = requests.value.find(r => r.id === requestId)
-    if (request) request.status = 'closed'
-  }
-}
+watch(statusFilter, async (newFilter) => {
+	const status = newFilter?.id;
+	const cacheKey = status || "all";
 
-const getStatusColor = (status: string) => {
-  return EMPLOYMENT_STATUS_COLORS[status] || { bg: 'bg-gray-100', text: 'text-gray-600' }
-}
+	if (statusCache.value[cacheKey]) {
+		const cached = statusCache.value[cacheKey];
+		requests.value = cached.requests;
+		total.value = cached.total;
+	} else {
+		await loadRequests(status);
+	}
+});
 
-const isUpdating = computed(() => isApproving.value || isClosing.value)
-const updateError = computed(() => approveError.value || closeError.value)
-const updateSuccess = computed(() => approveSuccess.value || closeSuccess.value)
-const resetUpdate = () => {
-  resetApprove()
-  resetClose()
-}
+onMounted(() => {
+	if (statusOptions[0]) statusFilter.value = statusOptions[0];
+
+	loadRequests("pending");
+});
+
+const handleApprove = async (request: EmploymentRequest) => {
+	const success = await approve(request.id);
+	if (success) {
+		const item = requests.value.find((r) => r.id === request.id);
+		if (item) item.status = "approved";
+
+		if (statusFilter.value?.id === "pending") {
+			const index = requests.value.findIndex((r) => r.id === request.id);
+			if (index !== -1) requests.value.splice(index, 1);
+			total.value--;
+		}
+
+		Object.keys(statusCache.value).forEach((key) => {
+			const cached = statusCache.value[key];
+			const cachedItem = cached.requests.find((r) => r.id === request.id);
+			if (cachedItem) cachedItem.status = "approved";
+		});
+
+		notify({
+			title: "Успех",
+			content: "Заявка одобрена",
+			type: "success",
+		});
+	} else {
+		notify({
+			title: "Ошибка",
+			content: "Не удалось одобрить заявку",
+			type: "error",
+		});
+	}
+};
+
+const handleReject = async (request: EmploymentRequest) => {
+	const success = await reject(request.id);
+	if (success) {
+		if (statusFilter.value?.id === "pending") {
+			const index = requests.value.findIndex((r) => r.id === request.id);
+			if (index !== -1) requests.value.splice(index, 1);
+			total.value--;
+		} else {
+			const item = requests.value.find((r) => r.id === request.id);
+			if (item) item.status = "rejected";
+		}
+
+		Object.keys(statusCache.value).forEach((key) => {
+			const cached = statusCache.value[key];
+			const cachedItem = cached.requests.find((r) => r.id === request.id);
+			if (cachedItem) cachedItem.status = "rejected";
+		});
+
+		notify({
+			title: "Успех",
+			content: "Заявка отклонена",
+			type: "success",
+		});
+	} else {
+		notify({
+			title: "Ошибка",
+			content: "Не удалось отклонить заявку",
+			type: "error",
+		});
+	}
+};
+
+const handleClose = async (request: EmploymentRequest) => {
+	const success = await updateStatus(request.id, "closed");
+	if (success) {
+		const item = requests.value.find((r) => r.id === request.id);
+		if (item) item.status = "closed";
+
+		Object.keys(statusCache.value).forEach((key) => {
+			const cached = statusCache.value[key];
+			const cachedItem = cached.requests.find((r) => r.id === request.id);
+			if (cachedItem) cachedItem.status = "closed";
+		});
+
+		notify({
+			title: "Успех",
+			content: "Заявка закрыта",
+			type: "success",
+		});
+	} else {
+		notify({
+			title: "Ошибка",
+			content: "Не удалось закрыть заявку",
+			type: "error",
+		});
+	}
+};
+
+const isUpdating = computed(() => isApproving.value || isClosing.value);
+const updateError = computed(() => approveError.value || closeError.value);
+const updateSuccess = computed(
+	() => approveSuccess.value || closeSuccess.value,
+);
+
+const { list, containerProps, wrapperProps } = useVirtualList(requests, {
+	itemHeight: 200,
+	overscan: 8,
+});
 </script>
 
 <template>
   <div class="space-y-4">
-    <div class="flex items-center gap-4">
-      <div class="flex items-center gap-2">
-        <Icon name="ph:funnel" class="text-emerald-600" />
-        <select
+    <div class="flex items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <Select
           v-model="statusFilter"
-          class="px-3 py-2 rounded-lg border border-emerald-200 bg-white/80 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400"
-        >
-          <option v-for="opt in statusOptions" :key="opt.value" :value="opt.value">
-            {{ opt.label }}
-          </option>
-        </select>
+          :options="statusOptions"
+          icon="ph:funnel"
+          placeholder="Статус"
+        />
       </div>
-      <span class="text-sm text-gray-500">Всего: {{ total }}</span>
+      <span class="text-sm text-gray-500 whitespace-nowrap">
+        Всего: {{ formatTotalStudentSquads(total, { oneText: 'заявка', twoFourText: 'заявки', fivePlusText: 'заявок' }) }}
+      </span>
     </div>
 
     <div v-if="errorMessage" class="p-4 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
@@ -96,7 +217,7 @@ const resetUpdate = () => {
       Статус успешно обновлён!
     </div>
 
-    <div v-if="isLoading" class="flex justify-center py-8">
+    <div v-if="isLoading || isCacheLoading" class="flex justify-center py-8">
       <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
     </div>
 
@@ -105,88 +226,23 @@ const resetUpdate = () => {
       <p>Заявки не найдены</p>
     </div>
 
-    <div v-else class="space-y-3">
-      <div
-        v-for="request in requests"
-        :key="request.id"
-        class="bg-white/80 border border-emerald-100 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow"
-      >
-        <div class="flex items-start justify-between gap-4">
-          <div class="flex-1 min-w-0">
-            <div class="flex items-center gap-2 mb-2">
-              <h3 class="font-semibold text-gray-900 truncate">{{ request.title }}</h3>
-              <span
-                :class="[
-                  'px-2 py-0.5 rounded-full text-xs font-medium',
-                  getStatusColor(request.status).bg,
-                  getStatusColor(request.status).text
-                ]"
-              >
-                {{ EMPLOYMENT_STATUS_LABELS[request.status] || request.status }}
-              </span>
-            </div>
-
-            <p v-if="request.description" class="text-sm text-gray-600 mb-2">
-              {{ request.description }}
-            </p>
-
-            <div class="flex flex-wrap items-center gap-3 text-sm text-gray-500">
-              <span class="flex items-center gap-1">
-                <Icon name="ph:buildings" size="16" />
-                {{ request.enterprise_name }}
-              </span>
-              <span class="flex items-center gap-1">
-                <Icon name="ph:graduation-cap" size="16" />
-                {{ request.university_department_name }}
-              </span>
-              <span v-if="request.salary" class="flex items-center gap-1">
-                <Icon name="ph:currency-rub" size="16" />
-                {{ request.salary }}
-              </span>
-              <span v-if="request.employment_type" class="flex items-center gap-1">
-                <Icon name="ph:clock" size="16" />
-                {{ request.employment_type }}
-              </span>
-            </div>
-
-            <div v-if="request.requirements" class="mt-2 text-sm text-gray-500">
-              <span class="font-medium">Требования:</span> {{ request.requirements }}
-            </div>
-          </div>
-
-          <div class="flex-shrink-0 flex gap-2">
-            <button
-              v-if="request.status === 'pending'"
-              @click="handleApprove(request.id)"
-              :disabled="isUpdating"
-              class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-300 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2"
-            >
-              <Icon v-if="!isUpdating" name="ph:check-circle" size="18" />
-              <div v-else class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-              Одобрить
-            </button>
-            <button
-              v-if="request.status === 'pending'"
-              @click="handleReject(request.id)"
-              :disabled="isUpdating"
-              class="px-4 py-2 bg-red-50 hover:bg-red-100 disabled:bg-red-50 text-red-600 text-sm font-medium rounded-lg transition-colors flex items-center gap-2"
-            >
-              <Icon v-if="!isUpdating" name="ph:x-circle" size="18" />
-              <div v-else class="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600"></div>
-              Отклонить
-            </button>
-            <button
-              v-if="request.status === 'approved'"
-              @click="handleClose(request.id)"
-              :disabled="isUpdating"
-              class="px-4 py-2 bg-red-50 hover:bg-red-100 disabled:bg-red-50 text-red-600 text-sm font-medium rounded-lg transition-colors flex items-center gap-2"
-            >
-              <Icon v-if="!isUpdating" name="ph:x-circle" size="18" />
-              <div v-else class="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600"></div>
-              Закрыть
-            </button>
-          </div>
-        </div>
+    <div
+      v-else
+      v-bind="containerProps"
+      class="h-150 overflow-y-auto rounded-2xl border border-emerald-100 bg-white/60 backdrop-blur"
+    >
+      <div v-bind="wrapperProps" class="p-4 space-y-3">
+        <EmploymentRequestCard
+          v-for="{ data: request } in list"
+          :key="request.id"
+          :request="request"
+          :show-actions="true"
+          :is-university-mode="true"
+          :is-loading="isUpdating"
+          @approve="handleApprove"
+          @reject="handleReject"
+          @close="handleClose"
+        />
       </div>
     </div>
   </div>

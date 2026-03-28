@@ -39,6 +39,20 @@ func (h *EmploymentHandler) GetAll(c *gin.Context) {
 		offset = 0
 	}
 
+	if roleVal, exists := c.Get(middleware.UserRoleKey); exists {
+		if role, ok := roleVal.(string); ok && role == "student" {
+			if status == "" || status == "all" {
+				status = "approved"
+			}
+			userID, _ := c.Get(middleware.UserIDKey)
+			uid := userID.(uuid.UUID)
+			studentProfile, _ := h.profileService.GetStudentProfile(c.Request.Context(), uid)
+			if studentProfile != nil && studentProfile.UniversityDepartmentID != nil {
+				universityDeptID = studentProfile.UniversityDepartmentID.String()
+			}
+		}
+	}
+
 	response, err := h.service.GetAll(c.Request.Context(), status, universityDeptID, limit, offset)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения заявок"})
@@ -211,15 +225,16 @@ func (h *EmploymentHandler) UpdateParticipantStatus(c *gin.Context) {
 		return
 	}
 
-	var req dto.UpdateParticipantStatusRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверные данные: " + err.Error()})
+	userIDStr := c.Param("userId")
+	userID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверный формат ID пользователя"})
 		return
 	}
 
-	userID, err := uuid.Parse(req.UserID)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверный формат ID пользователя"})
+	var req dto.UpdateParticipantStatusRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверные данные: " + err.Error()})
 		return
 	}
 

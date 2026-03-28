@@ -1,93 +1,100 @@
 <script setup lang="ts">
-import { useDashboardProfiles } from '@/composables/api/dashboard/useDashboardProfiles'
-import type { ProfileRow } from '@/types/dashboard/profile'
-import ProfileFilter from './ProfileFilter.vue'
-import ProfileTable from './ProfileTable.vue'
-import ProfileEditModal from './ProfileEditModal.vue'
-import ModalConfirm from '@/components/common/ModalConfirm.vue'
-import EnterpriseCreate from './EnterpriseCreate.vue'
-import UniversityCreate from './UniversityCreate.vue'
+import { useDashboardProfiles } from "@/composables/api/dashboard/useDashboardProfiles";
+import type { ProfileRow } from "@/types/dashboard/profile";
+import ProfileFilter from "./ProfileFilter.vue";
+import ProfileTable from "./ProfileTable.vue";
+import ProfileEditModal from "./ProfileEditModal.vue";
+import ModalConfirm from "@/components/common/ModalConfirm.vue";
+import EnterpriseCreate from "./EnterpriseCreate.vue";
+import UniversityCreate from "./UniversityCreate.vue";
 
-const { profiles, total, isLoading, errorMessage, fetchProfiles, deleteProfile } = useDashboardProfiles()
+const {
+	profiles,
+	total,
+	isLoading,
+	errorMessage,
+	fetchProfiles,
+	deleteProfile,
+} = useDashboardProfiles();
 
 const PAGE_SIZE = 20;
 const CURRENT_PAGE = 1;
-const INITIAL_SELECTION = 'all';
+const INITIAL_SELECTION = "all";
 
-const search = ref('')
+const search = ref("");
 
-const selectedType = ref<string>(INITIAL_SELECTION)
-const currentPage = ref<number>(CURRENT_PAGE)
-const perPage = ref<number>(PAGE_SIZE)
+const selectedType = ref<string>(INITIAL_SELECTION);
+const currentPage = ref<number>(CURRENT_PAGE);
+const perPage = ref<number>(PAGE_SIZE);
 
-const totalPages = computed(() => Math.ceil(total.value / perPage.value) || 1)
+const totalPages = computed(() => Math.ceil(total.value / perPage.value) || 1);
 
 const loadProfiles = () => {
-  const offset = (currentPage.value - 1) * perPage.value
-  fetchProfiles({
-    type: selectedType.value,
-    search: search.value,
-    limit: perPage.value,
-    offset
-  })
-}
+	const offset = (currentPage.value - 1) * perPage.value;
+	fetchProfiles({
+		type: selectedType.value,
+		search: search.value,
+		limit: perPage.value,
+		offset,
+	});
+};
 
 watch([selectedType, currentPage], () => {
-  loadProfiles()
-})
+	loadProfiles();
+});
 
 watch(search, () => {
-  currentPage.value = 1
-  loadProfiles()
-})
+	currentPage.value = 1;
+	loadProfiles();
+});
 
 onMounted(() => {
-  loadProfiles()
-})
+	loadProfiles();
+});
 
-const isEditModalOpen = ref(false)
-const editingProfile = ref<ProfileRow | null>(null)
+const isEditModalOpen = ref(false);
+const editingProfile = ref<ProfileRow | null>(null);
 
 const openEditModal = (profile: ProfileRow) => {
-  editingProfile.value = profile
-  isEditModalOpen.value = true
-}
+	editingProfile.value = profile;
+	isEditModalOpen.value = true;
+};
 
 const closeEditModal = () => {
-  isEditModalOpen.value = false
-  editingProfile.value = null
-}
+	isEditModalOpen.value = false;
+	editingProfile.value = null;
+};
 
 const handlePageChange = (page: number) => {
-  currentPage.value = page
-}
+	currentPage.value = page;
+};
 
-const isDeleteModalOpen = ref(false)
-const deletingProfile = ref<ProfileRow | null>(null)
-const isDeleting = ref(false)
+const isDeleteModalOpen = ref(false);
+const deletingProfile = ref<ProfileRow | null>(null);
+const isDeleting = ref(false);
 
 const openDeleteModal = (profile: ProfileRow) => {
-  deletingProfile.value = profile
-  isDeleteModalOpen.value = true
-}
+	deletingProfile.value = profile;
+	isDeleteModalOpen.value = true;
+};
 
 const closeDeleteModal = () => {
-  isDeleteModalOpen.value = false
-  deletingProfile.value = null
-}
+	isDeleteModalOpen.value = false;
+	deletingProfile.value = null;
+};
 
 const handleConfirmDelete = async () => {
-  if (!deletingProfile.value) return
+	if (!deletingProfile.value) return;
 
-  isDeleting.value = true
-  const success = await deleteProfile(deletingProfile.value.user_id)
-  isDeleting.value = false
+	isDeleting.value = true;
+	const success = await deleteProfile(deletingProfile.value.user_id);
+	isDeleting.value = false;
 
-  if (success) {
-    closeDeleteModal()
-    loadProfiles()
-  }
-}
+	if (success) {
+		closeDeleteModal();
+		loadProfiles();
+	}
+};
 </script>
 
 <template>

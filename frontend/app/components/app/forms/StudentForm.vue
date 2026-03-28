@@ -1,25 +1,23 @@
 <script setup lang="ts">
-import { useStudentForm } from '@/composables/api/forms/useStudentForm'
-import { useUniversityDepartments } from '@/composables/api/useUniversityDepartments'
-import Select from '@/components/ui/Select/Select.vue'
-import ModalConfirm from '~/components/common/ModalConfirm.vue'
+import { useStudentForm } from "@/composables/api/forms/useStudentForm";
+import { useUniversityDepartments } from "@/composables/api/useUniversityDepartments";
+import Select from "@/components/ui/Select/Select.vue";
+import ModalConfirm from "~/components/common/ModalConfirm.vue";
 
-const emit = defineEmits(['submit'])
+const emit = defineEmits(["submit"]);
+
+const { form, isLoading, errorMessage, showConfirm, handleSubmit, submit } =
+	useStudentForm();
 
 const {
-  form,
-  isLoading,
-  errorMessage,
-  showConfirm,
-  handleSubmit,
-  submit
-} = useStudentForm()
-
-const { departments, isLoading: isLoadingDepartments, fetchDepartments } = useUniversityDepartments()
+	departments,
+	isLoading: isLoadingDepartments,
+	fetchDepartments,
+} = useUniversityDepartments();
 
 onMounted(() => {
-  fetchDepartments()
-})
+	fetchDepartments();
+});
 </script>
 
 <template>

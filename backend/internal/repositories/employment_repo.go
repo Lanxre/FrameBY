@@ -259,7 +259,7 @@ func (r *EmploymentRepository) Apply(ctx context.Context, requestID, userID uuid
 	}
 
 	if statusID != 2 {
-		return errors.New("recruitment is not open")
+		return errors.New("applications are only accepted for approved requests")
 	}
 
 	if currentCount >= maxParticipants {
@@ -490,7 +490,7 @@ func (r *EmploymentRepository) UpdateStatus(ctx context.Context, id uuid.UUID, a
 	return err
 }
 
-func (r *EmploymentRepository) GetUserApplications(ctx context.Context, userID uuid.UUID) ([]db.EmploymentRequestWithDetails, error) {
+func (r *EmploymentRepository) GetUserApplications(ctx context.Context, userID uuid.UUID) ([]db.EmploymentApplicationWithDetails, error) {
 	query := `
 		SELECT er.id, er.enterprise_id, e.name as enterprise_name, e.address as enterprise_address,
 			   er.university_department_id, u.name as university_name, d.name as department_name, ud.address as university_address,
@@ -498,7 +498,8 @@ func (r *EmploymentRepository) GetUserApplications(ctx context.Context, userID u
 			   er.max_participants,
 			   (SELECT COUNT(*) FROM employment_participants WHERE request_id = er.id) as current_participants,
 			   er.status_id, es.name as status_name,
-			   er.created_at, er.updated_at
+			   er.created_at, er.updated_at,
+			   ep.status_id as participant_status_id, eps.name as participant_status_name, ep.applied_at as participant_applied_at
 		FROM employment_requests er
 		JOIN enterprises e ON er.enterprise_id = e.id
 		JOIN university_departments ud ON er.university_department_id = ud.id
@@ -506,6 +507,7 @@ func (r *EmploymentRepository) GetUserApplications(ctx context.Context, userID u
 		JOIN departments d ON ud.department_id = d.id
 		JOIN employment_statuses es ON er.status_id = es.id
 		JOIN employment_participants ep ON ep.request_id = er.id
+		JOIN employment_participant_statuses eps ON ep.status_id = eps.id
 		WHERE ep.user_id = $1
 		ORDER BY ep.applied_at DESC`
 
@@ -515,21 +517,22 @@ func (r *EmploymentRepository) GetUserApplications(ctx context.Context, userID u
 	}
 	defer rows.Close()
 
-	var results []db.EmploymentRequestWithDetails
+	results := make([]db.EmploymentApplicationWithDetails, 0)
 	for rows.Next() {
-		var e db.EmploymentRequestWithDetails
+		var a db.EmploymentApplicationWithDetails
 		err := rows.Scan(
-			&e.ID, &e.EnterpriseID, &e.EnterpriseName, &e.EnterpriseAddress,
-			&e.UniversityDepartmentID, &e.UniversityName, &e.DepartmentName, &e.UniversityAddress,
-			&e.Title, &e.Description, &e.Requirements, &e.Salary, &e.Schedule,
-			&e.MaxParticipants, &e.CurrentParticipants,
-			&e.StatusID, &e.StatusName,
-			&e.CreatedAt, &e.UpdatedAt,
+			&a.ID, &a.EnterpriseID, &a.EnterpriseName, &a.EnterpriseAddress,
+			&a.UniversityDepartmentID, &a.UniversityName, &a.DepartmentName, &a.UniversityAddress,
+			&a.Title, &a.Description, &a.Requirements, &a.Salary, &a.Schedule,
+			&a.MaxParticipants, &a.CurrentParticipants,
+			&a.StatusID, &a.StatusName,
+			&a.CreatedAt, &a.UpdatedAt,
+			&a.ParticipantStatusID, &a.ParticipantStatusName, &a.ParticipantAppliedAt,
 		)
 		if err != nil {
 			return nil, err
 		}
-		results = append(results, e)
+		results = append(results, a)
 	}
 	return results, nil
 }
@@ -539,7 +542,8 @@ func (r *EmploymentRepository) ensureEmploymentStatusesExist(ctx context.Context
 		INSERT INTO employment_statuses (name, description) VALUES 
 			('pending', 'Ожидает подтверждения'),
 			('approved', 'Подтверждена'),
-			('closed', 'Закрыта')
+			('closed', 'Закрыта'),
+			('rejected', 'Отклонена')
 		ON CONFLICT DO NOTHING
 	`)
 }

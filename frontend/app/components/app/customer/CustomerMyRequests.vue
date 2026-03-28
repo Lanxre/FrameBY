@@ -1,135 +1,185 @@
 <script setup lang="ts">
-import { useMySquads, useUpdateSquad } from '@/composables/api/squads/useStudentSquads'
-import { useMyOrganizationRequests } from '@/composables/api/employment/useEmploymentRequests'
-import { useUpdateEmploymentStatus } from '@/composables/api/employment/useEmploymentActions'
-import StudentSquadCard from '@/components/app/squads/StudentSquadCard.vue'
-import StudentSquadEditModal from '@/components/app/squads/StudentSquadEditModal.vue'
-import EmploymentRequestCard from './EmploymentRequestCard.vue'
-import EmploymentRequestEditModal from './EmploymentRequestEditModal.vue'
-import ModalConfirm from '@/components/common/ModalConfirm.vue'
-import type { StudentSquad } from '@/types/frontend/student-squad'
-import type { EmploymentRequest } from '@/types/frontend/employment'
+import { useVirtualList } from "@vueuse/core";
+import {
+	useMySquads,
+	useUpdateSquad,
+} from "@/composables/api/squads/useStudentSquads";
+import { useMyOrganizationRequests } from "@/composables/api/employment/useEmploymentRequests";
+import { useUpdateEmploymentStatus } from "@/composables/api/employment/useEmploymentActions";
+import StudentSquadCard from "@/components/app/squads/StudentSquadCard.vue";
+import StudentSquadEditModal from "@/components/app/squads/StudentSquadEditModal.vue";
+import EmploymentRequestCard from "./EmploymentRequestCard.vue";
+import EmploymentRequestEditModal from "./EmploymentRequestEditModal.vue";
+import ModalConfirm from "@/components/common/ModalConfirm.vue";
+import type { StudentSquad } from "@/types/frontend/student-squad";
+import type { EmploymentRequest } from "@/types/frontend/employment";
+import { formatTotalStudentSquads } from "@/utils/str";
 
-const { squads, isLoading: isLoadingSquads, fetchMySquads, errorMessage: squadsError } = useMySquads()
-const { requests, isLoading: isLoadingRequests, fetchRequests, errorMessage: requestsError } = useMyOrganizationRequests()
-const { closeRecruitment, openRecruitment, isLoading: isUpdatingSquad } = useUpdateSquad()
-const { updateStatus, isLoading: isUpdatingRequest } = useUpdateEmploymentStatus()
+const {
+	squads,
+	isLoading: isLoadingSquads,
+	fetchMySquads,
+	errorMessage: squadsError,
+} = useMySquads();
+const {
+	requests,
+	isLoading: isLoadingRequests,
+	fetchRequests,
+	errorMessage: requestsError,
+} = useMyOrganizationRequests();
+const {
+	closeRecruitment,
+	openRecruitment,
+	isLoading: isUpdatingSquad,
+} = useUpdateSquad();
+const { updateStatus, isLoading: isUpdatingRequest } =
+	useUpdateEmploymentStatus();
 
-const errorMessage = computed(() => squadsError.value || requestsError.value)
-const isLoading = computed(() => isLoadingSquads.value || isLoadingRequests.value)
-const isUpdating = computed(() => isUpdatingSquad.value || isUpdatingRequest.value)
+const errorMessage = computed(() => squadsError.value || requestsError.value);
+const isLoading = computed(
+	() => isLoadingSquads.value || isLoadingRequests.value,
+);
+const isUpdating = computed(
+	() => isUpdatingSquad.value || isUpdatingRequest.value,
+);
 
-const activeTab = ref<'all' | 'squads' | 'employment'>('all')
+const activeTab = ref<"all" | "squads" | "employment">("all");
 
 const filteredSquads = computed(() => {
-  if (activeTab.value === 'employment') return []
-  return squads.value
-})
+	if (activeTab.value === "employment") return [];
+	return squads.value;
+});
 
 const filteredRequests = computed(() => {
-  if (activeTab.value === 'squads') return []
-  return requests.value
-})
+	if (activeTab.value === "squads") return [];
+	return requests.value;
+});
 
-const showCloseModal = ref(false)
-const closeItem = ref<{ type: 'squad' | 'request'; item: StudentSquad | EmploymentRequest } | null>(null)
+const showCloseModal = ref(false);
+const closeItem = ref<{
+	type: "squad" | "request";
+	item: StudentSquad | EmploymentRequest;
+} | null>(null);
 
-const showSquadEditModal = ref(false)
-const editingSquad = ref<StudentSquad | null>(null)
+const showSquadEditModal = ref(false);
+const editingSquad = ref<StudentSquad | null>(null);
 
-const showRequestEditModal = ref(false)
-const editingRequest = ref<EmploymentRequest | null>(null)
+const showRequestEditModal = ref(false);
+const editingRequest = ref<EmploymentRequest | null>(null);
 
-const openCloseModal = (type: 'squad' | 'request', item: StudentSquad | EmploymentRequest) => {
-  closeItem.value = { type, item }
-  showCloseModal.value = true
-}
+const openCloseModal = (
+	type: "squad" | "request",
+	item: StudentSquad | EmploymentRequest,
+) => {
+	closeItem.value = { type, item };
+	showCloseModal.value = true;
+};
 
 const handleOpenSquad = async (squadId: string) => {
-  const success = await openRecruitment(squadId)
-  if (success) {
-    const squad = squads.value.find(s => s.id === squadId)
-    if (squad) squad.status = 'pending'
-  }
-}
+	const success = await openRecruitment(squadId);
+	if (success) {
+		const squad = squads.value.find((s) => s.id === squadId);
+		if (squad) squad.status = "pending";
+	}
+};
 
 const handleCloseSquad = async (squadId: string) => {
-  const squad = squads.value.find(s => s.id === squadId)
-  if (squad) {
-    openCloseModal('squad', squad)
-  }
-}
+	const squad = squads.value.find((s) => s.id === squadId);
+	if (squad) {
+		openCloseModal("squad", squad);
+	}
+};
 
 const handleEditSquad = (squad: StudentSquad) => {
-  editingSquad.value = squad
-  showSquadEditModal.value = true
-}
+	editingSquad.value = squad;
+	showSquadEditModal.value = true;
+};
 
 const handleOpenRequest = async (request: EmploymentRequest) => {
-  const success = await updateStatus(request.id, 'pending')
-  if (success) {
-    const req = requests.value.find(r => r.id === request.id)
-    if (req) req.status = 'pending'
-  }
-}
+	const success = await updateStatus(request.id, "pending");
+	if (success) {
+		const req = requests.value.find((r) => r.id === request.id);
+		if (req) req.status = "pending";
+	}
+};
 
 const handleCloseRequest = async (request: EmploymentRequest) => {
-  openCloseModal('request', request)
-}
+	openCloseModal("request", request);
+};
 
 const handleEditRequest = (request: EmploymentRequest) => {
-  editingRequest.value = request
-  showRequestEditModal.value = true
-}
+	editingRequest.value = request;
+	showRequestEditModal.value = true;
+};
 
 const confirmClose = async () => {
-  if (!closeItem.value) return
-  if (closeItem.value.type === 'squad') {
-    const success = await closeRecruitment(closeItem.value.item.id)
-    if (success) {
-      const squad = squads.value.find(s => s.id === closeItem.value!.item.id)
-      if (squad) squad.status = 'closed'
-    }
-  } else {
-    const success = await updateStatus(closeItem.value.item.id, 'closed')
-    if (success) {
-      const request = requests.value.find(r => r.id === closeItem.value!.item.id)
-      if (request) request.status = 'closed'
-    }
-  }
-  showCloseModal.value = false
-  closeItem.value = null
-}
+	if (!closeItem.value) return;
+	if (closeItem.value.type === "squad") {
+		const success = await closeRecruitment(closeItem.value.item.id);
+		if (success) {
+			const squad = squads.value.find((s) => s.id === closeItem.value!.item.id);
+			if (squad) squad.status = "closed";
+		}
+	} else {
+		const success = await updateStatus(closeItem.value.item.id, "closed");
+		if (success) {
+			const request = requests.value.find(
+				(r) => r.id === closeItem.value!.item.id,
+			);
+			if (request) request.status = "closed";
+		}
+	}
+	showCloseModal.value = false;
+	closeItem.value = null;
+};
 
 const handleSaved = (data: EmploymentRequest) => {
-  const job = requests.value.find((job) => job.id === data.id)
-  if (job) {
-    job.title = data.title
-    job.description = data.description
-    job.requirements = data.requirements
-    job.salary = data.salary
-    job.schedule = data.schedule
-    job.max_participants = data.max_participants
-  }
-  showRequestEditModal.value = false
-  editingRequest.value = null
-}
+	const job = requests.value.find((job) => job.id === data.id);
+	if (job) {
+		job.title = data.title;
+		job.description = data.description;
+		job.requirements = data.requirements;
+		job.salary = data.salary;
+		job.schedule = data.schedule;
+		job.max_participants = data.max_participants;
+	}
+	showRequestEditModal.value = false;
+	editingRequest.value = null;
+};
 
 const handleSquadSaved = (data: StudentSquad) => {
-  const squad = squads.value.find(s => s.id === data.id)
-  if (squad) {
-    squad.title = data.title
-    squad.description = data.description
-    squad.profile = data.profile
-    squad.max_participants = data.max_participants
-  }
-  showSquadEditModal.value = false
-  editingSquad.value = null
-}
+	const squad = squads.value.find((s) => s.id === data.id);
+	if (squad) {
+		squad.title = data.title;
+		squad.description = data.description;
+		squad.profile = data.profile;
+		squad.max_participants = data.max_participants;
+	}
+	showSquadEditModal.value = false;
+	editingSquad.value = null;
+};
 
 onMounted(async () => {
-  await Promise.all([fetchMySquads(), fetchRequests()])
-})
+	await Promise.all([fetchMySquads(), fetchRequests()]);
+});
+
+const {
+	list: squadList,
+	containerProps: squadContainerProps,
+	wrapperProps: squadWrapperProps,
+} = useVirtualList(squads, {
+	itemHeight: 220,
+	overscan: 8,
+});
+
+const {
+	list: requestList,
+	containerProps: requestContainerProps,
+	wrapperProps: requestWrapperProps,
+} = useVirtualList(requests, {
+	itemHeight: 200,
+	overscan: 8,
+});
 </script>
 
 <template>
@@ -140,7 +190,7 @@ onMounted(async () => {
         <h2 class="text-lg font-semibold text-gray-800">Мои заявки</h2>
       </div>
       <span class="text-sm text-gray-500">
-        {{ filteredSquads.length + filteredRequests.length }} заявок
+        Всего: {{ formatTotalStudentSquads(filteredSquads.length + filteredRequests.length, { oneText: 'заявка', twoFourText: 'заявки', fivePlusText: 'заявок' }) }}
       </span>
     </div>
 
@@ -181,31 +231,47 @@ onMounted(async () => {
       <p>Заявки не найдены</p>
     </div>
 
-    <div v-else class="space-y-4">
-      <template v-for="squad in filteredSquads" :key="squad.id">
-        <StudentSquadCard
-          :squad="squad"
-          :on-edit="handleEditSquad"
-          :on-close="handleCloseSquad"
-          :on-open="handleOpenSquad"
-        />
-      </template>
+    <template v-else>
+      <div
+        v-if="activeTab !== 'employment'"
+        v-bind="squadContainerProps"
+        class="h-150 overflow-y-auto rounded-2xl border border-emerald-100 bg-white/60 backdrop-blur"
+      >
+        <div v-bind="squadWrapperProps" class="p-4 space-y-3">
+          <StudentSquadCard
+            v-for="{ data: squad } in squadList"
+            :key="squad.id"
+            :squad="squad"
+            :on-edit="handleEditSquad"
+            :on-close="handleCloseSquad"
+            :on-open="handleOpenSquad"
+          />
+        </div>
+      </div>
 
-      <template v-for="request in filteredRequests" :key="request.id">
-        <EmploymentRequestCard
-          :request="request"
-          show-actions
-          @edit="handleEditRequest"
-          @close="handleCloseRequest"
-          @open="handleOpenRequest"
-        />
-      </template>
-    </div>
+      <div
+        v-if="activeTab !== 'squads'"
+        v-bind="requestContainerProps"
+        class="h-150 overflow-y-auto rounded-2xl border border-emerald-100 bg-white/60 backdrop-blur"
+      >
+        <div v-bind="requestWrapperProps" class="p-4 space-y-3">
+          <EmploymentRequestCard
+            v-for="{ data: request } in requestList"
+            :key="request.id"
+            :request="request"
+            show-actions
+            @edit="handleEditRequest"
+            @close="handleCloseRequest"
+            @open="handleOpenRequest"
+          />
+        </div>
+      </div>
+    </template>
 
     <StudentSquadEditModal
       v-model="showSquadEditModal"
       :squad="editingSquad"
-      @saved="(data) => handleSquadSaved(data)"
+      @saved="(data: any) => handleSquadSaved(data)"
     />
 
     <EmploymentRequestEditModal

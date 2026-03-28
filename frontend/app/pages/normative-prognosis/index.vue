@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import TitleText from '@/components/common/TitleText.vue';
-
+import TitleText from "@/components/common/TitleText.vue";
 </script>
 
 <template>

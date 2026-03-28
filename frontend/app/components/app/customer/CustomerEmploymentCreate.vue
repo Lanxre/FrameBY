@@ -1,112 +1,119 @@
 <script setup lang="ts">
-import Select from '@/components/ui/Select/Select.vue'
-import ModalConfirm from '@/components/common/ModalConfirm.vue'
-import type { CreateEmploymentRequestData } from '@/types/frontend/employment'
-import { useUniversityDepartments } from '@/composables/api/useUniversityDepartments'
-import { useCreateEmploymentRequest } from '@/composables/api/employment/useCreateEmploymentRequest'
-import { useNotificationStore } from '@/stores/notification'
+import Select from "@/components/ui/Select/Select.vue";
+import ModalConfirm from "@/components/common/ModalConfirm.vue";
+import type { CreateEmploymentRequestData } from "@/types/frontend/employment";
+import { useUniversityDepartments } from "@/composables/api/useUniversityDepartments";
+import { useCreateEmploymentRequest } from "@/composables/api/employment/useCreateEmploymentRequest";
+import { useNotificationStore } from "@/stores/notification";
 
 const emit = defineEmits<{
-  created: []
-}>()
+	created: [];
+}>();
 
-const { departments, fetchDepartments } = useUniversityDepartments()
-const { create, isLoading, errorMessage, isSuccess, reset } = useCreateEmploymentRequest()
-const notification = useNotificationStore()
+const { departments, fetchDepartments } = useUniversityDepartments();
+const { create, isLoading, errorMessage, isSuccess, reset } =
+	useCreateEmploymentRequest();
+const notification = useNotificationStore();
 
-const selectedDepartment = ref<{ id: string; name: string } | null>(null)
-const showConfirmModal = ref(false)
+const selectedDepartment = ref<{ id: string; name: string } | null>(null);
+const showConfirmModal = ref(false);
 
 const form = ref<CreateEmploymentRequestData>({
-  university_department_id: '',
-  title: '',
-  description: '',
-  requirements: '',
-  salary: '',
-  schedule: '',
-  max_participants: 10
-})
+	university_department_id: "",
+	title: "",
+	description: "",
+	requirements: "",
+	salary: "",
+	schedule: "",
+	max_participants: 10,
+});
 
 const errors = ref({
-  department: '',
-  title: '',
-  maxParticipants: ''
-})
+	department: "",
+	title: "",
+	maxParticipants: "",
+});
 
 watch(selectedDepartment, (val) => {
-  form.value.university_department_id = val?.id || ''
-  if (val) errors.value.department = ''
-})
+	form.value.university_department_id = val?.id || "";
+	if (val) errors.value.department = "";
+});
 
-watch(() => form.value.title, (val) => {
-  if (val?.trim()) errors.value.title = ''
-})
+watch(
+	() => form.value.title,
+	(val) => {
+		if (val?.trim()) errors.value.title = "";
+	},
+);
 
-watch(() => form.value.max_participants, (val) => {
-  if (val > 0) errors.value.maxParticipants = ''
-})
+watch(
+	() => form.value.max_participants,
+	(val) => {
+		if (val > 0) errors.value.maxParticipants = "";
+	},
+);
 
 const validate = (): boolean => {
-  let isValid = true
+	let isValid = true;
 
-  if (!selectedDepartment.value) {
-    errors.value.department = 'Выберите отдел/кафедру'
-    isValid = false
-  }
+	if (!selectedDepartment.value) {
+		errors.value.department = "Выберите отдел/кафедру";
+		isValid = false;
+	}
 
-  if (!form.value.title?.trim()) {
-    errors.value.title = 'Введите название вакансии'
-    isValid = false
-  }
+	if (!form.value.title?.trim()) {
+		errors.value.title = "Введите название вакансии";
+		isValid = false;
+	}
 
-  if (form.value.max_participants <= 0) {
-    errors.value.maxParticipants = 'Укажите количество участников'
-    isValid = false
-  }
+	if (form.value.max_participants <= 0) {
+		errors.value.maxParticipants = "Укажите количество участников";
+		isValid = false;
+	}
 
-  return isValid
-}
+	return isValid;
+};
 
 const handleSubmit = async () => {
-  if (!validate()) return
+	if (!validate()) return;
 
-  showConfirmModal.value = true
-}
+	showConfirmModal.value = true;
+};
 
 const confirmSubmit = async () => {
-  showConfirmModal.value = false
+	showConfirmModal.value = false;
 
-  const success = await create(form.value)
-  if (success) {
-    notification.notify({
-      type: 'success',
-      title: 'Успешно',
-      content: 'Заявка успешно создана!'
-    })
-    reset()
-    selectedDepartment.value = null
-    form.value = {
-      university_department_id: '',
-      title: '',
-      description: '',
-      requirements: '',
-      salary: '',
-      schedule: '',
-      max_participants: 10
-    }
-    emit('created')
-  } else if (errorMessage.value) {
-    notification.notify({
-      type: 'error',
-      title: 'Ошибка',
-      content: errorMessage.value
-    })
-  }
-}
+	const success = await create(form.value);
+	if (success) {
+		notification.notify({
+			type: "success",
+			title: "Успешно",
+			content: "Заявка успешно создана!",
+		});
+		reset();
+		selectedDepartment.value = null;
+		form.value = {
+			university_department_id: "",
+			title: "",
+			description: "",
+			requirements: "",
+			salary: "",
+			schedule: "",
+			max_participants: 10,
+		};
+		emit("created");
+	} else if (errorMessage.value) {
+		notification.notify({
+			type: "error",
+			title: "Ошибка",
+			content: errorMessage.value,
+		});
+	}
+};
 
 onMounted(() => {
-  fetchDepartments()
-})
+	fetchDepartments();
+});
 </script>
 
 <template>

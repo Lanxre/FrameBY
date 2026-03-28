@@ -1,45 +1,50 @@
 <script setup lang="ts">
-import { useVirtualList } from '@vueuse/core'
-import StudentSquadCard from './StudentSquadCard.vue'
-import { useMySquads } from '@/composables/api/squads/useStudentSquads'
-import { useLeaveSquad } from '@/composables/api/squads/useJoinLeaveSquad'
-import { useNotificationStore } from '#imports'
+import { useVirtualList } from "@vueuse/core";
+import StudentSquadCard from "./StudentSquadCard.vue";
+import { useMySquads } from "@/composables/api/squads/useStudentSquads";
+import { useLeaveSquad } from "@/composables/api/squads/useJoinLeaveSquad";
+import { useNotificationStore } from "#imports";
 
-const { squads, isLoading, errorMessage, fetchMySquads } = useMySquads()
-const { leave, isLoading: isLeaving, errorMessage: leaveError, reset: resetLeave, isSuccess: leaveSuccess } = useLeaveSquad()
+const { squads, isLoading, errorMessage, fetchMySquads } = useMySquads();
+const {
+	leave,
+	isLoading: isLeaving,
+	errorMessage: leaveError,
+	reset: resetLeave,
+	isSuccess: leaveSuccess,
+} = useLeaveSquad();
 
-const { notify } = useNotificationStore()
+const { notify } = useNotificationStore();
 
 const loadSquads = () => {
-  fetchMySquads()
-}
+	fetchMySquads();
+};
 
 const handleLeave = async (id: string) => {
-  const success = await leave(id)
-  if (success) {
-    resetLeave()
-    squads.value = squads.value.filter(squad => squad.id !== id)
-    notify({
-      title: 'Успех',
-      content: 'Вы успешно покинули отряд!',
-      type: 'success'
-    })
-  } else {
-    notify({
-      title: 'Ошибка',
-      content: 'Не удалось покинуть отряд!',
-      type: 'error'
-    })
-  }
-}
+	const success = await leave(id);
+	if (success) {
+		resetLeave();
+		squads.value = squads.value.filter((squad) => squad.id !== id);
+		notify({
+			title: "Успех",
+			content: "Вы успешно покинули отряд!",
+			type: "success",
+		});
+	} else {
+		notify({
+			title: "Ошибка",
+			content: "Не удалось покинуть отряд!",
+			type: "error",
+		});
+	}
+};
 
 const { list, containerProps, wrapperProps } = useVirtualList(squads, {
-  itemHeight: 200,
-  overscan: 8
-})
+	itemHeight: 200,
+	overscan: 8,
+});
 
-onMounted(loadSquads)
-
+onMounted(loadSquads);
 </script>
 
 <template>

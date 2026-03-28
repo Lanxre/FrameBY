@@ -1,20 +1,20 @@
 <script setup lang="ts">
-import Tooltip from '@/components/ui/ToolTip.vue'
-import ModalConfirm from '@/components/common/ModalConfirm.vue'
-import { useProfileSettings } from '@/composables/api/profile/userProfileSettings';
+import Tooltip from "@/components/ui/ToolTip.vue";
+import ModalConfirm from "@/components/common/ModalConfirm.vue";
+import { useProfileSettings } from "@/composables/api/profile/userProfileSettings";
 
 const {
-  form,
-  errorMessage,
-  avatarPreview,
-  fileInputRef,
-  showConfirm,
-  isLoading,
-  openFileDialog,
-  handleAvatarChange,
-  handleSubmit,
-  submit
-} = useProfileSettings()
+	form,
+	errorMessage,
+	avatarPreview,
+	fileInputRef,
+	showConfirm,
+	isLoading,
+	openFileDialog,
+	handleAvatarChange,
+	handleSubmit,
+	submit,
+} = useProfileSettings();
 </script>
 
 <template>

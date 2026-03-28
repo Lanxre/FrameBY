@@ -1,12 +1,12 @@
 <script setup lang="ts">
 defineProps<{
-  currentPage: number
-  totalPages: number
-}>()
+	currentPage: number;
+	totalPages: number;
+}>();
 
 const emit = defineEmits<{
-  pageChange: [page: number]
-}>()
+	pageChange: [page: number];
+}>();
 </script>
 
 <template>

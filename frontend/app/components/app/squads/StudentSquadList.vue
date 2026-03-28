@@ -1,89 +1,168 @@
 <script setup lang="ts">
-import { useVirtualList } from '@vueuse/core'
-import StudentSquadCard from './StudentSquadCard.vue'
-import Select from '@/components/ui/Select/Select.vue'
-import Pagination from '@/components/ui/Pagination/Pagination.vue'
-import { SQUAD_STATUS_OPTIONS } from '@/const/squad'
+import { useVirtualList } from "@vueuse/core";
+import StudentSquadCard from "./StudentSquadCard.vue";
+import Select from "@/components/ui/Select/Select.vue";
+import Pagination from "@/components/ui/Pagination/Pagination.vue";
+import { SQUAD_STATUS_OPTIONS } from "@/const/squad";
 
-import { useStudentSquads, useMySquads } from '@/composables/api/squads/useStudentSquads'
-import { useJoinSquad } from '@/composables/api/squads/useJoinLeaveSquad'
-import { FramebyAppRole } from '~/types/frontend/enums/role'
+import {
+	useStudentSquads,
+	useMySquads,
+} from "@/composables/api/squads/useStudentSquads";
+import { useJoinSquad } from "@/composables/api/squads/useJoinLeaveSquad";
+import { formatTotalStudentSquads } from "@/utils/str";
+import { removeFromFirstByProp } from "@/utils/arr";
+import { FramebyAppRole } from "~/types/frontend/enums/role";
 
-const { user } = useAuthStore()
-
+const { user } = useAuthStore();
 
 const statusOptions = computed(() => {
-  if (user?.role === FramebyAppRole.STUDENT) {
-    return SQUAD_STATUS_OPTIONS.filter(option => option.id !== 'closed' && option.id !== 'rejected')
-  }
-  
-  return SQUAD_STATUS_OPTIONS
-})
+	if (user?.role === FramebyAppRole.STUDENT) {
+		return SQUAD_STATUS_OPTIONS.filter(
+			(option) => option.id !== "closed" && option.id !== "rejected",
+		);
+	}
 
-const showOnlyMine = ref(false)
-const selectedStatus = ref(statusOptions.value[0]!)
-const page = ref(1)
-const limit = ref(10)
+	return SQUAD_STATUS_OPTIONS;
+});
 
-const { squads, total, errorMessage, fetchSquads } = useStudentSquads()
-const { squads: mySquads, fetchMySquads } = useMySquads()
-const { join, isLoading: isJoining, errorMessage: joinError, reset: resetJoin } = useJoinSquad()
+const showOnlyMine = ref(false);
+const selectedStatus = ref<{ id: string; name: string } | null>(null);
+const page = ref(1);
+const limit = ref(10);
 
-const { notify } = useNotificationStore()
+const {
+	squads,
+	total,
+	isLoading: isLoadingSquads,
+	fetchSquads,
+	errorMessage,
+} = useStudentSquads();
+const {
+	squads: mySquads,
+	isLoading: isLoadingMySquads,
+	fetchMySquads,
+} = useMySquads();
+const {
+	join,
+	isLoading: isJoining,
+	errorMessage: joinError,
+	reset: resetJoin,
+} = useJoinSquad();
 
-const sourceList = ref<any[]>([])
+const { notify } = useNotificationStore();
 
-watch([squads, mySquads, showOnlyMine], () => {
-  sourceList.value = showOnlyMine.value ? mySquads.value : squads.value
-}, { immediate: true })
+const sourceList = ref<any[]>([]);
+const isLoading = ref(false);
+
+watch(
+	[squads, mySquads, showOnlyMine],
+	() => {
+		sourceList.value = showOnlyMine.value ? mySquads.value : squads.value;
+	},
+	{ immediate: true },
+);
+
+const statusCache = ref<Record<string, { squads: any[]; total: number }>>({});
 
 const loadSquads = async () => {
-  if (showOnlyMine.value) {
-    await fetchMySquads()
-  } else {
-    await fetchSquads({
-      status: selectedStatus.value.id === 'all' ? undefined : selectedStatus.value.id,
-      limit: limit.value,
-      offset: (page.value - 1) * limit.value
-    })
-  }
-}
+	await fetchMySquads();
+
+	const cacheKey = selectedStatus.value?.id || "all";
+
+	if (statusCache.value[cacheKey] && page.value === 1) {
+		const cached = statusCache.value[cacheKey];
+		squads.value = cached.squads;
+		total.value = cached.total;
+		return;
+	}
+
+	isLoading.value = true;
+	try {
+		await fetchSquads({
+			status:
+				selectedStatus.value?.id === "all"
+					? undefined
+					: selectedStatus.value?.id,
+			limit: limit.value,
+			offset: (page.value - 1) * limit.value,
+		});
+
+		if (page.value === 1) {
+			let filteredSquads = squads.value;
+			if (mySquads.value.length > 0) {
+				filteredSquads = removeFromFirstByProp(
+					[...squads.value],
+					mySquads.value,
+					"id",
+				);
+			}
+			statusCache.value[cacheKey] = {
+				squads: filteredSquads,
+				total: total.value,
+			};
+			squads.value = filteredSquads;
+		}
+	} finally {
+		isLoading.value = false;
+	}
+
+	if (mySquads.value.length > 0) {
+		squads.value = removeFromFirstByProp(squads.value, mySquads.value, "id");
+	}
+};
 
 const handlePageChange = (newPage: number) => {
-  page.value = newPage
-  loadSquads()
-}
+	page.value = newPage;
+	loadSquads();
+};
 
 const handleJoin = async (id: string) => {
-  const success = await join(id)
-  if (success) {
-    resetJoin()
-    notify({
-      title: 'Успех',
-      content: 'Вы успешно присоединились к отряду!',
-      type: 'success'
-    })
-    squads.value = squads.value.filter(squad => squad.id !== id)
-  } else {
-    notify({
-      title: 'Ошибка',
-      content: 'Не удалось присоединиться к отряду!',
-      type: 'error'
-    })
-  }
-}
+	const success = await join(id);
+	if (success) {
+		resetJoin();
+		notify({
+			title: "Успех",
+			content: "Вы успешно присоединились к отряду!",
+			type: "success",
+		});
+
+		sourceList.value = sourceList.value.filter((squad) => squad.id !== id);
+
+		if (!showOnlyMine.value) {
+			total.value--;
+		}
+
+		Object.keys(statusCache.value).forEach((key) => {
+			const index = statusCache.value[key].squads.findIndex((s) => s.id === id);
+			if (index !== -1) {
+				statusCache.value[key].squads.splice(index, 1);
+				statusCache.value[key].total--;
+			}
+		});
+	} else {
+		notify({
+			title: "Ошибка",
+			content: "Не удалось присоединиться к отряду!",
+			type: "error",
+		});
+	}
+};
 
 watch([selectedStatus, showOnlyMine], () => {
-  page.value = 1
-  loadSquads()
-})
+	page.value = 1;
+	loadSquads();
+});
 
-onMounted(loadSquads)
+onMounted(() => {
+	selectedStatus.value = statusOptions.value[0] || null;
+	loadSquads();
+});
 
 const { list, containerProps, wrapperProps } = useVirtualList(sourceList, {
-  itemHeight: 140,
-  overscan: 8
-})
+	itemHeight: 140,
+	overscan: 8,
+});
 </script>
 
 <template>
@@ -101,7 +180,7 @@ const { list, containerProps, wrapperProps } = useVirtualList(sourceList, {
         />
       </div>
 
-      <span class="text-sm text-gray-500">{{ total }} отрядов</span>
+      <span class="text-sm text-gray-500">Всего: {{ formatTotalStudentSquads(total) }} </span>
     </div>
 
     <div v-if="errorMessage" class="p-3 rounded-xl bg-red-50 border border-red-200 text-sm text-red-500">
@@ -112,9 +191,22 @@ const { list, containerProps, wrapperProps } = useVirtualList(sourceList, {
       {{ joinError }}
     </div>
 
+    <div v-if="isLoading" class="flex justify-center py-8">
+      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
+    </div>
+
     <div
+      v-else-if="sourceList.length === 0"
+      class="flex flex-col items-center justify-center py-12 text-gray-500"
+    >
+      <Icon name="ph:users-three" size="48" class="mb-3 text-gray-300" />
+      <p>Отряды не найдены</p>
+    </div>
+
+    <div
+      v-else
       v-bind="containerProps"
-      class="h-150 overflow-y-auto rounded-2xl border border-emerald-100 bg-white/60 backdrop-blur"
+      class="h-170 overflow-y-auto rounded-2xl border border-emerald-100 bg-white/60 backdrop-blur"
     >
       <div v-bind="wrapperProps" class="p-4 space-y-3">
         <StudentSquadCard

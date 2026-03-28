@@ -101,6 +101,28 @@ func (s *ProfileService) DeleteCustomerProfile(ctx context.Context, userID uuid.
 	return s.repo.DeleteCustomerProfile(ctx, userID)
 }
 
+func (s *ProfileService) GetUniversityStats(ctx context.Context, universityDeptID uuid.UUID) (*dto.UniversityStatsResponse, error) {
+	dept, err := s.universityDeptRepo.GetByID(ctx, universityDeptID)
+	if err != nil || dept == nil || dept.University == nil || dept.Department == nil {
+		return nil, errors.New("university department not found")
+	}
+
+	stats, err := s.repo.GetUniversityStats(ctx, universityDeptID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &dto.UniversityStatsResponse{
+		UniversityName:   dept.University.Name,
+		DepartmentName:   dept.Department.Name,
+		TotalStudents:    stats.TotalStudents,
+		StudentsInSquads: stats.StudentsInSquads,
+		StudentsEmployed: stats.StudentsEmployed,
+		TotalSquads:      stats.TotalSquads,
+		JobInvitations:   stats.JobInvitations,
+	}, nil
+}
+
 func (s *ProfileService) DeleteProfile(ctx context.Context, userID uuid.UUID) error {
 	return s.repo.DeleteAllProfiles(ctx, userID)
 }
@@ -232,6 +254,25 @@ func (s *ProfileService) GetAllProfiles(ctx context.Context, profileType, search
 		Total:    total,
 		Limit:    limit,
 		Offset:   offset,
+	}, nil
+}
+
+type UniversityDepartmentInfo struct {
+	UniversityName string
+	DepartmentName string
+}
+
+func (s *ProfileService) GetUniversityDepartmentInfo(ctx context.Context, deptID uuid.UUID) (*UniversityDepartmentInfo, error) {
+	dept, err := s.universityDeptRepo.GetByID(ctx, deptID)
+	if err != nil || dept == nil {
+		return nil, err
+	}
+	if dept.University == nil || dept.Department == nil {
+		return nil, errors.New("university or department not found")
+	}
+	return &UniversityDepartmentInfo{
+		UniversityName: dept.University.Name,
+		DepartmentName: dept.Department.Name,
 	}, nil
 }
 
@@ -414,4 +455,12 @@ func ptrToStr(s *string) string {
 		return ""
 	}
 	return *s
+}
+
+func (s *ProfileService) SearchUsers(ctx context.Context, search string, limit int) (*dto.AllProfilesResponse, error) {
+	return s.repo.SearchUsers(ctx, search, limit)
+}
+
+func (s *ProfileService) GetStudentsWithEmployment(ctx context.Context, universityDeptID uuid.UUID, limit, offset int) (*dto.StudentEmploymentListResponse, error) {
+	return s.repo.GetStudentsWithEmployment(ctx, universityDeptID, limit, offset)
 }

@@ -1,29 +1,25 @@
 <script setup lang="ts">
-import ModalWindow from './ModalWindow.vue';
+import ModalWindow from "./ModalWindow.vue";
 
 const props = defineProps<{
-  modelValue: boolean
-  title?: string
-  description?: string
-  confirmText?: string
-  cancelText?: string
-  loading?: boolean
-}>()
+	modelValue: boolean;
+	title?: string;
+	description?: string;
+	confirmText?: string;
+	cancelText?: string;
+	loading?: boolean;
+}>();
 
-const emit = defineEmits([
-  'update:modelValue',
-  'confirm',
-  'cancel'
-])
+const emit = defineEmits(["update:modelValue", "confirm", "cancel"]);
 
 const close = () => {
-  emit('update:modelValue', false)
-  emit('cancel')
-}
+	emit("update:modelValue", false);
+	emit("cancel");
+};
 
 const confirm = () => {
-  emit('confirm')
-}
+	emit("confirm");
+};
 </script>
 
 <template>

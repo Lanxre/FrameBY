@@ -34,6 +34,7 @@ func (rts *ProfileRoutes) Register(cfg *config.Config, r *gin.Engine) {
 		student := authGroup.Group("/profile/student")
 		{
 			student.GET("", rts.ProfileHandler.GetStudentProfile)
+			student.GET("/by-user", rts.ProfileHandler.GetStudentProfileByUserID)
 			student.POST("", rts.ProfileHandler.CreateStudentProfile)
 			student.PUT("", rts.ProfileHandler.UpdateStudentProfile)
 			student.DELETE("", rts.ProfileHandler.DeleteStudentProfile)
@@ -42,6 +43,8 @@ func (rts *ProfileRoutes) Register(cfg *config.Config, r *gin.Engine) {
 		university := authGroup.Group("/profile/university")
 		{
 			university.GET("", rts.ProfileHandler.GetUniversityProfile)
+			university.GET("/stats", rts.ProfileHandler.GetUniversityStats)
+			university.GET("/students", rts.ProfileHandler.GetStudentsWithEmployment)
 			university.POST("", rts.ProfileHandler.CreateUniversityProfile)
 			university.PUT("", rts.ProfileHandler.UpdateUniversityProfile)
 			university.DELETE("", rts.ProfileHandler.DeleteUniversityProfile)
@@ -61,6 +64,11 @@ func (rts *ProfileRoutes) Register(cfg *config.Config, r *gin.Engine) {
 			admin.GET("", rts.ProfileHandler.GetAllProfiles)
 			admin.PATCH("/:userID/subrole", rts.ProfileHandler.UpdateSubrole)
 			admin.DELETE("/:userID", rts.ProfileHandler.DeleteProfile)
+		}
+
+		users := authGroup.Group("/users")
+		{
+			users.GET("/search", rts.ProfileHandler.SearchUsers)
 		}
 	}
 }

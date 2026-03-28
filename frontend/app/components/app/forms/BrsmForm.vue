@@ -1,16 +1,10 @@
 <script setup lang="ts">
-import { useBrsmForm } from '@/composables/api/forms/useBrsmForm'
-import ModalConfirm from '~/components/common/ModalConfirm.vue';
-const emit = defineEmits(['submit'])
+import { useBrsmForm } from "@/composables/api/forms/useBrsmForm";
+import ModalConfirm from "~/components/common/ModalConfirm.vue";
+const emit = defineEmits(["submit"]);
 
-const {
-  form,
-  isLoading,
-  errorMessage,
-  showConfirm,
-  handleSubmit,
-  submit
-} = useBrsmForm()
+const { form, isLoading, errorMessage, showConfirm, handleSubmit, submit } =
+	useBrsmForm();
 </script>
 
 <template>

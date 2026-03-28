@@ -47,6 +47,13 @@ type EmploymentRequestDetailResponse struct {
 	ParticipantUserIDs []string `json:"participant_user_ids"`
 }
 
+type EmploymentApplicationResponse struct {
+	EmploymentRequestResponse
+	ParticipantStatus    string `json:"participant_status"`
+	ParticipantStatusID  int    `json:"participant_status_id"`
+	ParticipantAppliedAt string `json:"participant_applied_at"`
+}
+
 type EmploymentParticipantResponse struct {
 	ID           string  `json:"id"`
 	RequestID    string  `json:"request_id"`
@@ -75,7 +82,6 @@ type ApplyToEmploymentRequest struct {
 }
 
 type UpdateParticipantStatusRequest struct {
-	UserID string `json:"user_id" binding:"required"`
 	Status string `json:"status" binding:"required"`
 }
 

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import BrsmForm from '@/components/app/forms/BrsmForm.vue'
+import BrsmForm from "@/components/app/forms/BrsmForm.vue";
 </script>
 
 <template>

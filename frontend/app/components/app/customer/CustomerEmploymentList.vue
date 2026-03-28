@@ -1,35 +1,36 @@
 <script setup lang="ts">
-import EmploymentRequestCard from './EmploymentRequestCard.vue'
-import { useMyOrganizationRequests } from '@/composables/api/employment/useEmploymentRequests'
-import { useUpdateEmploymentStatus } from '@/composables/api/employment/useEmploymentActions'
-import ModalConfirm from '@/components/common/ModalConfirm.vue'
-import type { EmploymentRequest } from '@/types/frontend/employment'
+import EmploymentRequestCard from "./EmploymentRequestCard.vue";
+import { useMyOrganizationRequests } from "@/composables/api/employment/useEmploymentRequests";
+import { useUpdateEmploymentStatus } from "@/composables/api/employment/useEmploymentActions";
+import ModalConfirm from "@/components/common/ModalConfirm.vue";
+import type { EmploymentRequest } from "@/types/frontend/employment";
 
-const { requests, isLoading, errorMessage, fetchRequests } = useMyOrganizationRequests()
-const { updateStatus, isLoading: isUpdating } = useUpdateEmploymentStatus()
+const { requests, isLoading, errorMessage, fetchRequests } =
+	useMyOrganizationRequests();
+const { updateStatus, isLoading: isUpdating } = useUpdateEmploymentStatus();
 
-const showCloseModal = ref(false)
-const requestToClose = ref<EmploymentRequest | null>(null)
+const showCloseModal = ref(false);
+const requestToClose = ref<EmploymentRequest | null>(null);
 
 const openCloseModal = (request: EmploymentRequest) => {
-  requestToClose.value = request
-  showCloseModal.value = true
-}
+	requestToClose.value = request;
+	showCloseModal.value = true;
+};
 
 const openRecruitment = async (request: EmploymentRequest) => {
-  await updateStatus(request.id, 'approved')
-  await fetchRequests()
-}
+	await updateStatus(request.id, "approved");
+	await fetchRequests();
+};
 
 const confirmClose = async () => {
-  if (!requestToClose.value) return
-  await updateStatus(requestToClose.value.id, 'closed')
-  showCloseModal.value = false
-  requestToClose.value = null
-  await fetchRequests()
-}
+	if (!requestToClose.value) return;
+	await updateStatus(requestToClose.value.id, "closed");
+	showCloseModal.value = false;
+	requestToClose.value = null;
+	await fetchRequests();
+};
 
-onMounted(fetchRequests)
+onMounted(fetchRequests);
 </script>
 
 <template>

@@ -1,39 +1,58 @@
 <script setup lang="ts">
-import Select from '@/components/ui/Select/Select.vue'
-import Pagination from '@/components/ui/Pagination/Pagination.vue'
-import StudentSquadCard from '@/components/app/squads/StudentSquadCard.vue'
-import { useStudentSquads } from '@/composables/api/squads/useStudentSquads'
-import { SQUAD_STATUS_OPTIONS } from '@/const/squad'
+import Select from "@/components/ui/Select/Select.vue";
+import Pagination from "@/components/ui/Pagination/Pagination.vue";
+import StudentSquadCard from "@/components/app/squads/StudentSquadCard.vue";
+import { useStudentSquads } from "@/composables/api/squads/useStudentSquads";
+import { SQUAD_STATUS_OPTIONS } from "@/const/squad";
 
-const statusOptions = SQUAD_STATUS_OPTIONS
-const selectedStatus = ref(statusOptions[0]!)
-const limit = ref(12)
-const offset = ref(0)
+const statusOptions = SQUAD_STATUS_OPTIONS;
+const selectedStatus = ref<{ id: string; name: string } | null>(null);
+const limit = ref(12);
+const offset = ref(0);
 
-const { squads, total, isLoading, errorMessage, fetchSquads } = useStudentSquads()
+const { squads, total, isLoading, errorMessage, fetchSquads } =
+	useStudentSquads();
 
-const totalPages = computed(() => Math.ceil(total.value / limit.value))
-const currentPage = computed(() => Math.floor(offset.value / limit.value) + 1)
+const totalPages = computed(() => Math.ceil(total.value / limit.value));
+const currentPage = computed(() => Math.floor(offset.value / limit.value) + 1);
 
-const loadSquads = () => {
-  fetchSquads({
-    status: selectedStatus.value.id === 'all' ? undefined : selectedStatus.value.id,
-    limit: limit.value,
-    offset: offset.value
-  })
-}
+const statusCache = ref<Record<string, any[]>>({});
+
+const loadSquads = async () => {
+	const cacheKey = selectedStatus.value?.id || "all";
+
+	if (statusCache.value[cacheKey] && currentPage.value === 1) {
+		const cached = statusCache.value[cacheKey];
+		squads.value = cached;
+		return;
+	}
+
+	await fetchSquads({
+		status:
+			selectedStatus.value?.id === "all" ? undefined : selectedStatus.value?.id,
+		limit: limit.value,
+		offset: offset.value,
+	});
+
+	if (currentPage.value === 1) {
+		statusCache.value[cacheKey] = [...squads.value];
+	}
+};
 
 watch(selectedStatus, () => {
-  offset.value = 0
-  loadSquads()
-})
+	offset.value = 0;
+	loadSquads();
+});
 
-onMounted(loadSquads)
+onMounted(() => {
+	selectedStatus.value = statusOptions[0] || null;
+	loadSquads();
+});
 
 const handlePageChange = (page: number) => {
-  offset.value = (page - 1) * limit.value
-  loadSquads()
-}
+	offset.value = (page - 1) * limit.value;
+	loadSquads();
+};
 </script>
 
 <template>

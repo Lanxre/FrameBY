@@ -1,10 +1,10 @@
 export enum FramebyAppRole {
-  USER = "user",
-  STUDENT = "student",
-  UNIVERSITY = "university",
-  CUSTOMER = "customer",
-  BRSM = "brsm",
-  ADMIN = "admin",
+	USER = "user",
+	STUDENT = "student",
+	UNIVERSITY = "university",
+	CUSTOMER = "customer",
+	BRSM = "brsm",
+	ADMIN = "admin",
 }
 
 export const ROLE_WEIGHTS: Record<FramebyAppRole, number> = {

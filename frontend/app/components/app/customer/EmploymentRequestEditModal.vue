@@ -1,95 +1,102 @@
 <script setup lang="ts">
-import Select from '@/components/ui/Select/Select.vue'
-import ModalWindow from '@/components/common/ModalWindow.vue'
-import type { EmploymentRequest } from '@/types/frontend/employment'
-import { useUniversityDepartments } from '@/composables/api/useUniversityDepartments'
-import { useUpdateEmploymentRequest } from '@/composables/api/employment/useEmploymentRequests'
+import Select from "@/components/ui/Select/Select.vue";
+import ModalWindow from "@/components/common/ModalWindow.vue";
+import type { EmploymentRequest } from "@/types/frontend/employment";
+import { useUniversityDepartments } from "@/composables/api/useUniversityDepartments";
+import { useUpdateEmploymentRequest } from "@/composables/api/employment/useEmploymentRequests";
 
 const props = defineProps<{
-  modelValue: boolean
-  request: EmploymentRequest | null
-}>()
+	modelValue: boolean;
+	request: EmploymentRequest | null;
+}>();
 
 const emit = defineEmits<{
-  'update:modelValue': [value: boolean]
-  saved: [value: any]
-}>()
+	"update:modelValue": [value: boolean];
+	saved: [value: any];
+}>();
 
-const { fetchDepartments } = useUniversityDepartments()
-const { update, isLoading, errorMessage, reset } = useUpdateEmploymentRequest()
+const { fetchDepartments } = useUniversityDepartments();
+const { update, isLoading, errorMessage, reset } = useUpdateEmploymentRequest();
 
-const selectedDepartment = ref<{ id: string; name: string } | null>(null)
+const selectedDepartment = ref<{ id: string; name: string } | null>(null);
 
 const form = ref({
-  title: '',
-  description: '',
-  requirements: '',
-  salary: '',
-  schedule: '',
-  max_participants: 10
-})
+	title: "",
+	description: "",
+	requirements: "",
+	salary: "",
+	schedule: "",
+	max_participants: 10,
+});
 
-watch(() => props.request, (request) => {
-  if (request) {
-    form.value = {
-      title: request.title || '',
-      description: request.description || '',
-      requirements: request.requirements || '',
-      salary: request.salary || '',
-      schedule: request.schedule || '',
-      max_participants: request.max_participants || 10
-    }
-    selectedDepartment.value = {
-      id: request.university_department_id,
-      name: `${request.university_name} / ${request.department_name}`
-    }
-  }
-}, { immediate: true })
+watch(
+	() => props.request,
+	(request) => {
+		if (request) {
+			form.value = {
+				title: request.title || "",
+				description: request.description || "",
+				requirements: request.requirements || "",
+				salary: request.salary || "",
+				schedule: request.schedule || "",
+				max_participants: request.max_participants || 10,
+			};
+			selectedDepartment.value = {
+				id: request.university_department_id,
+				name: `${request.university_name} / ${request.department_name}`,
+			};
+		}
+	},
+	{ immediate: true },
+);
 
-watch(() => props.modelValue, (val) => {
-  if (val) {
-    fetchDepartments()
-  } else {
-    reset()
-  }
-})
+watch(
+	() => props.modelValue,
+	(val) => {
+		if (val) {
+			fetchDepartments();
+		} else {
+			reset();
+		}
+	},
+);
 
 const close = () => {
-  emit('update:modelValue', false)
-}
+	emit("update:modelValue", false);
+};
 
 const handleSubmit = async () => {
-  if (!props.request) return
+	if (!props.request) return;
 
-  const body = {
-    title: form.value.title,
-    description: form.value.description || undefined,
-    requirements: form.value.requirements || undefined,
-    salary: form.value.salary || undefined,
-    schedule: form.value.schedule || undefined,
-    max_participants: form.value.max_participants
-  }
-  
-  const success = await update(props.request.id, body)
+	const body = {
+		title: form.value.title,
+		description: form.value.description || undefined,
+		requirements: form.value.requirements || undefined,
+		salary: form.value.salary || undefined,
+		schedule: form.value.schedule || undefined,
+		max_participants: form.value.max_participants,
+	};
 
-  if (success) {
-    emit('saved', {
-      id: props.request!.id,
-      ...body
-    })
-    close()
-  }
-}
+	const success = await update(props.request.id, body);
+
+	if (success) {
+		emit("saved", {
+			id: props.request!.id,
+			...body,
+		});
+		close();
+	}
+};
 
 const errors = computed(() => ({
-  title: !form.value.title?.trim() ? 'Введите название вакансии' : '',
-  maxParticipants: form.value.max_participants <= 0 ? 'Укажите количество участников' : ''
-}))
+	title: !form.value.title?.trim() ? "Введите название вакансии" : "",
+	maxParticipants:
+		form.value.max_participants <= 0 ? "Укажите количество участников" : "",
+}));
 
-const isValid = computed(() => 
-  form.value.title?.trim() && 
-  form.value.max_participants > 0
-)
+const isValid = computed(
+	() => form.value.title?.trim() && form.value.max_participants > 0,
+);
 </script>
 
 <template>
