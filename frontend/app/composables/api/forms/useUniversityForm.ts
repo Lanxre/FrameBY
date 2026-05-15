@@ -52,7 +52,7 @@ export function useUniversityForm() {
 				method: "POST",
 				body: {
 					full_name: form.fullName,
-					department: form.department,
+					university_department_id: form.university?.id || null,
 					position: form.position || null,
 					phone: form.phone || null,
 				},

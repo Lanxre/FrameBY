@@ -243,8 +243,35 @@ func (s *ProfileService) GetAllProfiles(ctx context.Context, profileType, search
 				Phone:      p.Phone,
 			}
 		default:
+			var universityInfo *dto.UniversityDepartmentInfo
+			if p.StudentUniversityDeptID != nil {
+				dept, _ := s.universityDeptRepo.GetByID(ctx, *p.StudentUniversityDeptID)
+				if dept != nil && dept.University != nil && dept.Department != nil {
+					universityInfo = &dto.UniversityDepartmentInfo{
+						ID:             dept.ID.String(),
+						UniversityName: dept.University.Name,
+						DepartmentName: dept.Department.Name,
+						Address:        dept.Address,
+					}
+				}
+			} else if p.UniversityUniversityDeptID != nil {
+				dept, _ := s.universityDeptRepo.GetByID(ctx, *p.UniversityUniversityDeptID)
+				if dept != nil && dept.University != nil && dept.Department != nil {
+					universityInfo = &dto.UniversityDepartmentInfo{
+						ID:             dept.ID.String(),
+						UniversityName: dept.University.Name,
+						DepartmentName: dept.Department.Name,
+						Address:        dept.Address,
+					}
+				}
+			}
+
 			profilesResponse[i].Profile = dto.UserProfileData{
-				FullName: p.FullName,
+				FullName:   p.FullName,
+				Phone:      p.Phone,
+				Position:   p.Position,
+				University: universityInfo,
+				Grade:      p.Grade,
 			}
 		}
 	}

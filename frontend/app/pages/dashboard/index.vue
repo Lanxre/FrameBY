@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { useAuthStore } from "@/stores/auth";
 import { FramebyAppRole } from "~/types/frontend/enums/role";
 import { useRolePermissions } from "~/composables/api/role/useRolePermissions";
 

@@ -99,7 +99,11 @@ type CustomerProfileData struct {
 }
 
 type UserProfileData struct {
-	FullName string `json:"full_name"`
+	FullName   string                    `json:"full_name"`
+	Phone      *string                   `json:"phone"`
+	Position   *string                   `json:"position"`
+	University *UniversityDepartmentInfo `json:"university,omitempty"`
+	Grade      *float64                  `json:"grade,omitempty"`
 }
 
 type AllProfilesResponse struct {

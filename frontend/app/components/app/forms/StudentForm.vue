@@ -70,23 +70,6 @@ onMounted(() => {
     </div>
 
     <div class="space-y-1">
-      <label class="text-xs text-gray-500 ml-2">Факультет</label>
-      <div class="relative">
-        <Icon name="ph:graduation-cap" size="18"
-              class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-        <input
-          v-model="form.faculty"
-          type="text"
-          placeholder="Факультет"
-          class="w-full pl-9 pr-3 py-2 rounded-xl
-                 bg-white/60 border border-emerald-100
-                 focus:outline-none focus:ring-2 focus:ring-emerald-400/40
-                 text-sm"
-        />
-      </div>
-    </div>
-
-    <div class="space-y-1">
       <label class="text-xs text-gray-500 ml-2">Специальность</label>
       <div class="relative">
         <Icon name="ph:book-open" size="18"
