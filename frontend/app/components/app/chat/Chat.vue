@@ -275,7 +275,7 @@ const formatTime = (dateStr: string | undefined): string => {
 						]"
 					>
 						<div class="flex justify-between items-center">
-							<p class="text-sm font-medium text-gray-800 truncate flex items-center gap-2">
+							<div class="text-sm font-medium text-gray-800 truncate flex items-center gap-2">
     				            <div class="w-6 h-6 rounded-full bg-emerald-100 flex items-center justify-center">
                                     <img v-if="chat.avatar" :src="formatAvatar(chat.name!, chat!.avatar)" alt="Avatar" class="object-cover rounded-full" />
                                     <span v-else class="text-[14px]">{{ chat.name!.charAt(0).toUpperCase() }}</span>     
@@ -289,7 +289,7 @@ const formatTime = (dateStr: string | undefined): string => {
 								>
 									{{ chat.unread_count }}
 								</span>
-							</p>
+							</div>
 							<span class="text-xs text-gray-400">{{ formatTime(chat.last_message_at) }}</span>
 						</div>
 						<p class="text-xs text-gray-500 truncate mt-0.5 ml-8">{{ chat.last_message || "Начните общение" }}</p>

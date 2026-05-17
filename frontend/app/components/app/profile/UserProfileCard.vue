@@ -114,18 +114,6 @@ const handleLogout = async () => {
       </div>
     </div>
     <div class="flex items-center gap-2">
-        <Tooltip v-if="hasPermission(FramebyAppRole.STUDENT)" text="Панель управления">
-            <NuxtLink
-                to="/dashboard"
-                class="p-2 rounded-xl
-                        bg-white/70
-                        border border-emerald-100
-                        hover:bg-emerald-50
-                        transition flex items-center cursor-pointer"
-            >
-                <Icon name="ph:monitor-play" size="20" class="text-emerald-600" />
-            </NuxtLink>
-        </Tooltip>
         <Tooltip text="Настройки">
             <button
                 @click="isModalSettingsOpen = true"
@@ -154,17 +142,25 @@ const handleLogout = async () => {
   </div>
 
   <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 auto-rows-fr">
-    <Tooltip text="Уникальный идентификатор пользователя">
-        <div class="w-full h-full flex flex-col justify-between p-4 rounded-xl bg-white/70 border border-emerald-100">
-
-        <p class="text-gray-400 text-xs mb-1 flex items-center gap-1">
-          <Icon name="ph:hash" size="14" />
-          ID
-        </p>
-        <p class="text-gray-800 font-normal">
-          {{ user.id }}
-        </p>
-      </div>
+    <Tooltip v-if="hasPermission(FramebyAppRole.STUDENT)" text="Панель управления">
+        <NuxtLink
+            to="/dashboard"
+            class="p-2 rounded-xl
+                    bg-white/70
+                    border border-emerald-100
+                    hover:bg-emerald-50
+                    transition flex items-center cursor-pointer"
+        >
+            <div class="w-full h-full flex flex-col justify-between p-4 rounded-xl bg-white/70 border border-emerald-100">
+            <p class="text-gray-400 text-xs mb-1 flex items-center gap-1">
+                <Icon name="ph:monitor-play" size="14"/>
+              Панель управления
+            </p>
+            <p class="text-emerald-700 font-semibold">
+                Настройки параметров системы
+            </p>
+          </div>
+        </NuxtLink>
     </Tooltip>
 
     <Tooltip text="Роль пользователя в системе">
