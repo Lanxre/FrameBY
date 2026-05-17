@@ -143,18 +143,18 @@ const handleLogout = async () => {
 
   <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 auto-rows-fr">
     <Tooltip v-if="hasPermission(FramebyAppRole.STUDENT)" text="Панель управления">
-        <NuxtLink
-            to="/dashboard"
-            class="w-full h-full flex flex-col justify-between p-4 rounded-xl bg-white/70 border border-emerald-100">
-
-        <p class="text-gray-400 text-xs mb-1 flex items-center gap-1">
-          <Icon name="ph:monitor-play" size="14" />
-          Панель управления
-        </p>
-        <p class="text-emerald-700 font-semibold">
-          Настройки параметров системы
-        </p>
-      </NuxtLink>
+        <div class="w-full h-full flex flex-col justify-between p-4 rounded-xl bg-white/70 border border-emerald-100">
+            <NuxtLink
+                to="/dashboard">
+                <p class="text-gray-400 text-xs mb-1 flex items-center gap-1">
+                  <Icon name="ph:monitor-play" size="14" />
+                  Панель управления
+                </p>
+                <p class="text-emerald-700 font-semibold">
+                  Настройки параметров
+                </p>
+            </NuxtLink>
+        </div>
     </Tooltip>
 
     <Tooltip text="Роль пользователя в системе">
