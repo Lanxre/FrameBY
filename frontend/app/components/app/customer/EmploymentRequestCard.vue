@@ -85,28 +85,6 @@ const isRejected = computed(() => props.request.status === "rejected");
 
       <div v-if="showActions" class="flex flex-col gap-2">
         <template v-if="isUniversityMode">
-          <ToolTip text="Одобрить">
-            <button
-              v-if="isPending"
-              @click="emit('approve', request)"
-              :disabled="isLoading"
-              class="p-1.5 text-gray-400 hover:text-emerald-500 transition rounded-lg cursor-pointer disabled:opacity-50"
-            >
-              <Icon name="ph:check-circle" size="18" />
-            </button>
-          </ToolTip>
-
-          <ToolTip text="Отклонить">
-            <button
-              v-if="isPending"
-              @click="emit('reject', request)"
-              :disabled="isLoading"
-              class="p-1.5 text-gray-400 hover:text-red-500 transition rounded-lg cursor-pointer disabled:opacity-50"
-            >
-              <Icon name="ph:x-circle" size="18" />
-            </button>
-          </ToolTip>
-
           <ToolTip text="Закрыть">
             <button
               v-if="isApproved"

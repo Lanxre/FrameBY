@@ -157,11 +157,11 @@ func (r *EmploymentRepository) GetByID(ctx context.Context, id uuid.UUID) (*db.E
 func (r *EmploymentRepository) Create(ctx context.Context, enterpriseID, universityDeptID uuid.UUID, title string, description, requirements, salary, schedule *string, maxParticipants int) (*db.EmploymentRequest, error) {
 	var id uuid.UUID
 	var statusID int
-	err := r.db.QueryRow(ctx, `SELECT id FROM employment_statuses WHERE name = 'pending'`).Scan(&statusID)
+	err := r.db.QueryRow(ctx, `SELECT id FROM employment_statuses WHERE name = 'approved'`).Scan(&statusID)
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			r.ensureEmploymentStatusesExist(ctx)
-			err = r.db.QueryRow(ctx, `SELECT id FROM employment_statuses WHERE name = 'pending'`).Scan(&statusID)
+			err = r.db.QueryRow(ctx, `SELECT id FROM employment_statuses WHERE name = 'approved'`).Scan(&statusID)
 			if err != nil {
 				return nil, err
 			}

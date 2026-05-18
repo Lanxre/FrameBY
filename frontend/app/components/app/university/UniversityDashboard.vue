@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import TabsLayout from "@/components/ui/TabsLayout/TabsLayout.vue";
 import UniversitySquadApproval from "./UniversitySquadApproval.vue";
-import UniversityEmploymentRequests from "./UniversityEmploymentRequests.vue";
 import UniversityStats from "./UniversityStats.vue";
 import UniversityStudentInfo from "./UniversityStudentInfo.vue";
 import StudentSquadTable from "@/components/app/squads/StudentSquadTable.vue";
@@ -12,13 +11,6 @@ const tabs = [
 		value: "squads",
 		icon: "ph:users-three",
 		component: UniversitySquadApproval,
-		hasPermission: true,
-	},
-	{
-		label: "Заявки на работу",
-		value: "employment",
-		icon: "ph:briefcase",
-		component: UniversityEmploymentRequests,
 		hasPermission: true,
 	},
 	{

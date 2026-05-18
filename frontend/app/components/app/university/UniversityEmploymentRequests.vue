@@ -2,24 +2,13 @@
 import { useVirtualList } from "@vueuse/core";
 import type { EmploymentRequest } from "@/types/frontend/employment";
 import { useEmploymentRequests } from "@/composables/api/employment/useEmploymentRequests";
-import {
-	useApproveEmployment,
-	useUpdateEmploymentStatus,
-} from "@/composables/api/employment/useEmploymentActions";
+import { useUpdateEmploymentStatus } from "@/composables/api/employment/useEmploymentActions";
 import { formatTotalStudentSquads } from "@/utils/str";
 import Select from "@/components/ui/Select/Select.vue";
 import EmploymentRequestCard from "@/components/app/customer/EmploymentRequestCard.vue";
 
 const { requests, total, isLoading, errorMessage, fetchRequests } =
 	useEmploymentRequests();
-
-const {
-	approve,
-	reject,
-	isLoading: isApproving,
-	errorMessage: approveError,
-	isSuccess: approveSuccess,
-} = useApproveEmployment();
 
 const {
 	updateStatus,
@@ -33,7 +22,6 @@ const { notify } = useNotificationStore();
 
 const statusFilter = ref<{ id: string; name: string } | null>(null);
 const statusOptions = [
-	{ id: "pending", name: "Ожидает подтверждения" },
 	{ id: "all", name: "Все" },
 ];
 
@@ -84,72 +72,8 @@ watch(statusFilter, async (newFilter) => {
 onMounted(() => {
 	if (statusOptions[0]) statusFilter.value = statusOptions[0];
 
-	loadRequests("pending");
+	loadRequests();
 });
-
-const handleApprove = async (request: EmploymentRequest) => {
-	const success = await approve(request.id);
-	if (success) {
-		const item = requests.value.find((r) => r.id === request.id);
-		if (item) item.status = "approved";
-
-		if (statusFilter.value?.id === "pending") {
-			const index = requests.value.findIndex((r) => r.id === request.id);
-			if (index !== -1) requests.value.splice(index, 1);
-			total.value--;
-		}
-
-		Object.keys(statusCache.value).forEach((key) => {
-			const cached = statusCache.value[key];
-			const cachedItem = cached.requests.find((r) => r.id === request.id);
-			if (cachedItem) cachedItem.status = "approved";
-		});
-
-		notify({
-			title: "Успех",
-			content: "Заявка одобрена",
-			type: "success",
-		});
-	} else {
-		notify({
-			title: "Ошибка",
-			content: "Не удалось одобрить заявку",
-			type: "error",
-		});
-	}
-};
-
-const handleReject = async (request: EmploymentRequest) => {
-	const success = await reject(request.id);
-	if (success) {
-		if (statusFilter.value?.id === "pending") {
-			const index = requests.value.findIndex((r) => r.id === request.id);
-			if (index !== -1) requests.value.splice(index, 1);
-			total.value--;
-		} else {
-			const item = requests.value.find((r) => r.id === request.id);
-			if (item) item.status = "rejected";
-		}
-
-		Object.keys(statusCache.value).forEach((key) => {
-			const cached = statusCache.value[key];
-			const cachedItem = cached.requests.find((r) => r.id === request.id);
-			if (cachedItem) cachedItem.status = "rejected";
-		});
-
-		notify({
-			title: "Успех",
-			content: "Заявка отклонена",
-			type: "success",
-		});
-	} else {
-		notify({
-			title: "Ошибка",
-			content: "Не удалось отклонить заявку",
-			type: "error",
-		});
-	}
-};
 
 const handleClose = async (request: EmploymentRequest) => {
 	const success = await updateStatus(request.id, "closed");
@@ -177,11 +101,9 @@ const handleClose = async (request: EmploymentRequest) => {
 	}
 };
 
-const isUpdating = computed(() => isApproving.value || isClosing.value);
-const updateError = computed(() => approveError.value || closeError.value);
-const updateSuccess = computed(
-	() => approveSuccess.value || closeSuccess.value,
-);
+const isUpdating = computed(() => isClosing.value);
+const updateError = computed(() => closeError.value);
+const updateSuccess = computed(() => closeSuccess.value);
 
 const { list, containerProps, wrapperProps } = useVirtualList(requests, {
 	itemHeight: 200,
@@ -239,8 +161,6 @@ const { list, containerProps, wrapperProps } = useVirtualList(requests, {
           :show-actions="true"
           :is-university-mode="true"
           :is-loading="isUpdating"
-          @approve="handleApprove"
-          @reject="handleReject"
           @close="handleClose"
         />
       </div>
