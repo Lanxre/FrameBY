@@ -46,7 +46,18 @@ type StudentSquadWithDetails struct {
 	StatusID          int       `json:"status_id"`
 	StatusName        string    `json:"status_name"`
 	CreatedAt         time.Time `json:"created_at"`
+	Avatar            *string   `json:"avatar"`
 	UpdatedAt         time.Time `json:"updated_at"`
+}
+
+type SquadParticipantInfo struct {
+	SquadID   uuid.UUID `json:"squad_id"`
+	UserID    uuid.UUID `json:"user_id"`
+	FullName  string    `json:"full_name"`
+	Phone     *string   `json:"phone"`
+	Specialty *string   `json:"specialty"`
+	Grade     *float64  `json:"grade"`
+	Avatar    *string   `json:"avatar"`
 }
 
 type StudentSquadWithParticipants struct {

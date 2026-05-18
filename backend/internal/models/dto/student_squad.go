@@ -24,18 +24,28 @@ type SquadOrganizer struct {
 	Phone    string `json:"phone"`
 }
 
+type SquadParticipantInfo struct {
+	ID        string  `json:"id"`
+	FullName  string  `json:"full_name"`
+	Phone     *string `json:"phone,omitempty"`
+	Specialty *string `json:"specialty,omitempty"`
+	Grade     *float64 `json:"grade,omitempty"`
+	Avatar    *string `json:"avatar,omitempty"`
+}
+
 type StudentSquadResponse struct {
-	ID              string         `json:"id"`
-	Organizer       SquadOrganizer `json:"organizer"`
-	Title           string         `json:"title"`
-	Description     *string        `json:"description,omitempty"`
-	Profile         *string        `json:"profile,omitempty"`
-	MaxParticipants int            `json:"max_participants"`
-	CurrentCount    int            `json:"current_count"`
-	Status          string         `json:"status"`
-	StatusID        int            `json:"status_id"`
-	CreatedAt       string         `json:"created_at"`
-	UpdatedAt       string         `json:"updated_at"`
+	ID              string                 `json:"id"`
+	Organizer       SquadOrganizer         `json:"organizer"`
+	Title           string                 `json:"title"`
+	Description     *string                `json:"description,omitempty"`
+	Profile         *string                `json:"profile,omitempty"`
+	MaxParticipants int                    `json:"max_participants"`
+	CurrentCount    int                    `json:"current_count"`
+	Status          string                 `json:"status"`
+	StatusID        int                    `json:"status_id"`
+	Participants    []SquadParticipantInfo `json:"participants"`
+	CreatedAt       string                 `json:"created_at"`
+	UpdatedAt       string                 `json:"updated_at"`
 }
 
 type StudentSquadDetailResponse struct {

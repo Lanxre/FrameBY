@@ -4,6 +4,7 @@ import UniversitySquadApproval from "./UniversitySquadApproval.vue";
 import UniversityEmploymentRequests from "./UniversityEmploymentRequests.vue";
 import UniversityStats from "./UniversityStats.vue";
 import UniversityStudentInfo from "./UniversityStudentInfo.vue";
+import StudentSquadTable from "@/components/app/squads/StudentSquadTable.vue";
 
 const tabs = [
 	{
@@ -18,6 +19,13 @@ const tabs = [
 		value: "employment",
 		icon: "ph:briefcase",
 		component: UniversityEmploymentRequests,
+		hasPermission: true,
+	},
+	{
+		label: "Списки отрядов",
+		value: "squad_list",
+		icon: "ph:list-bullets",
+		component: StudentSquadTable,
 		hasPermission: true,
 	},
 	{

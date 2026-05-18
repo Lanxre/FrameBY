@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { SQUAD_STATUS_LABELS, SQUAD_STATUS_COLORS } from "@/const/squad";
-import type { StudentSquad } from "@/types/frontend/student-squad";
+import type { SquadParticipant, StudentSquad } from "@/types/frontend/student-squad";
 import type { FramebyAppRole } from "~/types/frontend/enums/role";
 import ToolTip from "@/components/ui/ToolTip.vue";
+import StudentSquadParticipantsModal from "@/components/app/squads/StudentSquadParticipantsModal.vue";
 
 const props = withDefaults(
 	defineProps<{
@@ -24,6 +25,17 @@ const props = withDefaults(
 		isUniversityMode: false,
 	},
 );
+const showParticipantsModal = ref(false);
+const squadParticipants = ref<SquadParticipant[]>([]);
+
+const openParticipantsModal = (participants: SquadParticipant[]) => {
+
+    if (participants.length === 0) return;
+  
+    squadParticipants.value = participants;
+	showParticipantsModal.value = true;
+};
+
 
 const canJoin = computed(
 	() =>
@@ -114,6 +126,14 @@ const isRejected = computed(() => props.squad.status === "rejected");
 				</template>
 
 				<template v-else>
+    				<ToolTip v-if="squad.participants.length !== 0" text="Участники">
+    					<button
+    						@click="openParticipantsModal(squad.participants)"
+    						class="p-2 cursor-pointer rounded-xl text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 transition-all"
+    					>
+    						<Icon name="ph:person" size="20" />
+    					</button>
+    				</ToolTip>
 					<ToolTip text="Редактировать">
 						<button
 							v-if="canEdit"
@@ -185,7 +205,7 @@ const isRejected = computed(() => props.squad.status === "rejected");
 		</p>
 
 		<div class="flex items-center justify-between text-sm mb-2">
-			<div class="flex items-center gap-2">
+			<div v-on:click="openParticipantsModal(squad.participants)" class="flex items-center gap-2">
 				<div class="w-7 h-7 rounded-lg bg-emerald-50 flex items-center justify-center shrink-0">
 					<Icon name="ph:users" size="14" class="text-emerald-600" />
 				</div>
@@ -240,5 +260,9 @@ const isRejected = computed(() => props.squad.status === "rejected");
 				Покинуть
 			</button>
 		</div>
+		<StudentSquadParticipantsModal
+            v-model="showParticipantsModal"
+            :participants="squadParticipants"
+        />
 	</div>
 </template>

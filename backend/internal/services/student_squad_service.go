@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	"github.com/lanxre/frameby/internal/models/db"
 	"github.com/lanxre/frameby/internal/models/dto"
 	"github.com/lanxre/frameby/internal/repositories"
 )
@@ -16,11 +17,35 @@ func NewStudentSquadService(repo *repositories.StudentSquadRepository) *StudentS
 	return &StudentSquadService{repo: repo}
 }
 
+func mapParticipants(dbParticipants []db.SquadParticipantInfo) []dto.SquadParticipantInfo {
+	if len(dbParticipants) == 0 {
+		return []dto.SquadParticipantInfo{}
+	}
+	res := make([]dto.SquadParticipantInfo, len(dbParticipants))
+	for i, p := range dbParticipants {
+		res[i] = dto.SquadParticipantInfo{
+			ID:        p.UserID.String(),
+			FullName:  p.FullName,
+			Phone:     p.Phone,
+			Specialty: p.Specialty,
+			Grade:     p.Grade,
+			Avatar:    p.Avatar,
+		}
+	}
+	return res
+}
+
 func (s *StudentSquadService) GetAll(ctx context.Context, status string, limit, offset int) (*dto.AllSquadsResponse, error) {
 	squads, total, err := s.repo.GetAll(ctx, status, limit, offset)
 	if err != nil {
 		return nil, err
 	}
+
+	squadIDs := make([]uuid.UUID, len(squads))
+	for i, sq := range squads {
+		squadIDs[i] = sq.ID
+	}
+	participantsMap, _ := s.repo.GetParticipantsBySquadIDs(ctx, squadIDs)
 
 	response := make([]dto.StudentSquadResponse, len(squads))
 	for i, sq := range squads {
@@ -48,6 +73,7 @@ func (s *StudentSquadService) GetAll(ctx context.Context, status string, limit, 
 			CurrentCount:    sq.CurrentCount,
 			Status:          sq.StatusName,
 			StatusID:        sq.StatusID,
+			Participants:    mapParticipants(participantsMap[sq.ID]),
 			CreatedAt:       sq.CreatedAt.Format("2006-01-02T15:04:05Z"),
 			UpdatedAt:       sq.UpdatedAt.Format("2006-01-02T15:04:05Z"),
 		}
@@ -170,6 +196,12 @@ func (s *StudentSquadService) GetByOrganizer(ctx context.Context, organizerID uu
 		return nil, err
 	}
 
+	squadIDs := make([]uuid.UUID, len(squads))
+	for i, sq := range squads {
+		squadIDs[i] = sq.ID
+	}
+	participantsMap, _ := s.repo.GetParticipantsBySquadIDs(ctx, squadIDs)
+
 	response := make([]dto.StudentSquadResponse, len(squads))
 	for i, sq := range squads {
 		position := ""
@@ -196,6 +228,7 @@ func (s *StudentSquadService) GetByOrganizer(ctx context.Context, organizerID uu
 			CurrentCount:    sq.CurrentCount,
 			Status:          sq.StatusName,
 			StatusID:        sq.StatusID,
+			Participants:    mapParticipants(participantsMap[sq.ID]),
 			CreatedAt:       sq.CreatedAt.Format("2006-01-02T15:04:05Z"),
 			UpdatedAt:       sq.UpdatedAt.Format("2006-01-02T15:04:05Z"),
 		}
@@ -209,6 +242,12 @@ func (s *StudentSquadService) GetByParticipant(ctx context.Context, userID uuid.
 		return nil, err
 	}
 
+	squadIDs := make([]uuid.UUID, len(squads))
+	for i, sq := range squads {
+		squadIDs[i] = sq.ID
+	}
+	participantsMap, _ := s.repo.GetParticipantsBySquadIDs(ctx, squadIDs)
+
 	response := make([]dto.StudentSquadResponse, len(squads))
 	for i, sq := range squads {
 		position := ""
@@ -235,6 +274,7 @@ func (s *StudentSquadService) GetByParticipant(ctx context.Context, userID uuid.
 			CurrentCount:    sq.CurrentCount,
 			Status:          sq.StatusName,
 			StatusID:        sq.StatusID,
+			Participants:    mapParticipants(participantsMap[sq.ID]),
 			CreatedAt:       sq.CreatedAt.Format("2006-01-02T15:04:05Z"),
 			UpdatedAt:       sq.UpdatedAt.Format("2006-01-02T15:04:05Z"),
 		}
@@ -242,12 +282,58 @@ func (s *StudentSquadService) GetByParticipant(ctx context.Context, userID uuid.
 	return response, nil
 }
 
-func (s *StudentSquadService) Approve(ctx context.Context, squadID uuid.UUID, approved bool) error {
+func (s *StudentSquadService) GetByUniversity(ctx context.Context, universityDeptID uuid.UUID) ([]dto.StudentSquadResponse, error) {
+	squads, err := s.repo.GetByUniversity(ctx, universityDeptID)
+	if err != nil {
+		return nil, err
+	}
+
+	squadIDs := make([]uuid.UUID, len(squads))
+	for i, sq := range squads {
+		squadIDs[i] = sq.ID
+	}
+	participantsMap, _ := s.repo.GetParticipantsBySquadIDs(ctx, squadIDs)
+
+	response := make([]dto.StudentSquadResponse, len(squads))
+	for i, sq := range squads {
+		position := ""
+		if sq.OrganizerPosition != nil {
+			position = *sq.OrganizerPosition
+		}
+		phone := ""
+		if sq.OrganizerPhone != nil {
+			phone = *sq.OrganizerPhone
+		}
+		response[i] = dto.StudentSquadResponse{
+			ID: sq.ID.String(),
+			Organizer: dto.SquadOrganizer{
+				ID:       sq.OrganizerID.String(),
+				Name:     sq.OrganizerName,
+				Role:     sq.OrganizerRole,
+				Position: position,
+				Phone:    phone,
+			},
+			Title:           sq.Title,
+			Description:     sq.Description,
+			Profile:         sq.Profile,
+			MaxParticipants: sq.MaxParticipants,
+			CurrentCount:    sq.CurrentCount,
+			Status:          sq.StatusName,
+			StatusID:        sq.StatusID,
+			Participants:    mapParticipants(participantsMap[sq.ID]),
+			CreatedAt:       sq.CreatedAt.Format("2006-01-02T15:04:05Z"),
+			UpdatedAt:       sq.UpdatedAt.Format("2006-01-02T15:04:05Z"),
+		}
+	}
+	return response, nil
+}
+
+func (s *StudentSquadService) Approve(ctx context.Context, squadID uuid.UUID, approved bool, approvedByUserID uuid.UUID) error {
 	var statusName string
 	if approved {
 		statusName = "recruitment_open"
 	} else {
 		statusName = "rejected"
 	}
-	return s.repo.UpdateStatus(ctx, squadID, statusName)
+	return s.repo.UpdateStatus(ctx, squadID, statusName, approvedByUserID)
 }

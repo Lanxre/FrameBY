@@ -10,13 +10,13 @@ export const TWITTER_URL = "https://x.com/Lvnxrx";
 
 export const REQUIRE_MENU: MenuItem[] = [
 	{
-		label: "Сведения о дополнительной потребности в трудовых ресурсах",
+		label: "Сведения о дополнительной потребности в студенческих отрядах",
 		to: "/normative-sovmin#item-1",
 		icon: "ph:star",
 	},
 	{
-		label: "Заявки на подготовку рабочих, служащих и специалистов",
-		to: "/normative-sovmin#item-15",
+		label: "Заявки на создание студенческих отрядов",
+		to: "/normative-sovmin#item-5",
 		icon: "ph:star",
 	},
 	{
@@ -54,10 +54,10 @@ export const REQUIRE_SECTION_MENU: MenuItem[] = [
 
 export const FOOTER_SECTIONS: FooterSection[] = [
 	{
-		title: "Продукт",
+		title: "Информация",
 		links: [
-			{ label: "Функции", to: "/features" },
-			{ label: "Обновления", to: "/updates" },
+			{ label: "Предоставление данных", to: "/features" },
+			{ label: "Ресурсы", to: "/updates" },
 		],
 	},
 	{

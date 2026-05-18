@@ -25,7 +25,6 @@ export function useCreateSquad() {
 			isSuccess.value = true;
 			notify({
 				title: "Успех",
-				content: "Отряд успешно создан",
 				type: "success",
 			});
 			return true;

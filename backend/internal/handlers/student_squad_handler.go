@@ -12,11 +12,15 @@ import (
 )
 
 type StudentSquadHandler struct {
-	service *services.StudentSquadService
+	service        *services.StudentSquadService
+	profileService *services.ProfileService
 }
 
-func NewStudentSquadHandler(service *services.StudentSquadService) *StudentSquadHandler {
-	return &StudentSquadHandler{service: service}
+func NewStudentSquadHandler(service *services.StudentSquadService, profileService *services.ProfileService) *StudentSquadHandler {
+	return &StudentSquadHandler{
+		service:        service,
+		profileService: profileService,
+	}
 }
 
 func (h *StudentSquadHandler) GetAll(c *gin.Context) {
@@ -198,6 +202,13 @@ func (h *StudentSquadHandler) GetMySquads(c *gin.Context) {
 	switch role {
 	case "student":
 		squads, err = h.service.GetByParticipant(c.Request.Context(), uid)
+	case "university":
+		profile, pErr := h.profileService.GetUniversityProfile(c.Request.Context(), uid)
+		if pErr != nil || profile == nil || profile.UniversityDepartmentID == nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Профиль университета не найден"})
+			return
+		}
+		squads, err = h.service.GetByUniversity(c.Request.Context(), *profile.UniversityDepartmentID)
 	default:
 		squads, err = h.service.GetByOrganizer(c.Request.Context(), uid)
 	}
@@ -211,6 +222,9 @@ func (h *StudentSquadHandler) GetMySquads(c *gin.Context) {
 }
 
 func (h *StudentSquadHandler) Approve(c *gin.Context) {
+	userID, _ := c.Get(middleware.UserIDKey)
+	uid := userID.(uuid.UUID)
+
 	idStr := c.Param("id")
 	id, err := uuid.Parse(idStr)
 	if err != nil {
@@ -224,7 +238,7 @@ func (h *StudentSquadHandler) Approve(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.Approve(c.Request.Context(), id, req.Approved); err != nil {
+	if err := h.service.Approve(c.Request.Context(), id, req.Approved, uid); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка обновления статуса"})
 		return
 	}

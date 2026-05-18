@@ -433,7 +433,9 @@ func (s *ProfileService) UpdateProfile(ctx context.Context, userID uuid.UUID, re
 			} else {
 				fullName = profile.FullName
 			}
-			if req.Position == nil {
+			if req.Position != nil {
+				position = req.Position
+			} else {
 				position = profile.Position
 			}
 			if req.Phone == nil {

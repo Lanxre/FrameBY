@@ -8,10 +8,11 @@ import {
 } from "@/composables/api/squads/useStudentSquads";
 import { useUpdateSquad } from "@/composables/api/squads/useUpdateSquad";
 import { SQUAD_STATUS_COLORS, SQUAD_STATUS_LABELS } from "@/const/squad";
-import type { StudentSquad } from "@/types/frontend/student-squad";
+import type { SquadParticipant, StudentSquad } from "@/types/frontend/student-squad";
 import { formatDate, formatTotalStudentSquads } from "@/utils/str";
 import ModalConfirm from "@/components/common/ModalConfirm.vue";
 import ToolTip from "@/components/ui/ToolTip.vue";
+import StudentSquadParticipantsModal from "@/components/app/squads/StudentSquadParticipantsModal.vue";
 import StudentSquadEditModal from "./StudentSquadEditModal.vue";
 import { FramebyAppRole } from "~/types/frontend/enums/role";
 
@@ -44,6 +45,9 @@ const showCloseModal = ref(false);
 const squadToClose = ref<StudentSquad | null>(null);
 const showEditModal = ref(false);
 const squadToEdit = ref<StudentSquad | null>(null);
+const showParticipantsModal = ref(false);
+const squadParticipants = ref<SquadParticipant[]>([]);
+
 const limit = ref(10);
 const offset = ref(0);
 
@@ -84,6 +88,13 @@ const goToPage = (page: number) => {
 const openCloseModal = (squad: StudentSquad) => {
 	squadToClose.value = squad;
 	showCloseModal.value = true;
+};
+
+const openParticipantsModal = (participants: SquadParticipant[]) => {
+	if (participants.length === 0) return;
+  
+    squadParticipants.value = participants;
+	showParticipantsModal.value = true;
 };
 
 const openEditModal = (squad: StudentSquad) => {
@@ -222,8 +233,8 @@ const { list, containerProps, wrapperProps } = useVirtualList(sourceList, {
                 </span>
               </div>
 
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm text-gray-600 mb-3">
-                <div class="flex items-center gap-1">
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm text-gray-600 mb-3">
+                <div v-on:click="openParticipantsModal(squad.participants)" class="flex items-center gap-1">
                   Необходимо участников: {{ squad.current_count }} / {{ squad.max_participants }}
                   <Icon name="ph:users" size="14" />
                 </div>
@@ -237,6 +248,15 @@ const { list, containerProps, wrapperProps } = useVirtualList(sourceList, {
                     <Icon name="ph:clock" size="14" />
                     <span>{{ formatDate(squad.updated_at) }}</span>
                   </div>
+                </div>
+                
+                <div v-if="squad.participants.length !== 0 && !isMyView" class="justify-self-end">
+                  <ToolTip text="Участники">
+                    <button @click="openParticipantsModal(squad.participants)" class="flex items-center gap-1 p-1.5 text-gray-400 hover:text-emerald-500 transition rounded-lg cursor-pointer">
+                        <p class="text-[12px]">Показать участников</p>
+                        <Icon name="ph:person" size="18" />
+                    </button>
+                  </ToolTip>
                 </div>
 
                 <div class="col-span-2 flex flex-col gap-2">
@@ -274,6 +294,12 @@ const { list, containerProps, wrapperProps } = useVirtualList(sourceList, {
               <ToolTip v-if="squad.status === 'recruitment_open'" text="Закрыть">
                 <button @click="openCloseModal(squad)" class="p-1.5 text-gray-400 hover:text-red-500 transition rounded-lg cursor-pointer">
                   <Icon name="ph:x" size="18" />
+                </button>
+              </ToolTip>
+
+              <ToolTip v-if="squad.participants.length !== 0" text="Участники">
+                <button @click="openParticipantsModal(squad.participants)" class="p-1.5 text-gray-400 hover:text-emerald-500 transition rounded-lg cursor-pointer">
+                  <Icon name="ph:person" size="18" />
                 </button>
               </ToolTip>
 
@@ -330,6 +356,11 @@ const { list, containerProps, wrapperProps } = useVirtualList(sourceList, {
       v-model="showEditModal"
       :squad="squadToEdit"
       @saved="(data) => handleSquadSaved(data)"
+    />
+
+    <StudentSquadParticipantsModal
+      v-model="showParticipantsModal"
+      :participants="squadParticipants"
     />
   </div>
 </template>
