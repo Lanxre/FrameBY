@@ -172,7 +172,7 @@ func (r *StudentSquadRepository) Create(ctx context.Context, organizerID uuid.UU
 
 	var id uuid.UUID
 	var createdAt, updatedAt time.Time
-	err = r.db.QueryRow(ctx, query, organizerID, title, description, profile, maxParticipants, statusID).Scan(
+	err = r.db.QueryRow(ctx, query, organizerID, title, description, profile, maxParticipants, statusID, nil).Scan(
 		&id, &organizerID, &title, &description, &profile, &maxParticipants, &statusID, &createdAt, &updatedAt,
 	)
 	if err != nil {
