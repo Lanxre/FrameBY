@@ -1,8 +1,6 @@
 <script setup lang="ts">
-import Select from "@/components/ui/Select/Select.vue";
 import ModalConfirm from "@/components/common/ModalConfirm.vue";
 import type { CreateEmploymentRequestData } from "@/types/frontend/employment";
-import { useUniversityDepartments } from "@/composables/api/useUniversityDepartments";
 import { useCreateEmploymentRequest } from "@/composables/api/employment/useCreateEmploymentRequest";
 import { useNotificationStore } from "@/stores/notification";
 
@@ -10,16 +8,13 @@ const emit = defineEmits<{
 	created: [];
 }>();
 
-const { departments, fetchDepartments } = useUniversityDepartments();
 const { create, isLoading, errorMessage, isSuccess, reset } =
 	useCreateEmploymentRequest();
 const notification = useNotificationStore();
 
-const selectedDepartment = ref<{ id: string; name: string } | null>(null);
 const showConfirmModal = ref(false);
 
 const form = ref<CreateEmploymentRequestData>({
-	university_department_id: "",
 	title: "",
 	description: "",
 	requirements: "",
@@ -29,14 +24,8 @@ const form = ref<CreateEmploymentRequestData>({
 });
 
 const errors = ref({
-	department: "",
 	title: "",
 	maxParticipants: "",
-});
-
-watch(selectedDepartment, (val) => {
-	form.value.university_department_id = val?.id || "";
-	if (val) errors.value.department = "";
 });
 
 watch(
@@ -55,12 +44,7 @@ watch(
 
 const validate = (): boolean => {
 	let isValid = true;
-
-	if (!selectedDepartment.value) {
-		errors.value.department = "Выберите отдел/кафедру";
-		isValid = false;
-	}
-
+	
 	if (!form.value.title?.trim()) {
 		errors.value.title = "Введите название вакансии";
 		isValid = false;
@@ -76,7 +60,7 @@ const validate = (): boolean => {
 
 const handleSubmit = async () => {
 	if (!validate()) return;
-
+	
 	showConfirmModal.value = true;
 };
 
@@ -84,6 +68,7 @@ const confirmSubmit = async () => {
 	showConfirmModal.value = false;
 
 	const success = await create(form.value);
+	
 	if (success) {
 		notification.notify({
 			type: "success",
@@ -91,9 +76,7 @@ const confirmSubmit = async () => {
 			content: "Заявка успешно создана!",
 		});
 		reset();
-		selectedDepartment.value = null;
 		form.value = {
-			university_department_id: "",
 			title: "",
 			description: "",
 			requirements: "",
@@ -111,9 +94,6 @@ const confirmSubmit = async () => {
 	}
 };
 
-onMounted(() => {
-	fetchDepartments();
-});
 </script>
 
 <template>
@@ -124,17 +104,6 @@ onMounted(() => {
     </div>
 
     <form @submit.prevent="handleSubmit" class="space-y-4">
-      <div class="space-y-1">
-        <label class="text-sm font-medium text-gray-700 ml-1">Отдел/Кафедра Университета <span class="text-red-500">*</span></label>
-        <Select
-          v-model="selectedDepartment"
-          :options="departments"
-          placeholder="Выберите отдел/кафедру"
-          icon="ph:graduation-cap"
-        />
-        <p v-if="errors.department" class="text-xs text-red-500 ml-1 mt-1">{{ errors.department }}</p>
-      </div>
-
       <div class="space-y-1">
         <label class="text-sm font-medium text-gray-700 ml-1">Название вакансии <span class="text-red-500">*</span></label>
         <div class="relative">
@@ -153,7 +122,7 @@ onMounted(() => {
       </div>
 
       <div class="space-y-1">
-        <label class="text-sm font-medium text-gray-700 ml-1">Количество участников <span class="text-red-500">*</span></label>
+        <label class="text-sm font-medium text-gray-700 ml-1">Количество вакантных мест <span class="text-red-500">*</span></label>
         <div class="relative">
           <Icon name="ph:users" size="18" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
           <input

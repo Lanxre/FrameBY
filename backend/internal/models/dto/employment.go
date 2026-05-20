@@ -1,13 +1,12 @@
 package dto
 
 type CreateEmploymentRequest struct {
-	UniversityDepartmentID string  `json:"university_department_id" binding:"required"`
-	Title                  string  `json:"title" binding:"required"`
-	Description            *string `json:"description"`
-	Requirements           *string `json:"requirements"`
-	Salary                 *string `json:"salary"`
-	Schedule               *string `json:"schedule"`
-	MaxParticipants        int     `json:"max_participants" binding:"required,gt=0"`
+	Title           string  `json:"title" binding:"required"`
+	Description     *string `json:"description"`
+	Requirements    *string `json:"requirements"`
+	Salary          *string `json:"salary"`
+	Schedule        *string `json:"schedule"`
+	MaxParticipants int     `json:"max_participants" binding:"required,gt=0"`
 }
 
 type UpdateEmploymentRequest struct {

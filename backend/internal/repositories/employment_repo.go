@@ -24,7 +24,7 @@ func (r *EmploymentRepository) GetAll(ctx context.Context, status, universityDep
 
 	baseQuery := `
 		SELECT er.id, er.enterprise_id, e.name as enterprise_name, e.address as enterprise_address,
-			   er.university_department_id, u.name as university_name, d.name as department_name, ud.address as university_address,
+			   er.university_department_id, COALESCE(u.name, '') as university_name, COALESCE(d.name, '') as department_name, ud.address as university_address,
 			   er.title, er.description, er.requirements, er.salary, er.schedule,
 			   er.max_participants,
 			   (SELECT COUNT(*) FROM employment_participants WHERE request_id = er.id) as current_participants,
@@ -32,9 +32,9 @@ func (r *EmploymentRepository) GetAll(ctx context.Context, status, universityDep
 			   er.created_at, er.updated_at
 		FROM employment_requests er
 		JOIN enterprises e ON er.enterprise_id = e.id
-		JOIN university_departments ud ON er.university_department_id = ud.id
-		JOIN universities u ON ud.university_id = u.id
-		JOIN departments d ON ud.department_id = d.id
+		LEFT JOIN university_departments ud ON er.university_department_id = ud.id
+		LEFT JOIN universities u ON ud.university_id = u.id
+		LEFT JOIN departments d ON ud.department_id = d.id
 		JOIN employment_statuses es ON er.status_id = es.id`
 
 	countQuery := `SELECT COUNT(*) FROM employment_requests er JOIN employment_statuses es ON er.status_id = es.id`
@@ -105,7 +105,7 @@ func (r *EmploymentRepository) GetAll(ctx context.Context, status, universityDep
 func (r *EmploymentRepository) GetByID(ctx context.Context, id uuid.UUID) (*db.EmploymentRequestWithParticipants, error) {
 	query := `
 		SELECT er.id, er.enterprise_id, e.name as enterprise_name, e.address as enterprise_address,
-			   er.university_department_id, u.name as university_name, d.name as department_name, ud.address as university_address,
+			   er.university_department_id, COALESCE(u.name, '') as university_name, COALESCE(d.name, '') as department_name, ud.address as university_address,
 			   er.title, er.description, er.requirements, er.salary, er.schedule,
 			   er.max_participants,
 			   (SELECT COUNT(*) FROM employment_participants WHERE request_id = er.id) as current_participants,
@@ -113,9 +113,9 @@ func (r *EmploymentRepository) GetByID(ctx context.Context, id uuid.UUID) (*db.E
 			   er.created_at, er.updated_at
 		FROM employment_requests er
 		JOIN enterprises e ON er.enterprise_id = e.id
-		JOIN university_departments ud ON er.university_department_id = ud.id
-		JOIN universities u ON ud.university_id = u.id
-		JOIN departments d ON ud.department_id = d.id
+		LEFT JOIN university_departments ud ON er.university_department_id = ud.id
+		LEFT JOIN universities u ON ud.university_id = u.id
+		LEFT JOIN departments d ON ud.department_id = d.id
 		JOIN employment_statuses es ON er.status_id = es.id
 		WHERE er.id = $1`
 
@@ -154,31 +154,19 @@ func (r *EmploymentRepository) GetByID(ctx context.Context, id uuid.UUID) (*db.E
 	return &e, nil
 }
 
-func (r *EmploymentRepository) Create(ctx context.Context, enterpriseID, universityDeptID uuid.UUID, title string, description, requirements, salary, schedule *string, maxParticipants int) (*db.EmploymentRequest, error) {
+func (r *EmploymentRepository) Create(ctx context.Context, enterpriseID uuid.UUID, title string, description, requirements, salary, schedule *string, maxParticipants int) (*db.EmploymentRequest, error) {
 	var id uuid.UUID
-	var statusID int
-	err := r.db.QueryRow(ctx, `SELECT id FROM employment_statuses WHERE name = 'approved'`).Scan(&statusID)
-	if err != nil {
-		if err == pgx.ErrNoRows {
-			r.ensureEmploymentStatusesExist(ctx)
-			err = r.db.QueryRow(ctx, `SELECT id FROM employment_statuses WHERE name = 'approved'`).Scan(&statusID)
-			if err != nil {
-				return nil, err
-			}
-		} else {
-			return nil, err
-		}
-	}
 
 	query := `
-		INSERT INTO employment_requests (enterprise_id, university_department_id, title, description, requirements, salary, schedule, max_participants, status_id)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+		INSERT INTO employment_requests (enterprise_id, title, description, requirements, salary, schedule, max_participants)
+		VALUES ($1, $2, $3, $4, $5, $6, $7)
 		RETURNING id, enterprise_id, university_department_id, title, description, requirements, salary, schedule, max_participants, status_id, created_at, updated_at`
 
 	var req db.EmploymentRequest
-	err = r.db.QueryRow(ctx, query, enterpriseID, universityDeptID, title, description, requirements, salary, schedule, maxParticipants, statusID).Scan(
+	err := r.db.QueryRow(ctx, query, enterpriseID, title, description, requirements, salary, schedule, maxParticipants).Scan(
 		&id, &req.EnterpriseID, &req.UniversityDepartmentID, &req.Title, &req.Description, &req.Requirements, &req.Salary, &req.Schedule, &req.MaxParticipants, &req.StatusID, &req.CreatedAt, &req.UpdatedAt,
 	)
+	
 	if err != nil {
 		return nil, err
 	}
@@ -388,7 +376,7 @@ func (r *EmploymentRepository) GetParticipantStatuses(ctx context.Context) ([]db
 func (r *EmploymentRepository) GetByEnterprise(ctx context.Context, enterpriseID uuid.UUID) ([]db.EmploymentRequestWithDetails, error) {
 	query := `
 		SELECT er.id, er.enterprise_id, e.name as enterprise_name, e.address as enterprise_address,
-			   er.university_department_id, u.name as university_name, d.name as department_name, ud.address as university_address,
+			   er.university_department_id, COALESCE(u.name, '') as university_name, COALESCE(d.name, '') as department_name, ud.address as university_address,
 			   er.title, er.description, er.requirements, er.salary, er.schedule,
 			   er.max_participants,
 			   (SELECT COUNT(*) FROM employment_participants WHERE request_id = er.id) as current_participants,
@@ -396,9 +384,9 @@ func (r *EmploymentRepository) GetByEnterprise(ctx context.Context, enterpriseID
 			   er.created_at, er.updated_at
 		FROM employment_requests er
 		JOIN enterprises e ON er.enterprise_id = e.id
-		JOIN university_departments ud ON er.university_department_id = ud.id
-		JOIN universities u ON ud.university_id = u.id
-		JOIN departments d ON ud.department_id = d.id
+		LEFT JOIN university_departments ud ON er.university_department_id = ud.id
+		LEFT JOIN universities u ON ud.university_id = u.id
+		LEFT JOIN departments d ON ud.department_id = d.id
 		JOIN employment_statuses es ON er.status_id = es.id
 		WHERE er.enterprise_id = $1
 		ORDER BY er.created_at DESC`
@@ -431,7 +419,7 @@ func (r *EmploymentRepository) GetByEnterprise(ctx context.Context, enterpriseID
 func (r *EmploymentRepository) GetByUniversityDepartment(ctx context.Context, universityDeptID uuid.UUID) ([]db.EmploymentRequestWithDetails, error) {
 	query := `
 		SELECT er.id, er.enterprise_id, e.name as enterprise_name, e.address as enterprise_address,
-			   er.university_department_id, u.name as university_name, d.name as department_name, ud.address as university_address,
+			   er.university_department_id, COALESCE(u.name, '') as university_name, COALESCE(d.name, '') as department_name, ud.address as university_address,
 			   er.title, er.description, er.requirements, er.salary, er.schedule,
 			   er.max_participants,
 			   (SELECT COUNT(*) FROM employment_participants WHERE request_id = er.id) as current_participants,
@@ -439,9 +427,9 @@ func (r *EmploymentRepository) GetByUniversityDepartment(ctx context.Context, un
 			   er.created_at, er.updated_at
 		FROM employment_requests er
 		JOIN enterprises e ON er.enterprise_id = e.id
-		JOIN university_departments ud ON er.university_department_id = ud.id
-		JOIN universities u ON ud.university_id = u.id
-		JOIN departments d ON ud.department_id = d.id
+		LEFT JOIN university_departments ud ON er.university_department_id = ud.id
+		LEFT JOIN universities u ON ud.university_id = u.id
+		LEFT JOIN departments d ON ud.department_id = d.id
 		JOIN employment_statuses es ON er.status_id = es.id
 		WHERE er.university_department_id = $1
 		ORDER BY er.created_at DESC`
@@ -493,7 +481,7 @@ func (r *EmploymentRepository) UpdateStatus(ctx context.Context, id uuid.UUID, a
 func (r *EmploymentRepository) GetUserApplications(ctx context.Context, userID uuid.UUID) ([]db.EmploymentApplicationWithDetails, error) {
 	query := `
 		SELECT er.id, er.enterprise_id, e.name as enterprise_name, e.address as enterprise_address,
-			   er.university_department_id, u.name as university_name, d.name as department_name, ud.address as university_address,
+			   er.university_department_id, COALESCE(u.name, '') as university_name, COALESCE(d.name, '') as department_name, ud.address as university_address,
 			   er.title, er.description, er.requirements, er.salary, er.schedule,
 			   er.max_participants,
 			   (SELECT COUNT(*) FROM employment_participants WHERE request_id = er.id) as current_participants,
@@ -502,9 +490,9 @@ func (r *EmploymentRepository) GetUserApplications(ctx context.Context, userID u
 			   ep.status_id as participant_status_id, eps.name as participant_status_name, ep.applied_at as participant_applied_at
 		FROM employment_requests er
 		JOIN enterprises e ON er.enterprise_id = e.id
-		JOIN university_departments ud ON er.university_department_id = ud.id
-		JOIN universities u ON ud.university_id = u.id
-		JOIN departments d ON ud.department_id = d.id
+		LEFT JOIN university_departments ud ON er.university_department_id = ud.id
+		LEFT JOIN universities u ON ud.university_id = u.id
+		LEFT JOIN departments d ON ud.department_id = d.id
 		JOIN employment_statuses es ON er.status_id = es.id
 		JOIN employment_participants ep ON ep.request_id = er.id
 		JOIN employment_participant_statuses eps ON ep.status_id = eps.id

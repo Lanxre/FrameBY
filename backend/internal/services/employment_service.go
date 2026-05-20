@@ -57,8 +57,8 @@ func (s *EmploymentService) GetByID(ctx context.Context, id uuid.UUID) (*dto.Emp
 	}, nil
 }
 
-func (s *EmploymentService) Create(ctx context.Context, enterpriseID, universityDeptID uuid.UUID, req *dto.CreateEmploymentRequest) (*dto.EmploymentRequestResponse, error) {
-	request, err := s.repo.Create(ctx, enterpriseID, universityDeptID, req.Title, req.Description, req.Requirements, req.Salary, req.Schedule, req.MaxParticipants)
+func (s *EmploymentService) Create(ctx context.Context, enterpriseID uuid.UUID, req *dto.CreateEmploymentRequest) (*dto.EmploymentRequestResponse, error) {
+	request, err := s.repo.Create(ctx, enterpriseID, req.Title, req.Description, req.Requirements, req.Salary, req.Schedule, req.MaxParticipants)
 	if err != nil {
 		return nil, err
 	}
@@ -209,12 +209,17 @@ func (s *EmploymentService) Approve(ctx context.Context, id uuid.UUID, approved 
 }
 
 func (s *EmploymentService) mapToResponse(req db.EmploymentRequestWithDetails) dto.EmploymentRequestResponse {
+	var deptID string
+	if req.UniversityDepartmentID.Valid {
+		deptID = req.UniversityDepartmentID.UUID.String()
+	}
+
 	return dto.EmploymentRequestResponse{
 		ID:                     req.ID.String(),
 		EnterpriseID:           req.EnterpriseID.String(),
 		EnterpriseName:         req.EnterpriseName,
 		EnterpriseAddress:      req.EnterpriseAddress,
-		UniversityDepartmentID: req.UniversityDepartmentID.String(),
+		UniversityDepartmentID: deptID,
 		UniversityName:         req.UniversityName,
 		DepartmentName:         req.DepartmentName,
 		UniversityAddress:      req.UniversityAddress,

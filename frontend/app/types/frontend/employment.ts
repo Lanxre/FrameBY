@@ -42,7 +42,6 @@ export interface EmploymentParticipant {
 }
 
 export interface CreateEmploymentRequestData {
-	university_department_id: string;
 	title: string;
 	description?: string;
 	requirements?: string;

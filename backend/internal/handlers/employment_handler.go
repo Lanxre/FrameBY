@@ -99,13 +99,7 @@ func (h *EmploymentHandler) Create(c *gin.Context) {
 		return
 	}
 
-	universityDeptID, err := uuid.Parse(req.UniversityDepartmentID)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверный формат ID университета"})
-		return
-	}
-
-	request, err := h.service.Create(c.Request.Context(), *profile.EnterpriseID, universityDeptID, &req)
+	request, err := h.service.Create(c.Request.Context(), *profile.EnterpriseID, &req)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка создания заявки"})
 		return
