@@ -9,6 +9,11 @@ export interface EnterpriseEntity {
 	address: string;
 }
 
+export interface UniversityDepartmentResponse {
+	university_name: string;
+	department_name: string;
+}
+
 export interface UserEntity {
 	id: string;
 	email: string;
@@ -21,4 +26,5 @@ export interface UserEntity {
 	avatar?: string;
 	subrole?: string;
 	enterprise?: EnterpriseEntity;
+	university_info?: UniversityDepartmentResponse;
 }

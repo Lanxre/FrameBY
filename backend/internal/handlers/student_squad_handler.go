@@ -12,14 +12,12 @@ import (
 )
 
 type StudentSquadHandler struct {
-	service        *services.StudentSquadService
-	profileService *services.ProfileService
+	service *services.StudentSquadService
 }
 
-func NewStudentSquadHandler(service *services.StudentSquadService, profileService *services.ProfileService) *StudentSquadHandler {
+func NewStudentSquadHandler(service *services.StudentSquadService) *StudentSquadHandler {
 	return &StudentSquadHandler{
-		service:        service,
-		profileService: profileService,
+		service: service,
 	}
 }
 
@@ -203,12 +201,7 @@ func (h *StudentSquadHandler) GetMySquads(c *gin.Context) {
 	case "student":
 		squads, err = h.service.GetByParticipant(c.Request.Context(), uid)
 	case "university":
-		profile, pErr := h.profileService.GetUniversityProfile(c.Request.Context(), uid)
-		if pErr != nil || profile == nil || profile.UniversityDepartmentID == nil {
-			c.JSON(http.StatusNotFound, gin.H{"error": "Профиль университета не найден"})
-			return
-		}
-		squads, err = h.service.GetByUniversity(c.Request.Context(), *profile.UniversityDepartmentID)
+		squads, err = h.service.GetByApprover(c.Request.Context(), uid)
 	default:
 		squads, err = h.service.GetByOrganizer(c.Request.Context(), uid)
 	}

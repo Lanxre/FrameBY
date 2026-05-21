@@ -4,6 +4,7 @@ export interface SquadOrganizer {
   role: string;
   position: string;
   phone: string;
+  enterprise_name: string;
 }
 
 export interface StudentSquad {
@@ -19,6 +20,7 @@ export interface StudentSquad {
   created_at: string;
   updated_at: string | Date;
   participants: SquadParticipant[];
+  approved_by: string;
 }
 
 export interface SquadParticipant {

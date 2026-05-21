@@ -87,6 +87,14 @@ func (s *AuthService) GetMe(ctx context.Context, userId uuid.UUID) (*dto.UserDto
 		}
 	}
 
+	var universityInfo *dto.UniversityDepartmentResponse
+	if user.UniversityName != "" || user.DepartmentName != "" {
+		universityInfo = &dto.UniversityDepartmentResponse{
+			UniversityName: user.UniversityName,
+			DepartmentName: user.DepartmentName,
+		}
+	}
+
 	userDto := &dto.UserDto{
 		ID:    user.ID,
 		Login: user.Login,
@@ -100,6 +108,7 @@ func (s *AuthService) GetMe(ctx context.Context, userId uuid.UUID) (*dto.UserDto
 		FullName:     &user.FullName,
 		Subrole:      &user.Subrole,
 		Enterprise:   enterpriseDto,
+		UniversityInfo: universityInfo,
 	}
 
 	return userDto, nil

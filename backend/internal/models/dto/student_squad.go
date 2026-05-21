@@ -17,11 +17,12 @@ type UpdateStudentSquadRequest struct {
 }
 
 type SquadOrganizer struct {
-	ID       string `json:"id"`
-	Name     string `json:"name"`
-	Role     string `json:"role"`
-	Position string `json:"position"`
-	Phone    string `json:"phone"`
+	ID             string `json:"id"`
+	Name           string `json:"name"`
+	Role           string `json:"role"`
+	Position       string `json:"position"`
+	Phone          string `json:"phone"`
+	EnterpriseName string `json:"enterprise_name"`
 }
 
 type SquadParticipantInfo struct {
@@ -46,6 +47,7 @@ type StudentSquadResponse struct {
 	Participants    []SquadParticipantInfo `json:"participants"`
 	CreatedAt       string                 `json:"created_at"`
 	UpdatedAt       string                 `json:"updated_at"`
+	ApprovedBy      string                 `json:"approved_by"`
 }
 
 type StudentSquadDetailResponse struct {

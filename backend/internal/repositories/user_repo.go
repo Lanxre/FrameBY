@@ -37,12 +37,18 @@ func (r *UserRepository) findOne(ctx context.Context, field string, value any) (
 	query := `
 		SELECT 
 			u.id, u.email, u.login, u.password_hash, u.role, u.avatar, u.created_at, u.updated_at,
-			COALESCE(bp.full_name, sp.full_name, cp.full_name, '') as full_name,
+			COALESCE(bp.full_name, sp.full_name, up.full_name, cp.full_name, '') as full_name,
 			COALESCE(bp.subrole, '') as subrole,
-			cp.enterprise_id
+			cp.enterprise_id,
+			COALESCE(u2.name, '') as university_name,
+			COALESCE(d.name, '') as department_name
 		FROM users u
 		LEFT JOIN brsm_profiles bp ON bp.user_id = u.id
 		LEFT JOIN student_profiles sp ON sp.user_id = u.id
+		LEFT JOIN university_profiles up ON up.user_id = u.id
+		LEFT JOIN university_departments ud ON ud.id = up.university_department_id
+		LEFT JOIN universities u2 ON u2.id = ud.university_id
+		LEFT JOIN departments d ON d.id = ud.department_id
 		LEFT JOIN customer_profiles cp ON cp.user_id = u.id
 		WHERE u.` + field + ` = $1`
 
@@ -58,6 +64,8 @@ func (r *UserRepository) findOne(ctx context.Context, field string, value any) (
 		&u.FullName,
 		&u.Subrole,
 		&u.EnterpriseID,
+		&u.UniversityName,
+		&u.DepartmentName,
 	)
 
 	if err != nil {

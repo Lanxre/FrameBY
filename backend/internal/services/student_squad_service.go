@@ -57,6 +57,10 @@ func (s *StudentSquadService) GetAll(ctx context.Context, status string, limit, 
 		if sq.OrganizerPhone != nil {
 			phone = *sq.OrganizerPhone
 		}
+		enterpriseName := ""
+		if sq.OrganizerEnterpriseName != nil {
+			enterpriseName = *sq.OrganizerEnterpriseName
+		}
 		response[i] = dto.StudentSquadResponse{
 			ID: sq.ID.String(),
 			Organizer: dto.SquadOrganizer{
@@ -65,6 +69,7 @@ func (s *StudentSquadService) GetAll(ctx context.Context, status string, limit, 
 				Role:     sq.OrganizerRole,
 				Position: position,
 				Phone:    phone,
+				EnterpriseName: enterpriseName,
 			},
 			Title:           sq.Title,
 			Description:     sq.Description,
@@ -76,6 +81,7 @@ func (s *StudentSquadService) GetAll(ctx context.Context, status string, limit, 
 			Participants:    mapParticipants(participantsMap[sq.ID]),
 			CreatedAt:       sq.CreatedAt.Format("2006-01-02T15:04:05Z"),
 			UpdatedAt:       sq.UpdatedAt.Format("2006-01-02T15:04:05Z"),
+			ApprovedBy:      sq.ApprovedByName,
 		}
 	}
 
@@ -118,6 +124,7 @@ func (s *StudentSquadService) GetByID(ctx context.Context, id uuid.UUID) (*dto.S
 			StatusID:        squad.StatusID,
 			CreatedAt:       squad.CreatedAt.Format("2006-01-02T15:04:05Z"),
 			UpdatedAt:       squad.UpdatedAt.Format("2006-01-02T15:04:05Z"),
+			ApprovedBy:      squad.ApprovedByName,
 		},
 		ParticipantIDs: participantIDs,
 	}, nil
@@ -212,6 +219,10 @@ func (s *StudentSquadService) GetByOrganizer(ctx context.Context, organizerID uu
 		if sq.OrganizerPhone != nil {
 			phone = *sq.OrganizerPhone
 		}
+		enterpriseName := ""
+		if sq.OrganizerEnterpriseName != nil {
+			enterpriseName = *sq.OrganizerEnterpriseName
+		}
 		response[i] = dto.StudentSquadResponse{
 			ID: sq.ID.String(),
 			Organizer: dto.SquadOrganizer{
@@ -220,6 +231,7 @@ func (s *StudentSquadService) GetByOrganizer(ctx context.Context, organizerID uu
 				Role:     sq.OrganizerRole,
 				Position: position,
 				Phone:    phone,
+				EnterpriseName: enterpriseName,
 			},
 			Title:           sq.Title,
 			Description:     sq.Description,
@@ -231,6 +243,7 @@ func (s *StudentSquadService) GetByOrganizer(ctx context.Context, organizerID uu
 			Participants:    mapParticipants(participantsMap[sq.ID]),
 			CreatedAt:       sq.CreatedAt.Format("2006-01-02T15:04:05Z"),
 			UpdatedAt:       sq.UpdatedAt.Format("2006-01-02T15:04:05Z"),
+			ApprovedBy:      sq.ApprovedByName,
 		}
 	}
 	return response, nil
@@ -258,6 +271,10 @@ func (s *StudentSquadService) GetByParticipant(ctx context.Context, userID uuid.
 		if sq.OrganizerPhone != nil {
 			phone = *sq.OrganizerPhone
 		}
+		enterpriseName := ""
+		if sq.OrganizerEnterpriseName != nil {
+			enterpriseName = *sq.OrganizerEnterpriseName
+		}
 		response[i] = dto.StudentSquadResponse{
 			ID: sq.ID.String(),
 			Organizer: dto.SquadOrganizer{
@@ -266,6 +283,7 @@ func (s *StudentSquadService) GetByParticipant(ctx context.Context, userID uuid.
 				Role:     sq.OrganizerRole,
 				Position: position,
 				Phone:    phone,
+				EnterpriseName: enterpriseName,
 			},
 			Title:           sq.Title,
 			Description:     sq.Description,
@@ -277,6 +295,7 @@ func (s *StudentSquadService) GetByParticipant(ctx context.Context, userID uuid.
 			Participants:    mapParticipants(participantsMap[sq.ID]),
 			CreatedAt:       sq.CreatedAt.Format("2006-01-02T15:04:05Z"),
 			UpdatedAt:       sq.UpdatedAt.Format("2006-01-02T15:04:05Z"),
+			ApprovedBy:      sq.ApprovedByName,
 		}
 	}
 	return response, nil
@@ -304,6 +323,10 @@ func (s *StudentSquadService) GetByUniversity(ctx context.Context, universityDep
 		if sq.OrganizerPhone != nil {
 			phone = *sq.OrganizerPhone
 		}
+		enterpriseName := ""
+		if sq.OrganizerEnterpriseName != nil {
+			enterpriseName = *sq.OrganizerEnterpriseName
+		}
 		response[i] = dto.StudentSquadResponse{
 			ID: sq.ID.String(),
 			Organizer: dto.SquadOrganizer{
@@ -312,6 +335,7 @@ func (s *StudentSquadService) GetByUniversity(ctx context.Context, universityDep
 				Role:     sq.OrganizerRole,
 				Position: position,
 				Phone:    phone,
+				EnterpriseName: enterpriseName,
 			},
 			Title:           sq.Title,
 			Description:     sq.Description,
@@ -323,6 +347,59 @@ func (s *StudentSquadService) GetByUniversity(ctx context.Context, universityDep
 			Participants:    mapParticipants(participantsMap[sq.ID]),
 			CreatedAt:       sq.CreatedAt.Format("2006-01-02T15:04:05Z"),
 			UpdatedAt:       sq.UpdatedAt.Format("2006-01-02T15:04:05Z"),
+			ApprovedBy:      sq.ApprovedByName,
+		}
+	}
+	return response, nil
+}
+
+func (s *StudentSquadService) GetByApprover(ctx context.Context, approverID uuid.UUID) ([]dto.StudentSquadResponse, error) {
+	squads, err := s.repo.GetByApprover(ctx, approverID)
+	if err != nil {
+		return nil, err
+	}
+
+	squadIDs := make([]uuid.UUID, len(squads))
+	for i, sq := range squads {
+		squadIDs[i] = sq.ID
+	}
+	participantsMap, _ := s.repo.GetParticipantsBySquadIDs(ctx, squadIDs)
+
+	response := make([]dto.StudentSquadResponse, len(squads))
+	for i, sq := range squads {
+		position := ""
+		if sq.OrganizerPosition != nil {
+			position = *sq.OrganizerPosition
+		}
+		phone := ""
+		if sq.OrganizerPhone != nil {
+			phone = *sq.OrganizerPhone
+		}
+		enterpriseName := ""
+		if sq.OrganizerEnterpriseName != nil {
+			enterpriseName = *sq.OrganizerEnterpriseName
+		}
+		response[i] = dto.StudentSquadResponse{
+			ID: sq.ID.String(),
+			Organizer: dto.SquadOrganizer{
+				ID:       sq.OrganizerID.String(),
+				Name:     sq.OrganizerName,
+				Role:     sq.OrganizerRole,
+				Position: position,
+				Phone:    phone,
+				EnterpriseName: enterpriseName,
+			},
+			Title:           sq.Title,
+			Description:     sq.Description,
+			Profile:         sq.Profile,
+			MaxParticipants: sq.MaxParticipants,
+			CurrentCount:    sq.CurrentCount,
+			Status:          sq.StatusName,
+			StatusID:        sq.StatusID,
+			Participants:    mapParticipants(participantsMap[sq.ID]),
+			CreatedAt:       sq.CreatedAt.Format("2006-01-02T15:04:05Z"),
+			UpdatedAt:       sq.UpdatedAt.Format("2006-01-02T15:04:05Z"),
+			ApprovedBy:      sq.ApprovedByName,
 		}
 	}
 	return response, nil

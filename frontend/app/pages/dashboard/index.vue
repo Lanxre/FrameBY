@@ -35,10 +35,20 @@ const currentDashboard = computed(() => {
       <h1 class="text-2xl sm:text-3xl font-bold text-white text-shadow-lg/30 flex items-center gap-3">
         <Icon name="ph:squares-four" size="28" class="text-emerald-500" />
         Панель управления
-        <p v-if="user?.enterprise !== undefined && user?.enterprise.name !== undefined">
+        <p v-if="isExactRole(FramebyAppRole.CUSTOMER) && user?.enterprise !== undefined && user?.enterprise.name !== undefined">
           для представителя компании: "{{ user.enterprise.name }}"
         </p>
       </h1>
+        <div v-if="isExactRole(FramebyAppRole.UNIVERSITY) && user?.university_info !== undefined && user?.university_info !== null" c
+            class="flex flex-col ml-10 text-2xl sm:text-3xl font-bold text-white text-shadow-lg/30">
+            <p>
+                для представителя университета: "{{ user.university_info.university_name }}"
+            </p>
+            <p>
+                {{ user.university_info.department_name }}
+            </p>
+        </div>
+        
       <p v-if="currentDashboard === FramebyAppRole.ADMIN" class="mt-2 text-gray-600">
         Управление данными и профилями системы
       </p>

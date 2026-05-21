@@ -48,6 +48,8 @@ type StudentSquadWithDetails struct {
 	CreatedAt         time.Time `json:"created_at"`
 	Avatar            *string   `json:"avatar"`
 	UpdatedAt         time.Time `json:"updated_at"`
+	ApprovedByName          string    `json:"approved_by_name"`
+	OrganizerEnterpriseName *string   `json:"organizer_enterprise_name"`
 }
 
 type SquadParticipantInfo struct {

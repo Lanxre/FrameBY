@@ -233,7 +233,7 @@ const { list, containerProps, wrapperProps } = useVirtualList(sourceList, {
                 </span>
               </div>
 
-              <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm text-gray-600 mb-3">
+              <div class="grid grid-cols-2 gap-3 text-sm text-gray-600 mb-3" :class="!isMyView ? ' sm:grid-cols-3' : ''">
                 <div v-on:click="openParticipantsModal(squad.participants)" class="flex items-center gap-1">
                   Необходимо участников: {{ squad.current_count }} / {{ squad.max_participants }}
                   <Icon name="ph:users" size="14" />
@@ -271,6 +271,10 @@ const { list, containerProps, wrapperProps } = useVirtualList(sourceList, {
                   <div class="flex gap-1 items-center">
                     <Icon name="ph:phone" size="14" />
                     {{ squad.organizer.phone || 'Неизвестно' }}
+                  </div>
+                  <div v-if="squad.approved_by && squad.status === 'approved'" class="flex gap-1 items-center text-emerald-600">
+                    <Icon name="ph:check-circle" size="14" />
+                    Одобрен: {{ squad.approved_by }}
                   </div>
                 </div>
 

@@ -140,7 +140,7 @@ const handleLogout = async () => {
     </div>
   </div>
 
-  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 auto-rows-fr">
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
     <Tooltip v-if="hasPermission(FramebyAppRole.STUDENT)" text="Панель управления">
         <div class="w-full h-full flex flex-col justify-between p-4 rounded-xl bg-white/70 border border-emerald-100">
             <NuxtLink
@@ -157,10 +157,10 @@ const handleLogout = async () => {
     </Tooltip>
     
     <TabCard title="Роль пользователя в системе" tooltipText="Роль пользователя в системе" icon="ph:user-gear" :text="formatRole(user.role as FramebyAppRole)" />
-
     <TabCard title="Имя пользователя" tooltipText="Имя пользователя" icon="ph:user" :text="user.full_name ?? user.login" />
     <TabCard v-if="user.enterprise !== undefined && user.enterprise !== null" title="Название компании" tooltipText="Название компании" icon="ph:building" :text="user.enterprise?.name" />
-
+    <TabCard v-if="user.university_info !== undefined && user.university_info !== null" title="Университет" tooltipText="Университет" icon="ph:graduation-cap" :text="user.university_info?.university_name + (user.university_info?.department_name ? `, ${user.university_info?.department_name}` : '')" />
+    
     <TabCard title="Создан" tooltipText="Дата регистрации" icon="ph:calendar" :text="formatDate(user.created_at)" />
     <TabCard title="Обновлён" tooltipText="Последнее обновление профиля" icon="ph:clock-countdown" :text="formatDate(user.updated_at)" />
     

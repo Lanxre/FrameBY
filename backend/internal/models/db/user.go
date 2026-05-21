@@ -16,7 +16,9 @@ type UserEntity struct {
 	CreatedAt    time.Time
 	UpdatedAt    time.Time
 
-	FullName     string
-	Subrole      string    // только для BRSM
-	EnterpriseID *uuid.UUID // только для Customer
+	FullName       string
+	Subrole        string    // только для BRSM
+	EnterpriseID   *uuid.UUID // только для Customer
+	UniversityName string    // только для University
+	DepartmentName string    // только для University
 }

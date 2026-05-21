@@ -181,10 +181,10 @@ const isRejected = computed(() => props.squad.status === "rejected");
 					</p>
 				</div>
 			</div>
-			<div v-if="squad.organizer.position || squad.organizer.phone" class="mt-2 pt-2 border-t border-gray-200 grid grid-cols-2 gap-2 text-xs text-gray-500">
-				<div v-if="squad.organizer.position" class="flex items-center gap-1 truncate">
+			<div v-if="squad.organizer.position || squad.organizer.phone || squad.organizer.enterprise_name" class="mt-2 pt-2 border-t border-gray-200 grid grid-cols-2 gap-2 text-xs text-gray-500">
+				<div v-if="squad.organizer.position || squad.organizer.enterprise_name" class="flex items-center gap-1 truncate">
 					<Icon name="ph:briefcase" size="12" class="shrink-0" />
-					<span class="truncate">{{ squad.organizer.position }}</span>
+					<span class="truncate">{{ squad.organizer.position }}{{ squad.organizer.enterprise_name ? ' · ' + squad.organizer.enterprise_name : '' }}</span>
 				</div>
 				<div v-if="squad.organizer.phone" class="flex items-center gap-1 truncate">
 					<Icon name="ph:phone" size="12" class="shrink-0" />
