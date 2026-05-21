@@ -12,6 +12,8 @@ definePageMeta({
 	middleware: ["auth"],
 });
 
+const { user } = useAuthStore();
+
 const { isExactRole } = useRolePermissions();
 
 const currentDashboard = computed(() => {
@@ -33,6 +35,9 @@ const currentDashboard = computed(() => {
       <h1 class="text-2xl sm:text-3xl font-bold text-white text-shadow-lg/30 flex items-center gap-3">
         <Icon name="ph:squares-four" size="28" class="text-emerald-500" />
         Панель управления
+        <p v-if="user?.enterprise !== undefined && user?.enterprise.name !== undefined">
+          для представителя компании: "{{ user.enterprise.name }}"
+        </p>
       </h1>
       <p v-if="currentDashboard === FramebyAppRole.ADMIN" class="mt-2 text-gray-600">
         Управление данными и профилями системы

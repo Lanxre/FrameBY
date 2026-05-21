@@ -3,6 +3,12 @@ export interface UserEntityResponse {
 	user: UserEntity;
 }
 
+export interface EnterpriseEntity {
+	id: number;
+	name: string;
+	address: string;
+}
+
 export interface UserEntity {
 	id: string;
 	email: string;
@@ -14,5 +20,5 @@ export interface UserEntity {
 	full_name?: string;
 	avatar?: string;
 	subrole?: string;
-	enterprises_id?: number;
+	enterprise?: EnterpriseEntity;
 }

@@ -14,12 +14,14 @@ import (
 type AuthService struct {
 	repo     *repositories.UserRepository
 	tokenSvc *TokenService
+	enterprise *repositories.EnterpriseRepository
 }
 
-func NewAuthService(repo *repositories.UserRepository, tokenSvc *TokenService) *AuthService {
+func NewAuthService(repo *repositories.UserRepository, tokenSvc *TokenService, enterprise *repositories.EnterpriseRepository) *AuthService {
 	return &AuthService{
 		repo:     repo,
 		tokenSvc: tokenSvc,
+		enterprise: enterprise,
 	}
 }
 
@@ -71,6 +73,20 @@ func (s *AuthService) GetMe(ctx context.Context, userId uuid.UUID) (*dto.UserDto
 		return nil, err
 	}
 
+	var enterpriseDto *dto.EnterpriseInfo
+	if user.EnterpriseID != nil {
+		enterpriseInfo, err := s.enterprise.GetByID(ctx, *user.EnterpriseID)
+		if err != nil {
+			return nil, err
+		}
+
+		enterpriseDto = &dto.EnterpriseInfo{
+			ID:      enterpriseInfo.ID.String(),
+			Name:    enterpriseInfo.Name,
+			Address: enterpriseInfo.Address,
+		}
+	}
+
 	userDto := &dto.UserDto{
 		ID:    user.ID,
 		Login: user.Login,
@@ -83,7 +99,7 @@ func (s *AuthService) GetMe(ctx context.Context, userId uuid.UUID) (*dto.UserDto
 
 		FullName:     &user.FullName,
 		Subrole:      &user.Subrole,
-		EnterpriseID: user.EnterpriseID,
+		Enterprise:   enterpriseDto,
 	}
 
 	return userDto, nil

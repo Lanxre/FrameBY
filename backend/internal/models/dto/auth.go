@@ -42,5 +42,5 @@ type UserDto struct {
 
 	FullName     *string    `json:"full_name"`
 	Subrole      *string    `json:"subrole"`       // только для BRSM
-	EnterpriseID *uuid.UUID `json:"enterprise_id"` // только для Customer
+	Enterprise   *EnterpriseInfo `json:"enterprise"` // только для Customer
 }

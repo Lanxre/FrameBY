@@ -12,6 +12,7 @@ import BRSMTabs from "@/components/app/profile-tabs/BRSMTabs.vue";
 import UniversityTabs from "@/components/app/profile-tabs/UniversityTabs.vue";
 import CustomerTabs from "@/components/app/profile-tabs/CustomerTabs.vue";
 import Chat from "@/components/app/chat/Chat.vue";
+import TabCard from "./TabCard.vue";
 import { useRolePermissions } from "~/composables/api/role/useRolePermissions";
 
 import { formatAvatar } from "@/utils/str";
@@ -82,9 +83,7 @@ const handleLogout = async () => {
             bg-white/80 backdrop-blur-xl
             border border-emerald-100
             shadow-xl shadow-emerald-500/10">
-
   <div class="flex items-center justify-between mb-6">
-
     <div class="flex items-center gap-4">
       <div class="relative">
         <div class="w-16 h-16 rounded-full
@@ -150,50 +149,20 @@ const handleLogout = async () => {
                   <Icon name="ph:monitor-play" size="14" />
                   Панель управления
                 </p>
-                <p class="text-emerald-700 font-semibold">
-                  Настройки параметров
+                <p class="text-emerald-700 font-semibold mt-6">
+                    Функции роли
                 </p>
             </NuxtLink>
         </div>
     </Tooltip>
+    
+    <TabCard title="Роль пользователя в системе" tooltipText="Роль пользователя в системе" icon="ph:user-gear" :text="formatRole(user.role as FramebyAppRole)" />
 
-    <Tooltip text="Роль пользователя в системе">
-        <div class="w-full h-full flex flex-col justify-between p-4 rounded-xl bg-white/70 border border-emerald-100">
+    <TabCard title="Имя пользователя" tooltipText="Имя пользователя" icon="ph:user" :text="user.full_name ?? user.login" />
+    <TabCard v-if="user.enterprise !== undefined && user.enterprise !== null" title="Название компании" tooltipText="Название компании" icon="ph:building" :text="user.enterprise?.name" />
 
-        <p class="text-gray-400 text-xs mb-1 flex items-center gap-1">
-          <Icon name="ph:shield-check" size="14" />
-          Роль
-        </p>
-        <p class="text-emerald-600 font-semibold uppercase">
-          {{ formatRole(user.role as FramebyAppRole) }}
-        </p>
-      </div>
-    </Tooltip>
-
-    <Tooltip text="Дата регистрации">
-        <div class="w-full h-full flex flex-col justify-between p-4 rounded-xl bg-white/70 border border-emerald-100">
-
-        <p class="text-gray-400 text-xs mb-1 flex items-center gap-1">
-          <Icon name="ph:calendar" size="14" />
-          Создан
-        </p>
-        <p class="text-emerald-700 font-semibold">
-          {{ formatDate(user.created_at) }}
-        </p>
-      </div>
-    </Tooltip>
-
-    <Tooltip text="Последнее обновление профиля">
-        <div class="w-full h-full flex flex-col justify-between p-4 rounded-xl bg-white/70 border border-emerald-100">
-        <p class="text-gray-400 text-xs mb-1 flex items-center gap-1">
-          <Icon name="ph:clock-clockwise" size="14" />
-          Обновлён
-        </p>
-        <p class="text-emerald-700 font-semibold">
-          {{ formatDate(user.updated_at) }}
-        </p>
-      </div>
-    </Tooltip>
+    <TabCard title="Создан" tooltipText="Дата регистрации" icon="ph:calendar" :text="formatDate(user.created_at)" />
+    <TabCard title="Обновлён" tooltipText="Последнее обновление профиля" icon="ph:clock-countdown" :text="formatDate(user.updated_at)" />
     
   </div>
   <ModalWindow
