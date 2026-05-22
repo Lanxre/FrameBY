@@ -472,8 +472,15 @@ func (r *ProfileRepository) GetUniversityStats(ctx context.Context, universityDe
 	err = r.db.QueryRow(ctx, `
 		SELECT COUNT(DISTINCT ss.id)
 		FROM student_squads ss
-		JOIN student_profiles sp ON ss.organizer_id = sp.user_id
-		WHERE sp.university_department_id = $1
+		LEFT JOIN student_profiles sp ON ss.organizer_id = sp.user_id AND sp.university_department_id = $1
+		JOIN squad_statuses squad_s ON ss.status_id = squad_s.id
+		WHERE squad_s.name = 'recruitment_open'
+		  AND (sp.user_id IS NOT NULL
+			   OR EXISTS (
+				   SELECT 1 FROM university_profiles up
+				   WHERE up.user_id = ss.approved_by_university_id
+				   AND up.university_department_id = $1
+			   ))
 	`, universityDeptID).Scan(&stats.TotalSquads)
 	if err != nil {
 		return nil, err

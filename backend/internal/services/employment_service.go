@@ -2,7 +2,6 @@ package services
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/google/uuid"
 	"github.com/lanxre/frameby/internal/models/db"
@@ -181,9 +180,7 @@ func (s *EmploymentService) GetByUniversityDepartment(ctx context.Context, unive
 }
 
 func (s *EmploymentService) GetUserApplications(ctx context.Context, userID uuid.UUID) ([]dto.EmploymentApplicationResponse, error) {
-	fmt.Println("GetUserApplications called with userID:", userID)
 	applications, err := s.repo.GetUserApplications(ctx, userID)
-	fmt.Println("GetUserApplications found requests:", len(applications))
 	if err != nil {
 		return nil, err
 	}
