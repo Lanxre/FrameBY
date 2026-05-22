@@ -41,9 +41,6 @@ func (h *EmploymentHandler) GetAll(c *gin.Context) {
 
 	if roleVal, exists := c.Get(middleware.UserRoleKey); exists {
 		if role, ok := roleVal.(string); ok && role == "student" {
-			if status == "" || status == "all" {
-				status = "approved"
-			}
 			userID, _ := c.Get(middleware.UserIDKey)
 			uid := userID.(uuid.UUID)
 			studentProfile, _ := h.profileService.GetStudentProfile(c.Request.Context(), uid)

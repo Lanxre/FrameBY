@@ -51,9 +51,9 @@ func (r *EmploymentRepository) GetAll(ctx context.Context, status, universityDep
 
 	if universityDeptID != "" {
 		if whereClause == "" {
-			whereClause = ` WHERE er.university_department_id = $` + strconv.Itoa(argNum)
+			whereClause = ` WHERE (er.university_department_id IS NULL OR er.university_department_id = $` + strconv.Itoa(argNum) + `)`
 		} else {
-			whereClause += ` AND er.university_department_id = $` + strconv.Itoa(argNum)
+			whereClause += ` AND (er.university_department_id IS NULL OR er.university_department_id = $` + strconv.Itoa(argNum) + `)`
 		}
 		args = append(args, universityDeptID)
 		argNum++
@@ -235,19 +235,14 @@ func (r *EmploymentRepository) Apply(ctx context.Context, requestID, userID uuid
 	}
 	defer tx.Rollback(ctx)
 
-	var maxParticipants, currentCount, statusID int
+	var maxParticipants, currentCount int
 	err = tx.QueryRow(ctx, `
 		SELECT max_participants, 
-			   (SELECT COUNT(*) FROM employment_participants WHERE request_id = $1),
-			   status_id
+			   (SELECT COUNT(*) FROM employment_participants WHERE request_id = $1)
 		FROM employment_requests WHERE id = $1
-	`, requestID).Scan(&maxParticipants, &currentCount, &statusID)
+	`, requestID).Scan(&maxParticipants, &currentCount)
 	if err != nil {
 		return err
-	}
-
-	if statusID != 2 {
-		return errors.New("applications are only accepted for approved requests")
 	}
 
 	if currentCount >= maxParticipants {

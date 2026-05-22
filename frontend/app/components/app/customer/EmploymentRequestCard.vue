@@ -53,7 +53,7 @@ const isRejected = computed(() => props.request.status === "rejected");
             {{ request.current_participants }} / {{ request.max_participants }}
           </div>
 
-          <div class="flex items-center gap-1">
+          <div v-if="request.university_name" class="flex items-center gap-1">
             <Icon name="ph:graduation-cap" size="14" />
             {{ request.university_name }} / {{ request.department_name }}
           </div>

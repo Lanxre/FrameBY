@@ -46,7 +46,6 @@ const filterAppliedRequests = () => {
 const loadJobs = async () => {
     try {
         await fetchRequests({
-            status: "approved",
             limit: limit.value,
             offset: (page.value - 1) * limit.value,
         });
