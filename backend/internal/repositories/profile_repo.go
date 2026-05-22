@@ -681,7 +681,8 @@ func (r *ProfileRepository) GetStudentSquads(ctx context.Context, userID uuid.UU
 			   TO_CHAR(ssp.joined_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') as joined_at
 		FROM student_squad_participants ssp
 		JOIN student_squads ss ON ssp.squad_id = ss.id
-		WHERE ssp.user_id = $1
+		LEFT JOIN squad_statuses ss_status ON ss.status_id = ss_status.id
+		WHERE ssp.user_id = $1 AND ss_status.name = 'recruitment_open'
 		ORDER BY ssp.joined_at DESC`
 
 	rows, err := r.db.Query(ctx, query, userID)
