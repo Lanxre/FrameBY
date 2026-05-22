@@ -158,8 +158,8 @@ func (r *EmploymentRepository) Create(ctx context.Context, enterpriseID uuid.UUI
 	var id uuid.UUID
 
 	query := `
-		INSERT INTO employment_requests (enterprise_id, title, description, requirements, salary, schedule, max_participants)
-		VALUES ($1, $2, $3, $4, $5, $6, $7)
+		INSERT INTO employment_requests (enterprise_id, title, description, requirements, salary, schedule, max_participants, status_id)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, (SELECT id FROM employment_statuses WHERE name = 'approved'))
 		RETURNING id, enterprise_id, university_department_id, title, description, requirements, salary, schedule, max_participants, status_id, created_at, updated_at`
 
 	var req db.EmploymentRequest
