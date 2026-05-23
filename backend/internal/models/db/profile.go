@@ -21,6 +21,7 @@ type StudentProfileEntity struct {
 	Position               *string
 	Phone                  *string
 	Specialty              *string
+	SpecialtyID            *uuid.UUID
 	Grade                  *float64
 	UniversityDepartmentID *uuid.UUID
 	UpdatedAt              time.Time

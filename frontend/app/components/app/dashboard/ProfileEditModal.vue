@@ -18,11 +18,13 @@ const emit = defineEmits<{
 const {
 	roleOptions,
 	departments,
+	specialties,
 	selectedRole,
 	selectedUniversity,
 	fullName,
 	subrole,
-	specialty,
+	specialtyId,
+	specialtyName,
 	grade,
 	position,
 	phone,
@@ -31,7 +33,36 @@ const {
 	populateForm,
 	resetForm,
 	save,
+	fetchByUniversityDepartment,
 } = useProfileEdit();
+
+const selectedSpecialty = ref<{ id: string; name: string } | null>(null);
+
+watch(selectedSpecialty, (val) => {
+	specialtyId.value = val?.id || null;
+});
+
+watch(
+	() => selectedUniversity.value?.id,
+	(val) => {
+		selectedSpecialty.value = null;
+		specialtyId.value = null;
+		if (val) {
+			fetchByUniversityDepartment(val);
+		}
+	},
+);
+
+watch(
+	[() => props.modelValue, () => specialties.value],
+	([open]) => {
+		if (open && specialtyId.value && specialties.value.length > 0) {
+			const match = specialties.value.find((s) => s.id === specialtyId.value);
+			if (match) selectedSpecialty.value = { id: match.id, name: match.name };
+		}
+	},
+	{ immediate: true },
+);
 
 watch(
 	() => props.profile,
@@ -50,6 +81,10 @@ watch(
 			resetForm();
 		}
 	},
+);
+
+const specialtyOptions = computed(() =>
+	specialties.value.map((s) => ({ id: s.id, name: s.name })),
 );
 
 const close = () => {
@@ -179,7 +214,7 @@ const handleSave = async () => {
                 <label class="text-sm font-medium text-gray-700 ml-1.5">Университет / Кафедра</label>
                 <Select
                   v-model="selectedUniversity"
-                  :options="departments"
+                  :options="departments.map(dp => ({ id: dp.id, name: `${dp.university_name} / ${dp.department_name}`}))"
                   placeholder="Выберите университет и кафедру"
                   icon="ph:graduation-cap"
                 />
@@ -187,18 +222,13 @@ const handleSave = async () => {
 
               <div v-if="selectedRole?.id === FramebyAppRole.STUDENT" class="space-y-2">
                 <label class="text-sm font-medium text-gray-700 ml-1.5">Специальность</label>
-                <div class="relative">
-                  <Icon name="ph:book-open" size="18" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                  <input
-                    v-model="specialty"
-                    type="text"
-                    placeholder="Специальность"
-                    class="w-full pl-9 pr-4 py-2.5 rounded-xl
-                           bg-white/60 border border-emerald-100
-                           focus:outline-none focus:ring-2 focus:ring-emerald-400/40
-                           text-sm cursor-text"
-                  />
-                </div>
+                <Select
+                  v-model="selectedSpecialty"
+                  :options="specialtyOptions"
+                  placeholder="Выберите специальность"
+                  icon="ph:book-open"
+                  :disabled="!selectedUniversity"
+                />
               </div>
 
               <div v-if="selectedRole?.id === 'student'" class="space-y-2">

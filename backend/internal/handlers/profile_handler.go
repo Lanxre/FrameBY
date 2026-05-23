@@ -371,11 +371,12 @@ func (h *ProfileHandler) GetStudentProfileByUserID(c *gin.Context) {
 	}
 
 	response := gin.H{
-		"full_name": profile.FullName,
-		"specialty": profile.Specialty,
-		"grade":     profile.Grade,
-		"position":  profile.Position,
-		"phone":     profile.Phone,
+		"full_name":    profile.FullName,
+		"specialty":    profile.Specialty,
+		"specialty_id": profile.SpecialtyID,
+		"grade":        profile.Grade,
+		"position":     profile.Position,
+		"phone":        profile.Phone,
 	}
 
 	if profile.UniversityDepartmentID != nil {

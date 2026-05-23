@@ -62,7 +62,7 @@ onMounted(() => {
       <label class="text-xs text-gray-500 ml-2">Университет</label>
       <Select
         v-model="form.university"
-        :options="departments"
+        :options="departments.map(dp => ({ id: dp.id, name: dp.university_name }))"
         placeholder="Выберите университет"
         icon="ph:graduation-cap"
         :disabled="isLoadingDepartments"

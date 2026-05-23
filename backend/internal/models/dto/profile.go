@@ -11,7 +11,7 @@ type BrsmProfileRequest struct {
 
 type StudentProfileRequest struct {
 	FullName               string     `json:"full_name" binding:"required"`
-	Specialty              *string    `json:"specialty"`
+	SpecialtyID            *uuid.UUID `json:"specialty_id"`
 	Grade                  *float64   `json:"grade" binding:"gte=1,lte=10"`
 	UniversityDepartmentID *uuid.UUID `json:"university_department_id"`
 	Position               *string    `json:"position"`
@@ -34,14 +34,14 @@ type CustomerProfileRequest struct {
 }
 
 type UpdateSubroleRequest struct {
-	Role                   string   `json:"role" binding:"required"`
-	FullName               *string  `json:"full_name"`
-	Subrole                *string  `json:"subrole"`
-	Specialty              *string  `json:"specialty"`
-	Grade                  *float64 `json:"grade"`
-	UniversityDepartmentID *string  `json:"university_department_id"`
-	Position               *string  `json:"position"`
-	Phone                  *string  `json:"phone"`
+	Role                   string     `json:"role" binding:"required"`
+	FullName               *string    `json:"full_name"`
+	Subrole                *string    `json:"subrole"`
+	SpecialtyID            *uuid.UUID `json:"specialty_id"`
+	Grade                  *float64   `json:"grade"`
+	UniversityDepartmentID *string    `json:"university_department_id"`
+	Position               *string    `json:"position"`
+	Phone                  *string    `json:"phone"`
 }
 
 type ProfileResponse struct {

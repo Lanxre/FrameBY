@@ -4,7 +4,7 @@ import { $api } from "../useApi";
 export interface StudentFormData {
 	fullName: string;
 	university: { id: number | string; name: string } | null;
-	specialty: string;
+	specialtyId: string | null;
 	grade: string;
 	phone: string;
 }
@@ -19,7 +19,7 @@ export function useStudentForm() {
 	const form = reactive<StudentFormData>({
 		fullName: "",
 		university: null,
-		specialty: "",
+		specialtyId: null,
 		grade: "",
 		phone: "",
 	});
@@ -28,7 +28,7 @@ export function useStudentForm() {
 		if (
 			!form.fullName ||
 			!form.university ||
-			!form.specialty ||
+			!form.specialtyId ||
 			!form.grade ||
 			!form.phone
 		) {
@@ -53,7 +53,7 @@ export function useStudentForm() {
 	const clearForm = () => {
 		form.fullName = "";
 		form.university = null;
-		form.specialty = "";
+		form.specialtyId = null;
 		form.grade = "";
 		form.phone = "";
 	};
@@ -68,7 +68,7 @@ export function useStudentForm() {
 				body: {
 					full_name: form.fullName,
 					university_department_id: form.university?.id || null,
-					specialty: form.specialty,
+					specialty_id: form.specialtyId,
 					grade: Number(form.grade),
 					position: null,
 					phone: form.phone || null,

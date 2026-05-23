@@ -1,5 +1,6 @@
 import { $api } from "@/composables/api/useApi";
 import { useUniversityDepartments } from "@/composables/api/useUniversityDepartments";
+import { useSpecialties } from "@/composables/api/useSpecialties";
 import { PROFILE_TYPES, type ProfileRow } from "@/types/dashboard/profile";
 import { FramebyAppRole } from "~/types/frontend/enums/role";
 
@@ -17,12 +18,14 @@ export function useProfileEdit() {
 	}));
 
 	const { departments, fetchDepartments } = useUniversityDepartments();
+	const { specialties, fetchByUniversityDepartment } = useSpecialties();
 
 	const selectedRole = ref<RoleOption | null>(null);
 	const selectedUniversity = ref<{ id: string; name: string } | null>(null);
 	const fullName = ref("");
 	const subrole = ref("");
-	const specialty = ref("");
+	const specialtyId = ref<string | null>(null);
+	const specialtyName = ref("");
 	const grade = ref("");
 	const position = ref("");
 	const phone = ref("");
@@ -50,7 +53,8 @@ export function useProfileEdit() {
 
 		fullName.value = getProfileField(profile.profile, "full_name") || "";
 		subrole.value = getProfileField(profile.profile, "subrole") || "";
-		specialty.value = getProfileField(profile.profile, "specialty") || "";
+		specialtyId.value = getProfileField(profile.profile, "specialty_id") || null;
+		specialtyName.value = getProfileField(profile.profile, "specialty") || "";
 		grade.value = getProfileField(profile.profile, "grade")?.toString() || "";
 		position.value = getProfileField(profile.profile, "position") || "";
 		phone.value = getProfileField(profile.profile, "phone") || "";
@@ -83,7 +87,7 @@ export function useProfileEdit() {
 			if (selectedUniversity.value?.id) {
 				body.university_department_id = selectedUniversity.value.id;
 			}
-			if (specialty.value) body.specialty = specialty.value;
+			if (specialtyId.value) body.specialty_id = specialtyId.value;
 			if (grade.value) body.grade = parseFloat(grade.value);
 		}
 
@@ -134,11 +138,13 @@ export function useProfileEdit() {
 	return {
 		roleOptions,
 		departments,
+		specialties,
 		selectedRole,
 		selectedUniversity,
 		fullName,
 		subrole,
-		specialty,
+		specialtyId,
+		specialtyName,
 		grade,
 		position,
 		phone,
@@ -147,5 +153,6 @@ export function useProfileEdit() {
 		populateForm,
 		resetForm,
 		save,
+		fetchByUniversityDepartment,
 	};
 }

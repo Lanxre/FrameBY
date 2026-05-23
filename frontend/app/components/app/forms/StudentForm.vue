@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useStudentForm } from "@/composables/api/forms/useStudentForm";
 import { useUniversityDepartments } from "@/composables/api/useUniversityDepartments";
+import { useSpecialties } from "@/composables/api/useSpecialties";
 import Select from "@/components/ui/Select/Select.vue";
 import ModalConfirm from "~/components/common/ModalConfirm.vue";
 
@@ -14,6 +15,33 @@ const {
 	isLoading: isLoadingDepartments,
 	fetchDepartments,
 } = useUniversityDepartments();
+
+const {
+	specialties,
+	isLoading: isLoadingSpecialties,
+	fetchByUniversityDepartment,
+} = useSpecialties();
+
+const selectedSpecialty = ref<{ id: string; name: string } | null>(null);
+
+const specialtyOptions = computed(() =>
+	specialties.value.map((s) => ({ id: s.id, name: s.name })),
+);
+
+watch(
+	() => form.university,
+	(val) => {
+		selectedSpecialty.value = null;
+		form.specialtyId = null;
+		if (val?.id) {
+			fetchByUniversityDepartment(String(val.id));
+		}
+	},
+);
+
+watch(selectedSpecialty, (val) => {
+	form.specialtyId = val?.id || null;
+});
 
 onMounted(() => {
 	fetchDepartments();
@@ -62,7 +90,7 @@ onMounted(() => {
       <label class="text-xs text-gray-500 ml-2">Учебное заведение</label>
       <Select
         v-model="form.university"
-        :options="departments"
+        :options="departments.map(dp => ({ id: dp.id, name: `${dp.university_name} / ${dp.department_name}` }))"
         placeholder="Выберите университет"
         icon="ph:graduation-cap"
         :disabled="isLoadingDepartments"
@@ -71,19 +99,13 @@ onMounted(() => {
 
     <div class="space-y-1">
       <label class="text-xs text-gray-500 ml-2">Специальность</label>
-      <div class="relative">
-        <Icon name="ph:book-open" size="18"
-              class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-        <input
-          v-model="form.specialty"
-          type="text"
-          placeholder="Специальность"
-          class="w-full pl-9 pr-3 py-2 rounded-xl
-                 bg-white/60 border border-emerald-100
-                 focus:outline-none focus:ring-2 focus:ring-emerald-400/40
-                 text-sm"
-        />
-      </div>
+      <Select
+        v-model="selectedSpecialty"
+        :options="specialtyOptions"
+        placeholder="Выберите специальность"
+        icon="ph:book-open"
+        :disabled="isLoadingSpecialties || !form.university"
+      />
     </div>
 
     <div class="space-y-1">

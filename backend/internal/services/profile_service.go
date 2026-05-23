@@ -58,11 +58,11 @@ func (s *ProfileService) GetStudentProfile(ctx context.Context, userID uuid.UUID
 }
 
 func (s *ProfileService) CreateStudentProfile(ctx context.Context, userID uuid.UUID, req *dto.StudentProfileRequest) error {
-	return s.repo.CreateStudentProfile(ctx, userID, req.FullName, req.Specialty, req.Grade, req.Position, req.Phone, req.UniversityDepartmentID)
+	return s.repo.CreateStudentProfile(ctx, userID, req.FullName, req.SpecialtyID, req.Grade, req.Position, req.Phone, req.UniversityDepartmentID)
 }
 
 func (s *ProfileService) UpdateStudentProfile(ctx context.Context, userID uuid.UUID, req *dto.StudentProfileRequest) error {
-	return s.repo.UpdateStudentProfile(ctx, userID, req.FullName, req.Specialty, req.Grade, req.Position, req.Phone, req.UniversityDepartmentID)
+	return s.repo.UpdateStudentProfile(ctx, userID, req.FullName, req.SpecialtyID, req.Grade, req.Position, req.Phone, req.UniversityDepartmentID)
 }
 
 func (s *ProfileService) DeleteStudentProfile(ctx context.Context, userID uuid.UUID) error {
@@ -376,7 +376,7 @@ func (s *ProfileService) UpdateProfile(ctx context.Context, userID uuid.UUID, re
 	case string(types.RoleStudent):
 		profile, _ := s.repo.GetStudentProfile(ctx, userID)
 		fullName := ptrToStr(req.FullName)
-		specialty := req.Specialty
+		specialtyID := req.SpecialtyID
 		grade := req.Grade
 		position := req.Position
 		phone := req.Phone
@@ -393,8 +393,8 @@ func (s *ProfileService) UpdateProfile(ctx context.Context, userID uuid.UUID, re
 			} else {
 				fullName = profile.FullName
 			}
-			if specialty == nil {
-				specialty = profile.Specialty
+			if specialtyID == nil {
+				specialtyID = profile.SpecialtyID
 			}
 			if grade == nil {
 				grade = profile.Grade
@@ -408,12 +408,12 @@ func (s *ProfileService) UpdateProfile(ctx context.Context, userID uuid.UUID, re
 			if univDeptID == nil {
 				univDeptID = profile.UniversityDepartmentID
 			}
-			return s.repo.UpdateStudentProfile(ctx, userID, fullName, specialty, grade, position, phone, univDeptID)
+			return s.repo.UpdateStudentProfile(ctx, userID, fullName, specialtyID, grade, position, phone, univDeptID)
 		}
 		if fullName == "" {
 			return errors.New("full_name обязательно для заполнения")
 		}
-		return s.repo.CreateStudentProfile(ctx, userID, fullName, specialty, grade, position, phone, univDeptID)
+		return s.repo.CreateStudentProfile(ctx, userID, fullName, specialtyID, grade, position, phone, univDeptID)
 
 	case string(types.RoleUniversity):
 		profile, _ := s.repo.GetUniversityProfile(ctx, userID)

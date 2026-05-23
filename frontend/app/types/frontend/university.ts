@@ -40,3 +40,10 @@ export interface StudentEmploymentListResponse {
 	limit: number;
 	offset: number;
 }
+
+export interface UniversityDepartment {
+	id: string;
+  university_name: string;
+  department_name: string;
+  address?: string;
+}

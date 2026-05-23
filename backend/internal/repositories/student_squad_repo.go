@@ -671,10 +671,11 @@ func (r *StudentSquadRepository) GetParticipantsBySquadIDs(ctx context.Context, 
 	}
 
 	query := `
-		SELECT ssp.squad_id, p.id as user_id, sp.full_name, sp.phone, sp.specialty, sp.grade, p.avatar,
+		SELECT ssp.squad_id, p.id as user_id, sp.full_name, sp.phone, s.name, sp.grade, p.avatar,
 		       COALESCE(u.name, '')
 		FROM student_squad_participants ssp
 		JOIN student_profiles sp ON ssp.user_id = sp.user_id
+		LEFT JOIN specialties s ON s.id = sp.specialty_id
 		JOIN users p ON p.id = ssp.user_id
 		LEFT JOIN university_departments ud ON ud.id = sp.university_department_id
 		LEFT JOIN universities u ON u.id = ud.university_id

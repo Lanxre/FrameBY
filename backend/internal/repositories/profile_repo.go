@@ -85,11 +85,13 @@ func (r *ProfileRepository) DeleteBrsmProfile(ctx context.Context, userID uuid.U
 func (r *ProfileRepository) GetStudentProfile(ctx context.Context, userID uuid.UUID) (*db.StudentProfileEntity, error) {
 	p := &db.StudentProfileEntity{}
 	query := `
-		SELECT user_id, full_name, position, phone, specialty, grade, university_department_id, updated_at
-		FROM student_profiles
-		WHERE user_id = $1`
+		SELECT sp.user_id, sp.full_name, sp.position, sp.phone, s.name, sp.specialty_id, sp.grade, sp.university_department_id, sp.updated_at
+		FROM student_profiles sp
+		LEFT JOIN specialties s ON s.id = sp.specialty_id
+		WHERE sp.user_id = $1`
 
-	var specialty sql.NullString
+	var specialtyName sql.NullString
+	var specialtyID sql.Null[uuid.UUID]
 	var grade sql.Null[float64]
 	var univDeptID sql.Null[uuid.UUID]
 
@@ -98,7 +100,8 @@ func (r *ProfileRepository) GetStudentProfile(ctx context.Context, userID uuid.U
 		&p.FullName,
 		&p.Position,
 		&p.Phone,
-		&specialty,
+		&specialtyName,
+		&specialtyID,
 		&grade,
 		&univDeptID,
 		&p.UpdatedAt,
@@ -109,8 +112,11 @@ func (r *ProfileRepository) GetStudentProfile(ctx context.Context, userID uuid.U
 		}
 		return nil, err
 	}
-	if specialty.Valid {
-		p.Specialty = &specialty.String
+	if specialtyName.Valid {
+		p.Specialty = &specialtyName.String
+	}
+	if specialtyID.Valid {
+		p.SpecialtyID = &specialtyID.V
 	}
 	if grade.Valid {
 		p.Grade = &grade.V
@@ -121,29 +127,29 @@ func (r *ProfileRepository) GetStudentProfile(ctx context.Context, userID uuid.U
 	return p, nil
 }
 
-func (r *ProfileRepository) CreateStudentProfile(ctx context.Context, userID uuid.UUID, fullName string, specialty *string, grade *float64, position, phone *string, universityDeptID *uuid.UUID) error {
+func (r *ProfileRepository) CreateStudentProfile(ctx context.Context, userID uuid.UUID, fullName string, specialtyID *uuid.UUID, grade *float64, position, phone *string, universityDeptID *uuid.UUID) error {
 	query := `
-		INSERT INTO student_profiles (user_id, full_name, specialty, grade, position, phone, university_department_id)
+		INSERT INTO student_profiles (user_id, full_name, specialty_id, grade, position, phone, university_department_id)
 		VALUES ($1, $2, $3, $4, $5, $6, $7)
 		ON CONFLICT (user_id) DO UPDATE SET
 			full_name = EXCLUDED.full_name,
-			specialty = EXCLUDED.specialty,
+			specialty_id = EXCLUDED.specialty_id,
 			grade = EXCLUDED.grade,
 			position = EXCLUDED.position,
 			phone = EXCLUDED.phone,
 			university_department_id = EXCLUDED.university_department_id`
 
-	_, err := r.db.Exec(ctx, query, userID, fullName, specialty, grade, position, phone, universityDeptID)
+	_, err := r.db.Exec(ctx, query, userID, fullName, specialtyID, grade, position, phone, universityDeptID)
 	return err
 }
 
-func (r *ProfileRepository) UpdateStudentProfile(ctx context.Context, userID uuid.UUID, fullName string, specialty *string, grade *float64, position, phone *string, universityDeptID *uuid.UUID) error {
+func (r *ProfileRepository) UpdateStudentProfile(ctx context.Context, userID uuid.UUID, fullName string, specialtyID *uuid.UUID, grade *float64, position, phone *string, universityDeptID *uuid.UUID) error {
 	query := `
 		UPDATE student_profiles
-		SET full_name = $2, specialty = $3, grade = $4, position = $5, phone = $6, university_department_id = $7
+		SET full_name = $2, specialty_id = $3, grade = $4, position = $5, phone = $6, university_department_id = $7
 		WHERE user_id = $1`
 
-	result, err := r.db.Exec(ctx, query, userID, fullName, specialty, grade, position, phone, universityDeptID)
+	result, err := r.db.Exec(ctx, query, userID, fullName, specialtyID, grade, position, phone, universityDeptID)
 	if err != nil {
 		return err
 	}
@@ -305,7 +311,7 @@ func (r *ProfileRepository) GetAllProfiles(ctx context.Context, profileType, sea
 			COALESCE(bp.subrole, up.subrole, cp.subrole, NULL) as subrole,
 			COALESCE(bp.position, sp.position, up.position, cp.position, NULL) as position,
 			COALESCE(bp.phone, sp.phone, up.phone, cp.phone, NULL) as phone,
-			sp.specialty,
+			s.name,
 			sp.grade,
 			cp.enterprise_id,
 			sp.university_department_id,
@@ -318,8 +324,9 @@ func (r *ProfileRepository) GetAllProfiles(ctx context.Context, profileType, sea
 				TO_CHAR(u.updated_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
 			) as updated_at
 		FROM users u
-		LEFT JOIN brsm_profiles bp ON bp.user_id = u.id
 		LEFT JOIN student_profiles sp ON sp.user_id = u.id
+		LEFT JOIN specialties s ON s.id = sp.specialty_id
+		LEFT JOIN brsm_profiles bp ON bp.user_id = u.id
 		LEFT JOIN university_profiles up ON up.user_id = u.id
 		LEFT JOIN customer_profiles cp ON cp.user_id = u.id
 		WHERE u.role != 'admin'`
@@ -605,10 +612,11 @@ func (r *ProfileRepository) GetStudentsWithEmployment(ctx context.Context, unive
 
 	studentsQuery := `
 		SELECT u.id, u.email, u.login, u.role, u.avatar,
-			   sp.full_name, sp.specialty, sp.grade, sp.position, sp.phone,
+			   sp.full_name, s.name, sp.grade, sp.position, sp.phone,
 			   TO_CHAR(sp.updated_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') as updated_at
 		FROM student_profiles sp
 		JOIN users u ON sp.user_id = u.id
+		LEFT JOIN specialties s ON s.id = sp.specialty_id
 		WHERE sp.university_department_id = $1
 		ORDER BY sp.full_name ASC
 		LIMIT $2 OFFSET $3`
