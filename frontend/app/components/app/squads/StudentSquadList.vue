@@ -160,8 +160,8 @@ onMounted(() => {
 });
 
 const { list, containerProps, wrapperProps } = useVirtualList(sourceList, {
-	itemHeight: 140,
-	overscan: 8,
+	itemHeight: 250,
+	overscan: 10,
 });
 </script>
 
