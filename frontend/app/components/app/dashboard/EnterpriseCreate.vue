@@ -47,7 +47,7 @@ const handleSubmit = async () => {
       Организация успешно создана
     </div>
 
-    <div class="grid grid-rows-3 gap-3">
+    <div class="flex flex-col h-full gap-3">
       <div class="space-y-1">
         <label class="text-xs text-gray-500 ml-2">Название</label>
         <div class="relative">
@@ -63,32 +63,30 @@ const handleSubmit = async () => {
         </div>
       </div>
 
-      <div class="space-y-1 grid row-span-3 grid-rows-subgrid">
-        <div>
-            <label class="text-xs text-gray-500 ml-2">Адрес</label>
-            <div class="relative">
-              <Icon name="ph:map-pin" size="16" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-              <input
-                v-model="address"
-                type="text"
-                placeholder="Москва, ул. Льва Толстого 16"
-                class="w-full pl-8 pr-3 py-2 rounded-xl text-sm
-                       bg-white border border-emerald-100
-                       focus:outline-none focus:ring-2 focus:ring-emerald-400/40"
-              />
-            </div>
+      <div class="space-y-1">
+        <label class="text-xs text-gray-500 ml-2">Адрес</label>
+        <div class="relative">
+          <Icon name="ph:map-pin" size="16" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <input
+            v-model="address"
+            type="text"
+            placeholder="Москва, ул. Льва Толстого 16"
+            class="w-full pl-8 pr-3 py-2 rounded-xl text-sm
+                   bg-white border border-emerald-100
+                   focus:outline-none focus:ring-2 focus:ring-emerald-400/40"
+          />
         </div>
       </div>
 
       <button
-        class="py-2 mt-2.5 rounded-xl text-sm font-bold
-               bg-linear-to-r from-emerald-400 to-green-600 text-white
-               hover:opacity-90 transition
-               disabled:opacity-50 disabled:cursor-not-allowed
-               shadow-sm shadow-emerald-500/20"
-        :disabled="isLoading || !name.trim()"
-        @click="handleSubmit"
-      >
+         class="py-2 mt-30 rounded-xl text-sm font-bold
+                bg-linear-to-r from-emerald-400 to-green-600 text-white
+                hover:opacity-90 transition
+                disabled:opacity-50 disabled:cursor-not-allowed
+                shadow-sm shadow-emerald-500/20"
+         :disabled="isLoading || !name.trim()"
+         @click="handleSubmit"
+       >
         <span v-if="isLoading">Создание...</span>
         <span v-else>Создать</span>
       </button>

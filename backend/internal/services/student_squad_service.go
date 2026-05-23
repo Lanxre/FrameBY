@@ -35,8 +35,8 @@ func mapParticipants(dbParticipants []db.SquadParticipantInfo) []dto.SquadPartic
 	return res
 }
 
-func (s *StudentSquadService) GetAll(ctx context.Context, status string, limit, offset int) (*dto.AllSquadsResponse, error) {
-	squads, total, err := s.repo.GetAll(ctx, status, limit, offset)
+func (s *StudentSquadService) GetAll(ctx context.Context, status string, limit, offset int, universityDeptID *uuid.UUID) (*dto.AllSquadsResponse, error) {
+	squads, total, err := s.repo.GetAll(ctx, status, limit, offset, universityDeptID)
 	if err != nil {
 		return nil, err
 	}

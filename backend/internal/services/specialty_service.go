@@ -33,6 +33,15 @@ func mapSpecialties(entities []db.SpecialtyEntity) []dto.SpecialtyResponse {
 	return result
 }
 
+func (s *SpecialtyService) Create(ctx context.Context, name string, departmentID uuid.UUID) (*dto.SpecialtyResponse, error) {
+	entity, err := s.repo.Create(ctx, name, departmentID)
+	if err != nil {
+		return nil, err
+	}
+	result := mapSpecialty(*entity)
+	return &result, nil
+}
+
 func (s *SpecialtyService) GetByDepartmentID(ctx context.Context, departmentID uuid.UUID) ([]dto.SpecialtyResponse, error) {
 	entities, err := s.repo.GetByDepartmentID(ctx, departmentID)
 	if err != nil {

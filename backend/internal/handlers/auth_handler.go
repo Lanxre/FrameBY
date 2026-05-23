@@ -64,7 +64,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 
 	token, userDto, err := h.authSvc.Login(c.Request.Context(), req.Email, req.Password)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Неверный логин или пароль"})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Неверный пароль или почта"})
 		return
 	}
 

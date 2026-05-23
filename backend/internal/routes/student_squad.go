@@ -21,7 +21,7 @@ func NewStudentSquadRoutes(h *handlers.StudentSquadHandler, m *middleware.AuthMi
 
 func (rts *StudentSquadRoutes) Register(cfg *config.Config, r *gin.Engine) {
 	apiGroup := r.Group("/api")
-	apiGroup.GET("/student-squads", rts.Handler.GetAll)
+	apiGroup.GET("/student-squads", rts.AuthMid.OptionalAuth(), rts.Handler.GetAll)
 	apiGroup.Use(rts.AuthMid.Authenticate())
 	{
 		apiGroup.GET("/student-squads/statuses", rts.Handler.GetStatuses)

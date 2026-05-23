@@ -33,4 +33,6 @@ type UniversityDepartmentWithDetails struct {
 	UniversityName string    `json:"university_name"`
 	DepartmentName string    `json:"department_name"`
 	Address        *string   `json:"address"`
+	DepartmentID   uuid.UUID `json:"department_id"`
+	UniversityID   uuid.UUID `json:"university_id"`
 }

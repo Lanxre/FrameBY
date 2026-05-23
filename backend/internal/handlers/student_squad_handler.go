@@ -12,12 +12,14 @@ import (
 )
 
 type StudentSquadHandler struct {
-	service *services.StudentSquadService
+	service        *services.StudentSquadService
+	profileService *services.ProfileService
 }
 
-func NewStudentSquadHandler(service *services.StudentSquadService) *StudentSquadHandler {
+func NewStudentSquadHandler(service *services.StudentSquadService, profileService *services.ProfileService) *StudentSquadHandler {
 	return &StudentSquadHandler{
-		service: service,
+		service:        service,
+		profileService: profileService,
 	}
 }
 
@@ -36,7 +38,21 @@ func (h *StudentSquadHandler) GetAll(c *gin.Context) {
 		offset = 0
 	}
 
-	response, err := h.service.GetAll(c.Request.Context(), status, limit, offset)
+	var universityDeptID *uuid.UUID
+	if userRole, exists := c.Get(middleware.UserRoleKey); exists {
+		if role, ok := userRole.(string); ok && role == "student" {
+			if userID, exists := c.Get(middleware.UserIDKey); exists {
+				if uid, ok := userID.(uuid.UUID); ok {
+					profile, err := h.profileService.GetStudentProfile(c.Request.Context(), uid)
+					if err == nil && profile != nil {
+						universityDeptID = profile.UniversityDepartmentID
+					}
+				}
+			}
+		}
+	}
+
+	response, err := h.service.GetAll(c.Request.Context(), status, limit, offset, universityDeptID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения отрядов"})
 		return

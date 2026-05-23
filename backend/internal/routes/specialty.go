@@ -24,5 +24,6 @@ func (rts *SpecialtyRoutes) Register(cfg *config.Config, r *gin.Engine) {
 	apiGroup.Use(rts.AuthMid.Authenticate())
 	{
 		apiGroup.GET("/specialties", rts.Handler.GetByDepartment)
+		apiGroup.POST("/specialties", rts.Handler.Create)
 	}
 }

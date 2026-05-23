@@ -11,4 +11,6 @@ type UniversityDepartmentResponse struct {
 	UniversityName string  `json:"university_name"`
 	DepartmentName string  `json:"department_name"`
 	Address        *string `json:"address,omitempty"`
+	DepartmentID   string  `json:"department_id"`
+	UniversityID   string  `json:"university_id"`
 }

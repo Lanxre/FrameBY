@@ -5,6 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/lanxre/frameby/internal/models/dto"
 	"github.com/lanxre/frameby/internal/services"
 )
 
@@ -14,6 +15,28 @@ type SpecialtyHandler struct {
 
 func NewSpecialtyHandler(service *services.SpecialtyService) *SpecialtyHandler {
 	return &SpecialtyHandler{service: service}
+}
+
+func (h *SpecialtyHandler) Create(c *gin.Context) {
+	var req dto.CreateSpecialtyRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверные данные: " + err.Error()})
+		return
+	}
+
+	departmentID, err := uuid.Parse(req.DepartmentID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid department_id"})
+		return
+	}
+
+	specialty, err := h.service.Create(c.Request.Context(), req.Name, departmentID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка создания специальности"})
+		return
+	}
+
+	c.JSON(http.StatusCreated, specialty)
 }
 
 func (h *SpecialtyHandler) GetByDepartment(c *gin.Context) {

@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { useCreateUniversityDepartment } from "@/composables/api/dashboard/useCreateUniversityDepartment";
+import { useUniversityDepartments } from "@/composables/api/useUniversityDepartments";
+import Select from "@/components/ui/Select/Select.vue";
 
 const emit = defineEmits<{
 	created: [];
@@ -8,9 +10,33 @@ const emit = defineEmits<{
 const { isLoading, errorMessage, isSuccess, create, reset } =
 	useCreateUniversityDepartment();
 
+const { departments, isLoading: isLoadingDepartments, fetchDepartments } =
+	useUniversityDepartments();
+
 const universityName = ref("");
 const departmentName = ref("");
 const address = ref("");
+const selectedUniversity = ref<{ id: string; name: string } | null>(null);
+
+const universityOptions = computed(() => {
+	const names = new Set<string>();
+	for (const d of departments.value) {
+		if (d.university_name) {
+			names.add(d.university_name);
+		}
+	}
+	return Array.from(names).map((name) => ({ id: name, name }));
+});
+
+watch(selectedUniversity, (val) => {
+	if (val) {
+		universityName.value = val.name;
+	}
+});
+
+onMounted(() => {
+	fetchDepartments();
+});
 
 const handleSubmit = async () => {
 	if (!universityName.value.trim() || !departmentName.value.trim()) {
@@ -27,6 +53,7 @@ const handleSubmit = async () => {
 		universityName.value = "";
 		departmentName.value = "";
 		address.value = "";
+		selectedUniversity.value = null;
 		emit("created");
 		setTimeout(() => {
 			reset();
@@ -50,20 +77,24 @@ const handleSubmit = async () => {
       Запись успешно создана
     </div>
 
-    <div class="grid grid-rows-3 gap-3">
+    <div class="flex flex-col gap-3">
       <div class="space-y-1">
         <label class="text-xs text-gray-500 ml-2">Университет</label>
-        <div class="relative">
-          <Icon name="ph:buildings" size="16" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-          <input
-            v-model="universityName"
-            type="text"
-            placeholder="БГУ"
-            class="w-full pl-8 pr-3 py-2 rounded-xl text-sm
-                   bg-white border border-emerald-100
-                   focus:outline-none focus:ring-2 focus:ring-emerald-400/40"
-          />
-        </div>
+        <Select
+          v-model="selectedUniversity"
+          :options="universityOptions"
+          placeholder="Выберите существующий университет"
+          icon="ph:buildings"
+          :disabled="isLoadingDepartments"
+        />
+        <input
+          v-model="universityName"
+          type="text"
+          placeholder="Или введите новый"
+          class="w-full pl-3 pr-3 py-2 mt-1 rounded-xl text-sm
+                 bg-white border border-emerald-100
+                 focus:outline-none focus:ring-2 focus:ring-emerald-400/40"
+        />
       </div>
 
       <div class="space-y-1">
@@ -96,10 +127,8 @@ const handleSubmit = async () => {
         </div>
       </div>
 
-      <div></div>
-
       <button
-        class="py-2 mt-2.5 rounded-xl text-sm font-bold
+        class="py-2 rounded-xl text-sm font-bold
                bg-linear-to-r from-emerald-400 to-green-600 text-white
                hover:opacity-90 transition
                disabled:opacity-50 disabled:cursor-not-allowed

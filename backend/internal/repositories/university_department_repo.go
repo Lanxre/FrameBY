@@ -19,7 +19,7 @@ func NewUniversityDepartmentRepository(db *pgxpool.Pool) *UniversityDepartmentRe
 
 func (r *UniversityDepartmentRepository) GetAll(ctx context.Context) ([]db.UniversityDepartmentWithDetails, error) {
 	query := `
-		SELECT ud.id, u.name as university_name, d.name as department_name, ud.address
+		SELECT ud.id, u.name as university_name, d.name as department_name, ud.address, ud.department_id, ud.university_id
 		FROM university_departments ud
 		JOIN universities u ON ud.university_id = u.id
 		JOIN departments d ON ud.department_id = d.id
@@ -34,7 +34,7 @@ func (r *UniversityDepartmentRepository) GetAll(ctx context.Context) ([]db.Unive
 	var departments []db.UniversityDepartmentWithDetails
 	for rows.Next() {
 		var d db.UniversityDepartmentWithDetails
-		if err := rows.Scan(&d.ID, &d.UniversityName, &d.DepartmentName, &d.Address); err != nil {
+		if err := rows.Scan(&d.ID, &d.UniversityName, &d.DepartmentName, &d.Address, &d.DepartmentID, &d.UniversityID); err != nil {
 			return nil, err
 		}
 		departments = append(departments, d)

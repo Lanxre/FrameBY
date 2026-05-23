@@ -36,6 +36,25 @@ func (m *AuthMiddleware) Authenticate() gin.HandlerFunc {
 	}
 }
 
+func (m *AuthMiddleware) OptionalAuth() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		tokenString, err := c.Cookie("FRAMEBY_ACCESS_TOKEN")
+		if err != nil {
+			c.Next()
+			return
+		}
+		claims, err := m.tokenSvc.ValidateToken(tokenString)
+		if err != nil {
+			c.Next()
+			return
+		}
+		c.Set(UserIDKey, claims.UserID)
+		c.Set(UserEmailKey, claims.Email)
+		c.Set(UserRoleKey, claims.Role)
+		c.Next()
+	}
+}
+
 func (m *AuthMiddleware) RequireRole(requiredRole string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		role, exists := c.Get(UserRoleKey)

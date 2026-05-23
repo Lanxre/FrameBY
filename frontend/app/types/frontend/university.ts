@@ -46,4 +46,5 @@ export interface UniversityDepartment {
   university_name: string;
   department_name: string;
   address?: string;
+  department_id: string;
 }

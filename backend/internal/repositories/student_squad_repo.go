@@ -3,6 +3,7 @@ package repositories
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strconv"
 	"time"
 
@@ -20,7 +21,7 @@ func NewStudentSquadRepository(db *pgxpool.Pool) *StudentSquadRepository {
 	return &StudentSquadRepository{db: db}
 }
 
-func (r *StudentSquadRepository) GetAll(ctx context.Context, status string, limit, offset int) ([]db.StudentSquadWithDetails, int, error) {
+func (r *StudentSquadRepository) GetAll(ctx context.Context, status string, limit, offset int, universityDeptID *uuid.UUID) ([]db.StudentSquadWithDetails, int, error) {
 	results := make([]db.StudentSquadWithDetails, 0)
 
 	baseQuery := `
@@ -35,7 +36,8 @@ func (r *StudentSquadRepository) GetAll(ctx context.Context, status string, limi
 			   (SELECT COUNT(*) FROM student_squad_participants WHERE squad_id = ss.id) as current_count,
 			   ss.status_id, ss2.name as status_name,
 			   ss.created_at, ss.updated_at,
-			   COALESCE(abp.full_name, asp.full_name, aup.full_name, acp.full_name, '') as approved_by_name
+			   COALESCE(abp.full_name, asp.full_name, aup.full_name, acp.full_name, '') as approved_by_name,
+			   u.avatar
 		FROM student_squads ss
 		JOIN users u ON ss.organizer_id = u.id
 		LEFT JOIN brsm_profiles bp ON bp.user_id = ss.organizer_id
@@ -55,10 +57,48 @@ func (r *StudentSquadRepository) GetAll(ctx context.Context, status string, limi
 	args := []interface{}{}
 	argNum := 1
 
+	hasWhere := false
+
 	if status != "" && status != "all" {
 		baseQuery += ` WHERE ss2.name = $` + strconv.Itoa(argNum)
 		countQuery += ` WHERE ss2.name = $` + strconv.Itoa(argNum)
 		args = append(args, status)
+		argNum++
+		hasWhere = true
+	}
+
+	if universityDeptID != nil {
+		universityFilter := fmt.Sprintf(` (EXISTS (
+			SELECT 1 FROM university_profiles up3
+			JOIN university_departments ud3 ON ud3.id = up3.university_department_id
+			WHERE up3.user_id = ss.approved_by_university_id
+			AND ud3.university_id = (SELECT university_id FROM university_departments WHERE id = $%d)
+		) OR EXISTS (
+			SELECT 1 FROM student_profiles sp 
+			JOIN university_departments ud4 ON ud4.id = sp.university_department_id
+			WHERE sp.user_id = ss.organizer_id
+			AND ud4.university_id = (SELECT university_id FROM university_departments WHERE id = $%d)
+		) OR EXISTS (
+			SELECT 1 FROM university_profiles up2
+			JOIN university_departments ud2 ON ud2.id = up2.university_department_id
+			WHERE up2.user_id = ss.organizer_id
+			AND ud2.university_id = (SELECT university_id FROM university_departments WHERE id = $%d)
+		) OR EXISTS (
+			SELECT 1 FROM student_squad_participants ssp
+			JOIN student_profiles sp2 ON ssp.user_id = sp2.user_id
+			JOIN university_departments ud5 ON ud5.id = sp2.university_department_id
+			WHERE ssp.squad_id = ss.id
+			AND ud5.university_id = (SELECT university_id FROM university_departments WHERE id = $%d)
+		))`, argNum, argNum, argNum, argNum)
+
+		if hasWhere {
+			baseQuery += ` AND` + universityFilter
+			countQuery += ` AND` + universityFilter
+		} else {
+			baseQuery += ` WHERE` + universityFilter
+			countQuery += ` WHERE` + universityFilter
+		}
+		args = append(args, *universityDeptID)
 		argNum++
 	}
 
@@ -96,6 +136,7 @@ func (r *StudentSquadRepository) GetAll(ctx context.Context, status string, limi
 			&s.CurrentCount, &s.StatusID, &s.StatusName,
 			&s.CreatedAt, &s.UpdatedAt,
 			&s.ApprovedByName,
+			&s.Avatar,
 		)
 		if err != nil {
 			return nil, 0, err

@@ -29,6 +29,8 @@ func (s *UniversityDepartmentService) GetAll(ctx context.Context) ([]dto.Univers
 			UniversityName: d.UniversityName,
 			DepartmentName: d.DepartmentName,
 			Address:        d.Address,
+			DepartmentID:   d.DepartmentID.String(),
+			UniversityID:   d.UniversityID.String(),
 		}
 	}
 	return response, nil
@@ -47,6 +49,8 @@ func (s *UniversityDepartmentService) GetByID(ctx context.Context, id uuid.UUID)
 		UniversityName: department.University.Name,
 		DepartmentName: department.Department.Name,
 		Address:        department.Address,
+		DepartmentID:   department.Department.ID.String(),
+		UniversityID:   department.University.ID.String(),
 	}, nil
 }
 
@@ -60,5 +64,7 @@ func (s *UniversityDepartmentService) Create(ctx context.Context, universityName
 		UniversityName: department.UniversityName,
 		DepartmentName: department.DepartmentName,
 		Address:        department.Address,
+		DepartmentID:   department.DepartmentID.String(),
+		UniversityID:   department.UniversityID.String(),
 	}, nil
 }

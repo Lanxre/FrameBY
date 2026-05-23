@@ -7,6 +7,7 @@ import ProfileEditModal from "./ProfileEditModal.vue";
 import ModalConfirm from "@/components/common/ModalConfirm.vue";
 import EnterpriseCreate from "./EnterpriseCreate.vue";
 import UniversityCreate from "./UniversityCreate.vue";
+import SpecialtyCreate from "./SpecialtyCreate.vue";
 
 const {
 	profiles,
@@ -149,6 +150,7 @@ const handleConfirmDelete = async () => {
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <EnterpriseCreate @created="loadProfiles" />
       <UniversityCreate @created="loadProfiles" />
+      <SpecialtyCreate @created="loadProfiles" />
     </div>
   </div>
 </template>
