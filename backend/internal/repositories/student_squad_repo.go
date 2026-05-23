@@ -89,6 +89,10 @@ func (r *StudentSquadRepository) GetAll(ctx context.Context, status string, limi
 			JOIN university_departments ud5 ON ud5.id = sp2.university_department_id
 			WHERE ssp.squad_id = ss.id
 			AND ud5.university_id = (SELECT university_id FROM university_departments WHERE id = $%d)
+		) OR EXISTS (
+			SELECT 1 FROM users u_brsm
+			WHERE u_brsm.id = ss.organizer_id
+			AND u_brsm.role = 'brsm'
 		))`, argNum, argNum, argNum, argNum)
 
 		if hasWhere {
