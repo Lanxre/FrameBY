@@ -14,6 +14,9 @@ import ModalConfirm from "@/components/common/ModalConfirm.vue";
 import ToolTip from "@/components/ui/ToolTip.vue";
 import StudentSquadParticipantsModal from "@/components/app/squads/StudentSquadParticipantsModal.vue";
 import StudentSquadEditModal from "./StudentSquadEditModal.vue";
+import StudentSquadExportModal from "./StudentSquadExportModal.vue";
+import ToolTipButtonIcon from "@/components/common/ToolTipButtonIcon.vue";
+
 import { FramebyAppRole } from "~/types/frontend/enums/role";
 
 const emit = defineEmits<{ updated: [] }>();
@@ -47,6 +50,10 @@ const showEditModal = ref(false);
 const squadToEdit = ref<StudentSquad | null>(null);
 const showParticipantsModal = ref(false);
 const squadParticipants = ref<SquadParticipant[]>([]);
+
+const showExportModal = ref(false);
+const titleExportModal = ref("Экспорт 'Только моих'");
+const exportSquadId = ref<string | null>(null);
 
 const limit = ref(10);
 const offset = ref(0);
@@ -88,6 +95,21 @@ const goToPage = (page: number) => {
 const openCloseModal = (squad: StudentSquad) => {
 	squadToClose.value = squad;
 	showCloseModal.value = true;
+};
+
+const openExportModal = () => {
+	exportSquadId.value = null;
+	showExportModal.value = true;
+	titleExportModal.value = isMyView.value
+		? "Экспорт 'Только моих'"
+		: "Экспорт 'Всех'";
+};
+
+const openReportModal = (squad: StudentSquad) => {
+	if (squad.participants.length === 0) return;
+	exportSquadId.value = squad.id;
+	showExportModal.value = true;
+	titleExportModal.value = `Отчет по отряду: ${squad.title}`;
 };
 
 const openParticipantsModal = (participants: SquadParticipant[]) => {
@@ -196,13 +218,20 @@ const { list, containerProps, wrapperProps } = useVirtualList(sourceList, {
       </div>
 
       <div class="flex items-center gap-4">
-        <label class="flex items-center gap-2 cursor-pointer">
-          <input type="checkbox" v-model="showMySquadsOnly" class="sr-only peer" />
-          <div class="w-10 h-6 bg-gray-200 rounded-full peer-checked:bg-emerald-500 transition relative">
-            <div class="absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition peer-checked:translate-x-4"></div>
+        <div class="flex items-center gap-2">
+          <div class="flex items-center">
+              <ToolTip text="Загрузить отчет">
+                  <Icon name="ph:clipboard-text" size="20" class="text-zinc-950-500 cursor-pointer" @click="openExportModal" />
+              </ToolTip>
           </div>
-          <span class="text-sm text-gray-600">Только мои</span>
-        </label>
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" v-model="showMySquadsOnly" class="sr-only peer" />
+            <div class="w-10 h-6 bg-gray-200 rounded-full peer-checked:bg-emerald-500 transition relative">
+              <div class="absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition peer-checked:translate-x-4"></div>
+            </div>
+            <span class="text-sm text-gray-600">Только мои</span>
+          </label>
+        </div>
         <span class="text-sm text-gray-500">Всего: {{ isMyView ? formatTotalStudentSquads(mySquads.length) : formatTotalStudentSquads(total) }}</span>
       </div>
     </div>
@@ -289,29 +318,51 @@ const { list, containerProps, wrapperProps } = useVirtualList(sourceList, {
             </div>
 
             <div v-if="isMyView || squad.organizer.id === user?.id" class="flex flex-col gap-2">
-              <ToolTip text="Редактировать">
-                <button @click="openEditModal(squad)" class="p-1.5 text-gray-400 hover:text-emerald-500 transition rounded-lg cursor-pointer">
-                  <Icon name="ph:pencil" size="18" />
-                </button>
-              </ToolTip>
+                
+              <ToolTipButtonIcon
+                position="top"
+                icon="ph:pencil"
+                iconSize="18"
+                text="Редактировать"
+                @click="openEditModal(squad)"
+              />
 
-              <ToolTip v-if="squad.status === 'recruitment_open'" text="Закрыть">
-                <button @click="openCloseModal(squad)" class="p-1.5 text-gray-400 hover:text-red-500 transition rounded-lg cursor-pointer">
-                  <Icon name="ph:x" size="18" />
-                </button>
-              </ToolTip>
+              <ToolTipButtonIcon
+                v-if="squad.status === 'recruitment_open'"
+                position="top"
+                icon="ph:x"
+                iconSize="18"
+                text="Закрыть"
+                @click="openCloseModal(squad)"
+              />
+              
+              <ToolTipButtonIcon
+                v-if="squad.participants.length !== 0"
+                position="top"
+                icon="ph:person"
+                iconSize="18"
+                text="Участники"
+                @click="openParticipantsModal(squad.participants)"
+              />
 
-              <ToolTip v-if="squad.participants.length !== 0" text="Участники">
-                <button @click="openParticipantsModal(squad.participants)" class="p-1.5 text-gray-400 hover:text-emerald-500 transition rounded-lg cursor-pointer">
-                  <Icon name="ph:person" size="18" />
-                </button>
-              </ToolTip>
-
-              <ToolTip v-if="squad.status === 'closed'" text="Открыть">
-                <button @click="openRecruitmentFor(squad)" class="p-1.5 text-gray-400 hover:text-green-500 transition rounded-lg cursor-pointer">
-                  <Icon name="ph:plus" size="18" />
-                </button>
-              </ToolTip>
+              <ToolTipButtonIcon
+                v-if="squad.participants.length !== 0"
+                position="top"
+                icon="ph:file"
+                iconSize="18"
+                text="Создать отчет"
+                @click="openReportModal(squad)"
+              />
+              
+              <ToolTipButtonIcon
+                v-if="squad.status === 'closed'"
+                position="top"
+                icon="ph:plus"
+                iconSize="18"
+                text="Добавить"
+                @click="openRecruitmentFor(squad)"
+              />
+              
             </div>
           </div>
 
@@ -365,6 +416,13 @@ const { list, containerProps, wrapperProps } = useVirtualList(sourceList, {
     <StudentSquadParticipantsModal
       v-model="showParticipantsModal"
       :participants="squadParticipants"
+    />
+
+    <StudentSquadExportModal 
+        v-model="showExportModal" 
+        :my-only="showMySquadsOnly" 
+        :title="titleExportModal" 
+        :squad-id="exportSquadId" 
     />
   </div>
 </template>

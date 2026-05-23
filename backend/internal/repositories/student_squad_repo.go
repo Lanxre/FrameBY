@@ -111,6 +111,9 @@ func (r *StudentSquadRepository) GetByID(ctx context.Context, id uuid.UUID) (*db
 		SELECT ss.id, ss.organizer_id,
 			   COALESCE(bp.full_name, sp.full_name, up.full_name, cp.full_name, '') as organizer_name,
 			   u.role as organizer_role,
+			   COALESCE(bp.position, cp.position) as organizer_position,
+			   COALESCE(bp.phone, cp.phone) as organizer_phone,
+			   e.name as organizer_enterprise_name,
 			   ss.title, ss.description, ss.profile,
 			   ss.max_participants,
 			   (SELECT COUNT(*) FROM student_squad_participants WHERE squad_id = ss.id) as current_count,
@@ -135,6 +138,8 @@ func (r *StudentSquadRepository) GetByID(ctx context.Context, id uuid.UUID) (*db
 	var s db.StudentSquadWithParticipants
 	err := r.db.QueryRow(ctx, query, id).Scan(
 		&s.ID, &s.OrganizerID, &s.OrganizerName, &s.OrganizerRole,
+		&s.OrganizerPosition, &s.OrganizerPhone,
+		&s.OrganizerEnterpriseName,
 		&s.Title, &s.Description, &s.Profile, &s.MaxParticipants,
 		&s.CurrentCount, &s.StatusID, &s.StatusName,
 		&s.CreatedAt, &s.UpdatedAt,
@@ -347,6 +352,62 @@ func (r *StudentSquadRepository) ensureStatusesExist(ctx context.Context) {
 			('closed', 'Закрыта')
 		ON CONFLICT (name) DO NOTHING
 	`)
+}
+
+func (r *StudentSquadRepository) GetAllSquads(ctx context.Context) ([]db.StudentSquadWithDetails, error) {
+	query := `
+		SELECT ss.id, ss.organizer_id,
+			   COALESCE(bp.full_name, sp.full_name, up.full_name, cp.full_name, '') as organizer_name,
+			   u.role as organizer_role,
+			   COALESCE(bp.position, cp.position) as organizer_position,
+			   COALESCE(bp.phone, cp.phone) as organizer_phone,
+			   e.name as organizer_enterprise_name,
+			   ss.title, ss.description, ss.profile,
+			   ss.max_participants,
+			   (SELECT COUNT(*) FROM student_squad_participants WHERE squad_id = ss.id) as current_count,
+			   ss.status_id, ss2.name as status_name,
+			   ss.created_at, ss.updated_at,
+			   COALESCE(abp.full_name, asp.full_name, aup.full_name, acp.full_name, '') as approved_by_name
+		FROM student_squads ss
+		JOIN users u ON ss.organizer_id = u.id
+		LEFT JOIN brsm_profiles bp ON bp.user_id = ss.organizer_id
+		LEFT JOIN student_profiles sp ON sp.user_id = ss.organizer_id
+		LEFT JOIN university_profiles up ON up.user_id = ss.organizer_id
+		LEFT JOIN customer_profiles cp ON cp.user_id = ss.organizer_id
+		LEFT JOIN enterprises e ON e.id = cp.enterprise_id
+		LEFT JOIN users au ON au.id = ss.approved_by_university_id
+		LEFT JOIN brsm_profiles abp ON abp.user_id = au.id
+		LEFT JOIN student_profiles asp ON asp.user_id = au.id
+		LEFT JOIN university_profiles aup ON aup.user_id = au.id
+		LEFT JOIN customer_profiles acp ON acp.user_id = au.id
+		JOIN squad_statuses ss2 ON ss.status_id = ss2.id
+		ORDER BY ss.created_at DESC`
+
+	rows, err := r.db.Query(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var results []db.StudentSquadWithDetails
+	for rows.Next() {
+		var s db.StudentSquadWithDetails
+		err := rows.Scan(
+			&s.ID, &s.OrganizerID, &s.OrganizerName, &s.OrganizerRole,
+			&s.OrganizerPosition, &s.OrganizerPhone,
+			&s.OrganizerEnterpriseName,
+			&s.Title, &s.Description, &s.Profile, &s.MaxParticipants,
+			&s.CurrentCount, &s.StatusID, &s.StatusName,
+			&s.CreatedAt, &s.UpdatedAt,
+			&s.ApprovedByName,
+		)
+		if err != nil {
+			return nil, err
+		}
+		results = append(results, s)
+	}
+
+	return results, nil
 }
 
 func (r *StudentSquadRepository) GetByOrganizer(ctx context.Context, organizerID uuid.UUID) ([]db.StudentSquadWithDetails, error) {
@@ -610,10 +671,13 @@ func (r *StudentSquadRepository) GetParticipantsBySquadIDs(ctx context.Context, 
 	}
 
 	query := `
-		SELECT ssp.squad_id, p.id as user_id, sp.full_name, sp.phone, sp.specialty, sp.grade, p.avatar
+		SELECT ssp.squad_id, p.id as user_id, sp.full_name, sp.phone, sp.specialty, sp.grade, p.avatar,
+		       COALESCE(u.name, '')
 		FROM student_squad_participants ssp
 		JOIN student_profiles sp ON ssp.user_id = sp.user_id
 		JOIN users p ON p.id = ssp.user_id
+		LEFT JOIN university_departments ud ON ud.id = sp.university_department_id
+		LEFT JOIN universities u ON u.id = ud.university_id
 		WHERE ssp.squad_id = ANY($1)
 	`
 
@@ -626,7 +690,7 @@ func (r *StudentSquadRepository) GetParticipantsBySquadIDs(ctx context.Context, 
 	result := make(map[uuid.UUID][]db.SquadParticipantInfo)
 	for rows.Next() {
 		var info db.SquadParticipantInfo
-		err := rows.Scan(&info.SquadID, &info.UserID, &info.FullName, &info.Phone, &info.Specialty, &info.Grade, &info.Avatar)
+		err := rows.Scan(&info.SquadID, &info.UserID, &info.FullName, &info.Phone, &info.Specialty, &info.Grade, &info.Avatar, &info.University)
 		if err != nil {
 			return nil, err
 		}

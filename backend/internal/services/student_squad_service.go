@@ -114,6 +114,8 @@ func (s *StudentSquadService) GetByID(ctx context.Context, id uuid.UUID) (*dto.S
 				ID:   squad.OrganizerID.String(),
 				Name: squad.OrganizerName,
 				Role: squad.OrganizerRole,
+				Position: *squad.OrganizerPosition,
+				Phone:   *squad.OrganizerPhone,
 			},
 			Title:           squad.Title,
 			Description:     squad.Description,

@@ -43,6 +43,7 @@ func main() {
 			services.NewUniversityDepartmentService,
 			services.NewEnterpriseService,
 			services.NewStudentSquadService,
+			services.NewStudentSquadExportService,
 			services.NewEmploymentService,
 			services.NewChatService,
 
@@ -53,6 +54,7 @@ func main() {
 			handlers.NewUniversityDepartmentHandler,
 			handlers.NewEnterpriseHandler,
 			handlers.NewStudentSquadHandler,
+			handlers.NewStudentSquadExportHandler,
 			handlers.NewEmploymentHandler,
 			handlers.NewChatHandler,
 
@@ -65,6 +67,7 @@ func main() {
 			app.AsRoute(routes.NewUniversityDepartmentRoutes),
 			app.AsRoute(routes.NewEnterpriseRoutes),
 			app.AsRoute(routes.NewStudentSquadRoutes),
+			app.AsRoute(routes.NewStudentSquadExportRoutes),
 			app.AsRoute(routes.NewEmploymentRoutes),
 			app.AsRoute(routes.NewChatRoutes),
 

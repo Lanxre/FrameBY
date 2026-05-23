@@ -1,0 +1,45 @@
+# Студенческие отряды
+
+Всего: **{{.Total}}**
+{{- if .RequesterLabel}}
+
+*{{.RequesterLabel}}*
+{{- end}}
+
+{{- range .Squads}}
+
+## {{.Title}}
+
+*Создан: {{.CreatedAt}} • {{.OrgName}}*
+{{- if .OrgPosition}}
+- **Должность:** {{.OrgPosition}}
+{{- end}}
+{{- if .OrgPhone}}
+- **Телефон:** {{.OrgPhone}}
+{{- end}}
+{{- if .OrgEnterprise}}
+- **Компания:** {{.OrgEnterprise}}
+{{- end}}
+- **Статус:** {{.StatusLabel}}
+- **Участники:** {{.CurrentCount}} / {{.MaxParticipants}}
+{{- if .ApprovedByName}}
+- **Одобрено:** {{.ApprovedByName}}
+{{- end}}
+{{- if .Description}}
+
+**Описание:** {{.Description}}
+{{- end}}
+{{- if .Profile}}
+
+**Требования к участникам:** {{.Profile}}
+{{- end}}
+{{- if .Participants}}
+  | # | Имя | Телефон | ВУЗ | Специальность | Курс |
+  |---|-----|---------|-----|---------------|------|
+{{- range $i, $p := .Participants}}
+  | {{add1 $i}} | {{$p.FullName}} | {{$p.PhoneStr}} | {{$p.UnivStr}} | {{$p.SpecStr}} | {{$p.GradeStr}} |
+{{- end}}
+{{- end}}
+
+---
+{{- end}}

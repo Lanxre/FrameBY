@@ -53,13 +53,14 @@ type StudentSquadWithDetails struct {
 }
 
 type SquadParticipantInfo struct {
-	SquadID   uuid.UUID `json:"squad_id"`
-	UserID    uuid.UUID `json:"user_id"`
-	FullName  string    `json:"full_name"`
-	Phone     *string   `json:"phone"`
-	Specialty *string   `json:"specialty"`
-	Grade     *float64  `json:"grade"`
-	Avatar    *string   `json:"avatar"`
+	SquadID    uuid.UUID `json:"squad_id"`
+	UserID     uuid.UUID `json:"user_id"`
+	FullName   string    `json:"full_name"`
+	Phone      *string   `json:"phone"`
+	Specialty  *string   `json:"specialty"`
+	Grade      *float64  `json:"grade"`
+	Avatar     *string   `json:"avatar"`
+	University string    `json:"university"`
 }
 
 type StudentSquadWithParticipants struct {

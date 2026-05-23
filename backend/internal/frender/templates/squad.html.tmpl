@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>{{.Squad.Title}} — Студенческий отряд</title>
+
+<style>
+:root {
+  --bg: #f4f7fb;
+  --card: #ffffff;
+  --text: #1f2937;
+  --muted: #6b7280;
+
+  --primary: #10b981;
+  --primary-dark: #047857;
+
+  --border: #e5e7eb;
+  --shadow: 0 10px 30px rgba(0,0,0,0.06);
+
+  --success-bg: #d1fae5;
+  --success-text: #065f46;
+
+  --warning-bg: #fef3c7;
+  --warning-text: #92400e;
+
+  --danger-bg: #fee2e2;
+  --danger-text: #991b1b;
+
+  --gray-bg: #e5e7eb;
+  --gray-text: #374151;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: linear-gradient(180deg, #eef7f3 0%, var(--bg) 240px);
+  font-family: Inter, "Segoe UI", Arial, sans-serif;
+  color: var(--text);
+  line-height: 1.5;
+}
+
+.container {
+  max-width: 1100px;
+  margin: 40px auto;
+  padding: 0 20px;
+}
+
+/* HEADER */
+
+.header {
+  background: linear-gradient(135deg, #10b981, #047857);
+  color: white;
+  border-radius: 24px;
+  padding: 40px;
+  box-shadow: var(--shadow);
+  position: relative;
+  overflow: hidden;
+}
+
+.header::after {
+  content: "";
+  position: absolute;
+  right: -80px;
+  top: -80px;
+  width: 260px;
+  height: 260px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 50%;
+}
+
+.title {
+  margin: 0;
+  font-size: 42px;
+  font-weight: 800;
+  letter-spacing: -1px;
+}
+
+.subtitle {
+  margin-top: 10px;
+  opacity: 0.9;
+  font-size: 15px;
+}
+
+/* CARDS */
+
+.card {
+  background: var(--card);
+  border-radius: 22px;
+  padding: 28px;
+  margin-top: 24px;
+  box-shadow: var(--shadow);
+  border: 1px solid rgba(255,255,255,0.5);
+}
+
+.section-title {
+  margin: 0 0 22px;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--primary-dark);
+}
+
+/* INFO GRID */
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 18px;
+}
+
+.info-item {
+  background: #f9fafb;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 18px;
+}
+
+.info-label {
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.info-value {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+/* STATUS */
+
+.status {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.status-open {
+  background: var(--success-bg);
+  color: var(--success-text);
+}
+
+.status-pending {
+  background: var(--warning-bg);
+  color: var(--warning-text);
+}
+
+.status-closed {
+  background: var(--gray-bg);
+  color: var(--gray-text);
+}
+
+.status-rejected {
+  background: var(--danger-bg);
+  color: var(--danger-text);
+}
+
+/* TEXT BLOCKS */
+
+.text-block {
+  color: #374151;
+  font-size: 15px;
+  line-height: 1.8;
+}
+
+/* TABLE */
+
+.table-wrapper {
+  overflow-x: auto;
+  border-radius: 18px;
+  border: 1px solid var(--border);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+}
+
+thead {
+  background: linear-gradient(180deg, #f0fdf4, #ecfdf5);
+}
+
+th {
+  padding: 16px;
+  text-align: center;
+  vertical-align: middle;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--primary-dark);
+  border-bottom: 1px solid var(--border);
+}
+
+td {
+  padding: 16px;
+  border-bottom: 1px solid #f3f4f6;
+  font-size: 14px;
+  color: #374151;
+  text-align: center;
+  vertical-align: middle;
+}
+
+tbody tr {
+  transition: background .15s ease;
+}
+
+tbody tr:hover {
+  background: #f9fafb;
+}
+
+tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* EMPTY */
+
+.empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: #9ca3af;
+  font-size: 15px;
+}
+
+/* FOOTER */
+
+.footer {
+  text-align: center;
+  color: #6b7280;
+  font-size: 13px;
+  margin: 32px 0 10px;
+}
+
+/* RESPONSIVE */
+
+@media (max-width: 768px) {
+  .header {
+    padding: 28px;
+  }
+
+  .title {
+    font-size: 30px;
+  }
+
+  .card {
+    padding: 20px;
+  }
+
+  th, td {
+    padding: 12px;
+    font-size: 13px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <!-- HEADER -->
+  <div class="header">
+    <h1 class="title">{{.Squad.Title}}</h1>
+
+    <div class="subtitle">
+      Создан: {{.CreatedAt}} • {{.Squad.OrganizerName}}
+    </div>
+  </div>
+
+  <!-- INFO -->
+  <div class="card">
+    <h2 class="section-title">Информация об отряде</h2>
+
+    <div class="info-grid">
+
+      <div class="info-item">
+        <div class="info-label">Организатор</div>
+        <div class="info-value">{{.Squad.OrganizerName}}</div>
+      </div>
+
+      {{if .OrgPosition}}
+      <div class="info-item">
+        <div class="info-label">Должность</div>
+        <div class="info-value">{{.OrgPosition}}</div>
+      </div>
+      {{end}}
+
+      {{if .OrgPhone}}
+      <div class="info-item">
+        <div class="info-label">Телефон</div>
+        <div class="info-value">{{.OrgPhone}}</div>
+      </div>
+      {{end}}
+
+      {{if .OrgEnterprise}}
+      <div class="info-item">
+        <div class="info-label">Компания</div>
+        <div class="info-value">{{.OrgEnterprise}}</div>
+      </div>
+      {{end}}
+
+      <div class="info-item">
+        <div class="info-label">Статус</div>
+        <div class="info-value">
+          <span class="status status-{{.Squad.StatusName}}">
+            {{.StatusLabel}}
+          </span>
+        </div>
+      </div>
+
+      <div class="info-item">
+        <div class="info-label">Участники</div>
+        <div class="info-value">
+          {{.Squad.CurrentCount}} / {{.Squad.MaxParticipants}}
+        </div>
+      </div>
+
+      <div class="info-item">
+        <div class="info-label">Дата создания</div>
+        <div class="info-value">{{.CreatedAt}}</div>
+      </div>
+
+      {{if .Squad.ApprovedByName}}
+      <div class="info-item">
+        <div class="info-label">Одобрено</div>
+        <div class="info-value" style="color: var(--primary-dark);">
+          {{.Squad.ApprovedByName}}
+        </div>
+      </div>
+      {{end}}
+
+    </div>
+  </div>
+
+  <!-- DESCRIPTION -->
+  {{if .Description}}
+  <div class="card">
+    <h2 class="section-title">Описание</h2>
+    <div class="text-block">
+      {{.Description}}
+    </div>
+  </div>
+  {{end}}
+
+  <!-- PROFILE -->
+  {{if .Profile}}
+  <div class="card">
+    <h2 class="section-title">Требования к участникам</h2>
+    <div class="text-block">
+      {{.Profile}}
+    </div>
+  </div>
+  {{end}}
+
+  <!-- PARTICIPANTS -->
+  <div class="card">
+    <h2 class="section-title">
+      Участники ({{len .Participants}})
+    </h2>
+
+    {{if .Participants}}
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Имя</th>
+            <th>Телефон</th>
+            <th>ВУЗ</th>
+            <th>Специальность</th>
+            <th>Средний балл</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {{range $i, $p := .Participants}}
+          <tr>
+            <td>{{add1 $i}}</td>
+            <td><strong>{{$p.FullName}}</strong></td>
+            <td>{{orDash $p.Phone}}</td>
+            <td>{{$p.University}}</td>
+            <td>{{orDash $p.Specialty}}</td>
+            <td>{{gradeStr $p.Grade}}</td>
+          </tr>
+          {{end}}
+        </tbody>
+      </table>
+    </div>
+
+    {{else}}
+    <div class="empty">
+      Нет участников
+    </div>
+    {{end}}
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    Отчет сгенерирован • {{now}}
+  </div>
+
+</div>
+
+</body>
+</html>
