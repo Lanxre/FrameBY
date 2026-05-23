@@ -204,7 +204,7 @@ const handleSave = async () => {
                 <label class="text-sm font-medium text-gray-700 ml-1.5">Университет / Кафедра</label>
                 <Select
                   v-model="selectedUniversity"
-                  :options="departments"
+                  :options="departments.map(dp => ({ id: dp.id, name: `${dp.university_name} / ${dp.department_name}`}))"
                   placeholder="Выберите университет и кафедру"
                   icon="ph:buildings"
                 />
